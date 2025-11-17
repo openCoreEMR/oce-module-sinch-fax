@@ -21,6 +21,20 @@ repos:
         language: system
         types: [php]
 
+      - id: composer-validate
+        name: Validate composer.json
+        entry: composer validate --strict
+        language: system
+        files: ^composer\.json$
+        pass_filenames: false
+
+      - id: composer-normalize
+        name: Normalize composer.json
+        entry: composer normalize --dry-run
+        language: system
+        files: ^composer\.json$
+        pass_filenames: false
+
       - id: phpcs
         name: PHP CodeSniffer
         entry: composer run-script phpcs
@@ -40,4 +54,11 @@ repos:
         entry: composer run-script rector-fix
         language: system
         types: [php]
+        pass_filenames: false
+
+      - id: composer-require-checker
+        name: Composer Require Checker
+        entry: composer run-script require-checker
+        language: system
+        files: ^(composer\.json|src/.+\.php)$
         pass_filenames: false
