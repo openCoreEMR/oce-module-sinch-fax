@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="OpenEMR Coding Standards">
+    <description>Coding standards for OpenEMR Sinch Fax Module</description>
+
+    <file>src</file>
+    <file>public</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/templates/*</exclude-pattern>
+
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="parallel" value="75"/>
+    <arg value="np"/>
+
+    <rule ref="PSR12"/>
+</ruleset>
