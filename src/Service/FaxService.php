@@ -33,9 +33,9 @@ class FaxService
      * Send a fax
      *
      * @param string $to Recipient fax number
-     * @param array $files Array of file paths to send
-     * @param array $options Additional options
-     * @return array Fax information
+     * @param array<int, string> $files Array of file paths to send
+     * @param array<string, mixed> $options Additional options
+     * @return array<string, mixed> Fax information
      */
     public function sendFax(string $to, array $files, array $options = []): array
     {
@@ -71,7 +71,7 @@ class FaxService
      * Retrieve a fax by ID
      *
      * @param string $faxId
-     * @return array
+     * @return array<string, mixed>
      */
     public function getFax(string $faxId): array
     {
@@ -81,8 +81,8 @@ class FaxService
     /**
      * List faxes with optional filters
      *
-     * @param array $filters
-     * @return array
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed>
      */
     public function listFaxes(array $filters = []): array
     {
@@ -118,7 +118,7 @@ class FaxService
     /**
      * Process incoming fax webhook
      *
-     * @param array $webhookData
+     * @param array<string, mixed> $webhookData
      * @return bool
      */
     public function processIncomingFax(array $webhookData): bool
@@ -144,7 +144,7 @@ class FaxService
             $filePath = $storagePath . DIRECTORY_SEPARATOR . $filename;
 
             if (isset($webhookData['fileType']) && $webhookData['fileType'] === 'PDF') {
-                $content = base64_decode($webhookData['file']);
+                $content = base64_decode((string) $webhookData['file']);
                 file_put_contents($filePath, $content);
                 chmod($filePath, 0660);
             }
@@ -158,7 +158,7 @@ class FaxService
     /**
      * Process fax completed webhook
      *
-     * @param array $webhookData
+     * @param array<string, mixed> $webhookData
      * @return bool
      */
     public function processFaxCompleted(array $webhookData): bool
@@ -178,6 +178,11 @@ class FaxService
         return true;
     }
 
+    /**
+     * @param array<string, mixed> $faxData
+     * @param string $direction
+     * @param array<string, mixed> $options
+     */
     private function saveFaxToDatabase(array $faxData, string $direction, array $options = []): void
     {
         $sql = "INSERT INTO oce_sinch_faxes (
@@ -206,6 +211,10 @@ class FaxService
         sqlStatement($sql, $bind);
     }
 
+    /**
+     * @param string $faxId
+     * @param array<string, mixed> $faxData
+     */
     private function updateFaxStatus(string $faxId, array $faxData): void
     {
         $sql = "UPDATE oce_sinch_faxes SET
