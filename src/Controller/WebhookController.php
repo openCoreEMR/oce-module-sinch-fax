@@ -82,6 +82,9 @@ class WebhookController
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function parseMultipartFormData(): array
     {
         $data = [];

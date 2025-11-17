@@ -104,7 +104,7 @@ class GlobalConfig
     }
 
     /**
-     * @return array<string, array<string, string|bool|int|array>>
+     * @return array<string, array<string, string|bool|int|array<string, string>>>
      */
     public function getGlobalSettingSectionConfiguration(): array
     {

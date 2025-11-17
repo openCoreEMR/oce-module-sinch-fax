@@ -41,6 +41,9 @@ class SinchFaxClient
         ]);
     }
 
+    /**
+     * @return array<string, string>
+     */
     private function getAuthHeaders(): array
     {
         $headers = [
@@ -63,8 +66,8 @@ class SinchFaxClient
     /**
      * Send a fax
      *
-     * @param array $params Fax parameters
-     * @return array Response from API
+     * @param array<string, mixed> $params Fax parameters
+     * @return array<string, mixed> Response from API
      * @throws \Exception
      */
     public function sendFax(array $params): array
@@ -125,7 +128,7 @@ class SinchFaxClient
      * Get fax details
      *
      * @param string $faxId
-     * @return array
+     * @return array<string, mixed>
      * @throws \Exception
      */
     public function getFax(string $faxId): array
@@ -146,8 +149,8 @@ class SinchFaxClient
     /**
      * List faxes
      *
-     * @param array $filters Optional filters
-     * @return array
+     * @param array<string, mixed> $filters Optional filters
+     * @return array<string, mixed>
      * @throws \Exception
      */
     public function listFaxes(array $filters = []): array

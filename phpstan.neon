@@ -28,7 +28,6 @@ parameters:
         - '#unknown class OpenEMR\\#'
         - '#Instantiated class OpenEMR\\#'
         - '#invalid type OpenEMR\\#'
-        - '#no value type specified in iterable type array#'
         - '#Property .+ is never read, only written#'
         - '#Parameter \#1 \$json of function json_decode expects string, string\|false given#'
         - '#Parameter \#1 \$string of function base64_encode expects string, string\|false given#'
