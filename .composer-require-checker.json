@@ -1,7 +1,7 @@
 {
     "symbol-whitelist": [
         "null",
-        "true", 
+        "true",
         "false",
         "static",
         "self",

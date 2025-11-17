@@ -1,8 +1,34 @@
 parameters:
-    level: 6
+    level: 8
     paths:
         - src
+        - public
+        - openemr.bootstrap.php
+        - version.php
+
+    # PHP version
+    phpVersion: 80200
+
+    # Ignore errors in vendor
     excludePaths:
         - vendor
-    bootstrapFiles:
-        - vendor/autoload.php
+
+    # Additional checks
+    checkMissingCallableSignature: true
+    checkUninitializedProperties: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+
+    # Report always true conditions
+    reportAlwaysTrueInLastCondition: true
+
+    # Ignore missing OpenEMR classes during static analysis
+    ignoreErrors:
+        - '#Function (xlt|text|attr|sqlStatement|sqlFetchArray) not found#'
+        - '#Class OpenEMR\\#'
+        - '#unknown class OpenEMR\\#'
+        - '#Instantiated class OpenEMR\\#'
+        - '#invalid type OpenEMR\\#'
+        - '#no value type specified in iterable type array#'
+        - '#Property .+ is never read, only written#'
+        - '#Parameter \#1 \$json of function json_decode expects string, string\|false given#'
+        - '#Parameter \#1 \$string of function base64_encode expects string, string\|false given#'

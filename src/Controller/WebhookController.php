@@ -18,9 +18,9 @@ use OpenEMR\Common\Logging\SystemLogger;
 
 class WebhookController
 {
-    private FaxService $faxService;
-    private GlobalConfig $config;
-    private SystemLogger $logger;
+    private readonly FaxService $faxService;
+    private readonly GlobalConfig $config;
+    private readonly SystemLogger $logger;
 
     public function __construct()
     {
@@ -46,10 +46,10 @@ class WebhookController
         }
 
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-        
-        if (str_contains($contentType, 'multipart/form-data')) {
+
+        if (str_contains((string) $contentType, 'multipart/form-data')) {
             $data = $this->parseMultipartFormData();
-        } elseif (str_contains($contentType, 'application/json')) {
+        } elseif (str_contains((string) $contentType, 'application/json')) {
             $rawInput = file_get_contents('php://input');
             $data = json_decode($rawInput, true);
         } else {
@@ -67,16 +67,11 @@ class WebhookController
         try {
             $event = $data['event'] ?? '';
 
-            switch ($event) {
-                case 'INCOMING_FAX':
-                    $this->faxService->processIncomingFax($data);
-                    break;
-                case 'FAX_COMPLETED':
-                    $this->faxService->processFaxCompleted($data);
-                    break;
-                default:
-                    $this->logger->warning("Unknown webhook event: {$event}");
-            }
+            match ($event) {
+                'INCOMING_FAX' => $this->faxService->processIncomingFax($data),
+                'FAX_COMPLETED' => $this->faxService->processFaxCompleted($data),
+                default => $this->logger->warning("Unknown webhook event: {$event}"),
+            };
 
             http_response_code(200);
             echo json_encode(['status' => 'success']);
@@ -90,12 +85,12 @@ class WebhookController
     private function parseMultipartFormData(): array
     {
         $data = [];
-        
+
         $data['event'] = $_POST['event'] ?? '';
         $data['eventTime'] = $_POST['eventTime'] ?? '';
-        
+
         if (isset($_POST['fax'])) {
-            $data['fax'] = json_decode($_POST['fax'], true);
+            $data['fax'] = json_decode((string) $_POST['fax'], true);
         }
 
         if (isset($_FILES['file'])) {
