@@ -18,9 +18,9 @@ use OpenEMR\Common\Logging\SystemLogger;
 
 class FaxService
 {
-    private SinchFaxClient $client;
-    private SystemLogger $logger;
-    private GlobalConfig $config;
+    private readonly SinchFaxClient $client;
+    private readonly SystemLogger $logger;
+    private readonly GlobalConfig $config;
 
     public function __construct(?GlobalConfig $config = null)
     {
@@ -54,11 +54,9 @@ class FaxService
             $params['coverPageId'] = $options['coverPageId'];
         }
 
-        if (isset($options['callbackUrl'])) {
-            $params['callbackUrl'] = $options['callbackUrl'];
-        } else {
-            $params['callbackUrl'] = $this->getDefaultCallbackUrl();
-        }
+        $params['callbackUrl'] = isset($options['callbackUrl'])
+            ? $options['callbackUrl']
+            : $this->getDefaultCallbackUrl();
 
         $params['maxRetries'] = $options['maxRetries'] ?? $this->config->getDefaultRetryCount();
 
@@ -100,7 +98,7 @@ class FaxService
     public function downloadAndSaveFax(string $faxId): string
     {
         $content = $this->client->downloadFax($faxId);
-        
+
         $storagePath = $this->config->getFileStoragePath();
         if (!is_dir($storagePath)) {
             mkdir($storagePath, 0770, true);
@@ -210,8 +208,8 @@ class FaxService
 
     private function updateFaxStatus(string $faxId, array $faxData): void
     {
-        $sql = "UPDATE oce_sinch_faxes SET 
-            status = ?, 
+        $sql = "UPDATE oce_sinch_faxes SET
+            status = ?,
             num_pages = ?,
             error_code = ?,
             error_message = ?,
@@ -236,8 +234,8 @@ class FaxService
         global $GLOBALS;
         $webroot = $GLOBALS['webroot'] ?? '';
         $site = $_SESSION['site_id'] ?? 'default';
-        
-        return $GLOBALS['site_addr_oath'] . $webroot . 
+
+        return $GLOBALS['site_addr_oath'] . $webroot .
                '/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php';
     }
 }

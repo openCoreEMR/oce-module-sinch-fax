@@ -19,24 +19,20 @@ use OpenEMR\Common\Logging\SystemLogger;
 
 class SinchFaxClient
 {
-    private Client $httpClient;
-    private SystemLogger $logger;
-    private string $baseUrl;
-    private string $projectId;
-    private string $authMethod;
+    private readonly Client $httpClient;
+    private readonly SystemLogger $logger;
+    private readonly string $baseUrl;
+    private readonly string $projectId;
+    private readonly string $authMethod;
 
     public function __construct(private readonly GlobalConfig $config)
     {
         $this->logger = new SystemLogger();
         $this->projectId = $config->getProjectId();
         $this->authMethod = $config->getAuthMethod();
-        
+
         $region = $config->getRegion();
-        if ($region === 'global') {
-            $this->baseUrl = 'https://fax.api.sinch.com';
-        } else {
-            $this->baseUrl = "https://{$region}.fax.api.sinch.com";
-        }
+        $this->baseUrl = $region === 'global' ? 'https://fax.api.sinch.com' : "https://{$region}.fax.api.sinch.com";
 
         $this->httpClient = new Client([
             'base_uri' => $this->baseUrl,
@@ -79,7 +75,7 @@ class SinchFaxClient
             if (isset($params['to'])) {
                 $multipart[] = ['name' => 'to', 'contents' => $params['to']];
             }
-            
+
             if (isset($params['from'])) {
                 $multipart[] = ['name' => 'from', 'contents' => $params['from']];
             }
@@ -89,7 +85,7 @@ class SinchFaxClient
                     $multipart[] = [
                         'name' => 'file',
                         'contents' => fopen($file['path'], 'r'),
-                        'filename' => $file['filename'] ?? basename($file['path'])
+                        'filename' => $file['filename'] ?? basename((string) $file['path'])
                     ];
                 }
             }
@@ -158,7 +154,7 @@ class SinchFaxClient
     {
         try {
             $queryParams = [];
-            
+
             if (isset($filters['serviceId'])) {
                 $queryParams['serviceId'] = $filters['serviceId'];
             }

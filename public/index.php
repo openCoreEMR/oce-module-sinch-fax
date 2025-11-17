@@ -29,7 +29,7 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $to = $_POST['to'] ?? '';
     $patientId = $_POST['patient_id'] ?? null;
     $coverPageId = $_POST['cover_page_id'] ?? null;
-    
+
     if (empty($to)) {
         echo "Error: Recipient number is required";
         exit;
@@ -53,7 +53,7 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'user_id' => $_SESSION['authUserID'] ?? null,
             'coverPageId' => $coverPageId,
         ]);
-        
+
         echo "Fax sent successfully! ID: " . ($result['id'] ?? 'Unknown');
     } catch (\Exception $e) {
         echo "Error sending fax: " . $e->getMessage();
@@ -85,12 +85,15 @@ try {
 <html>
 <head>
     <title><?php echo xlt('Sinch Fax'); ?></title>
-    <link rel="stylesheet" href="<?php echo $GLOBALS['assets_static_relative']; ?>/bootstrap/dist/css/bootstrap.min.css">
+    <link
+        rel="stylesheet"
+        href="<?php echo $GLOBALS['assets_static_relative']; ?>/bootstrap/dist/css/bootstrap.min.css"
+    >
 </head>
 <body>
     <div class="container-fluid mt-3">
         <h2><?php echo xlt('Sinch Fax'); ?></h2>
-        
+
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" data-toggle="tab" href="#list"><?php echo xlt('Fax List'); ?></a>
@@ -115,7 +118,7 @@ try {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($faxes as $fax): ?>
+                        <?php foreach ($faxes as $fax) : ?>
                         <tr>
                             <td><?php echo text($fax['direction']); ?></td>
                             <td><?php echo text($fax['from_number']); ?></td>
@@ -131,17 +134,21 @@ try {
 
             <div id="send" class="tab-pane fade">
                 <h4><?php echo xlt('Send a Fax'); ?></h4>
-                <form method="post" enctype="multipart/form-data" action="?action=send&csrf_token=<?php echo attr(CsrfUtils::collectCsrfToken()); ?>">
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                    action="?action=send&csrf_token=<?php echo attr(CsrfUtils::collectCsrfToken()); ?>"
+                >
                     <div class="form-group">
                         <label for="to"><?php echo xlt('Recipient Fax Number'); ?></label>
                         <input type="text" class="form-control" id="to" name="to" placeholder="+1234567890" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="files"><?php echo xlt('Files to Fax'); ?></label>
                         <input type="file" class="form-control-file" id="files" name="files[]" multiple required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="patient_id"><?php echo xlt('Patient ID (optional)'); ?></label>
                         <input type="number" class="form-control" id="patient_id" name="patient_id">
