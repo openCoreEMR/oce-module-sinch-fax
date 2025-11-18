@@ -12,6 +12,7 @@
 
 $sessionAllowWrite = true;
 require_once(__DIR__ . "/../../../../globals.php");
+require_once(__DIR__ . "/../../../../library/classes/Document.class.php");
 
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Csrf\CsrfUtils;
@@ -29,6 +30,17 @@ $mimeType = $_REQUEST['mime'] ?? '';
 $docId = $_REQUEST['docid'] ?? '';
 $pid = $_REQUEST['pid'] ?? '';
 
+// Load document if available
+$document = null;
+$documentName = '';
+if ($isDocuments && !empty($docId)) {
+    $document = new \Document($docId);
+    $documentName = $document->get_name();
+    if (empty($pid)) {
+        $pid = $document->get_foreign_id();
+    }
+}
+
 // Handle form submission
 $error = '';
 $success = '';
@@ -45,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $faxService = new FaxService();
 
-            // Build the full file path if it's from documents
-            if ($isDocuments && !empty($filePath)) {
-                $fullPath = $GLOBALS['OE_SITE_DIR'] . '/documents/' . $filePath;
+            // Get the document and file path
+            if ($isDocuments && !empty($document)) {
+                $fullPath = $document->get_filesystem_filepath();
 
-                if (file_exists($fullPath)) {
+                if (!empty($fullPath) && file_exists($fullPath)) {
                     $options = [];
                     if (!empty($pid)) {
                         $options['patient_id'] = $pid;
@@ -64,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Close dialog after success
                     echo "<script>setTimeout(function() { dlgclose(); }, 2000);</script>";
                 } else {
-                    $error = xlt("Document file not found");
+                    $error = xlt("Document file not found") . " (Path: " . text($fullPath ?? 'null') . ")";
                 }
             } else {
                 $error = xlt("No document specified");
@@ -112,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label for="document_name"><?php echo xlt('Document'); ?>:</label>
-                <input type="text" class="form-control" id="document_name" value="<?php echo attr(basename((string) $filePath)); ?>" readonly>
+                <input type="text" class="form-control" id="document_name" value="<?php echo attr($documentName); ?>" readonly>
             </div>
 
             <?php if (!empty($pid)) : ?>
