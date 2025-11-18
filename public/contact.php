@@ -59,9 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Get the document and file path
             if ($isDocuments && !empty($document)) {
-                $fullPath = $document->get_filesystem_filepath();
+                // Build the filesystem path using public methods
+                $filepath = $document->get_url_filepath();
+                $from_all = explode("/", (string) $filepath);
+                $from_filename = array_pop($from_all);
+                $from_pathname_array = [];
+                for ($i = 0; $i < $document->get_path_depth(); $i++) {
+                    $from_pathname_array[] = array_pop($from_all);
+                }
+                $from_pathname_array = array_reverse($from_pathname_array);
+                $from_pathname = implode("/", $from_pathname_array);
+                $fullPath = $GLOBALS['OE_SITE_DIR'] . '/documents/' . $from_pathname . '/' . $from_filename;
 
-                if (!empty($fullPath) && file_exists($fullPath)) {
+                if (file_exists($fullPath)) {
                     $options = [];
                     if (!empty($pid)) {
                         $options['patient_id'] = $pid;
@@ -76,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Close dialog after success
                     echo "<script>setTimeout(function() { dlgclose(); }, 2000);</script>";
                 } else {
-                    $error = xlt("Document file not found") . " (Path: " . text($fullPath ?? 'null') . ")";
+                    $error = xlt("Document file not found") . " (Path: " . text($fullPath) . ")";
                 }
             } else {
                 $error = xlt("No document specified");
