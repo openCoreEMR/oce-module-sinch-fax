@@ -128,7 +128,7 @@ try {
 <!DOCTYPE html>
 <html>
 <head>
-    <title><?php echo xlt('Sinch Fax'); ?></title>
+    <title><?php echo xlt('OpenCoreEMR Sinch Fax'); ?></title>
     <link
         rel="stylesheet"
         href="<?php echo $GLOBALS['assets_static_relative']; ?>/bootstrap/dist/css/bootstrap.min.css"
@@ -136,7 +136,7 @@ try {
 </head>
 <body>
     <div class="container-fluid mt-3">
-        <h2><?php echo xlt('Sinch Fax'); ?></h2>
+        <h2><?php echo xlt('OpenCoreEMR Sinch Fax'); ?></h2>
 
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">

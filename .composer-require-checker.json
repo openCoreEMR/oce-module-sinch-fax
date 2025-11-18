@@ -15,6 +15,7 @@
     "iterable",
     "void",
     "object",
+    "OpenEMR\\Common\\Crypto\\CryptoGen",
     "OpenEMR\\Common\\Logging\\SystemLogger",
     "OpenEMR\\Common\\Twig\\TwigContainer",
     "OpenEMR\\Core\\Kernel",

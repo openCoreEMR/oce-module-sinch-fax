@@ -92,7 +92,7 @@ class Bootstrap
         global $GLOBALS;
 
         $service = $event->getGlobalsService();
-        $section = xlt("Sinch Fax");
+        $section = xlt("OpenCoreEMR Sinch Fax Module");
         $service->createSection($section, 'Fax');
 
         $settings = $this->globalsConfig->getGlobalSettingSectionConfiguration();
@@ -129,7 +129,7 @@ class Bootstrap
         $menuItem->requirement = 0;
         $menuItem->target = 'sinchfax';
         $menuItem->menu_id = 'sinchfax';
-        $menuItem->label = xlt('Sinch Fax');
+        $menuItem->label = xlt('OpenCoreEMR Sinch Fax');
         $menuItem->url = '/interface/modules/custom_modules/' . self::MODULE_NAME . '/public/index.php';
         $menuItem->icon = 'fa-fax';
         $menuItem->children = [];

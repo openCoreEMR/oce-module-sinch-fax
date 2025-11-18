@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="">
 <head>
-    <title><?php echo xlt('Send Fax via Sinch'); ?></title>
+    <title><?php echo xlt('Send Fax via OpenCoreEMR Sinch'); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php Header::setupHeader(); ?>
     <style>
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container-fluid">
-        <h4><?php echo xlt('Send Fax via Sinch'); ?></h4>
+        <h4><?php echo xlt('Send Fax via OpenCoreEMR Sinch'); ?></h4>
 
         <?php if (!empty($error)) : ?>
             <div class="alert alert-danger" role="alert">

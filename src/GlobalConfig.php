@@ -13,6 +13,7 @@
 namespace OpenCoreEMR\Modules\SinchFax;
 
 use OpenEMR\Services\Globals\GlobalSetting;
+use OpenEMR\Common\Crypto\CryptoGen;
 
 class GlobalConfig
 {
@@ -57,12 +58,24 @@ class GlobalConfig
 
     public function getApiSecret(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_API_SECRET] ?? '';
+        $value = $GLOBALS[self::CONFIG_OPTION_API_SECRET] ?? '';
+        if (!empty($value)) {
+            $cryptoGen = new CryptoGen();
+            $decrypted = $cryptoGen->decryptStandard($value);
+            return $decrypted !== false ? $decrypted : '';
+        }
+        return '';
     }
 
     public function getOAuthToken(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_OAUTH_TOKEN] ?? '';
+        $value = $GLOBALS[self::CONFIG_OPTION_OAUTH_TOKEN] ?? '';
+        if (!empty($value)) {
+            $cryptoGen = new CryptoGen();
+            $decrypted = $cryptoGen->decryptStandard($value);
+            return $decrypted !== false ? $decrypted : '';
+        }
+        return '';
     }
 
     public function getRegion(): string
@@ -72,7 +85,13 @@ class GlobalConfig
 
     public function getWebhookSecret(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_WEBHOOK_SECRET] ?? '';
+        $value = $GLOBALS[self::CONFIG_OPTION_WEBHOOK_SECRET] ?? '';
+        if (!empty($value)) {
+            $cryptoGen = new CryptoGen();
+            $decrypted = $cryptoGen->decryptStandard($value);
+            return $decrypted !== false ? $decrypted : '';
+        }
+        return '';
     }
 
     public function getFileStoragePath(): string
@@ -158,7 +177,7 @@ class GlobalConfig
             self::CONFIG_OPTION_API_SECRET => [
                 'title' => 'API Secret',
                 'description' => 'Your Sinch API secret (for Basic Auth)',
-                'type' => GlobalSetting::DATA_TYPE_TEXT,
+                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
                 'default' => ''
             ],
             self::CONFIG_OPTION_OAUTH_TOKEN => [
