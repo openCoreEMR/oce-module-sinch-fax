@@ -23,11 +23,12 @@ parameters:
 
     # Ignore missing OpenEMR classes during static analysis
     ignoreErrors:
-        - '#Function (xlt|text|attr|sqlStatement|sqlFetchArray) not found#'
+        - '#Function (xlt|xla|xlj|text|attr|sqlStatement|sqlFetchArray) not found#'
         - '#Class OpenEMR\\#'
         - '#unknown class OpenEMR\\#'
         - '#Instantiated class OpenEMR\\#'
         - '#invalid type OpenEMR\\#'
+        - '#class Document#'
         - '#Property .+ is never read, only written#'
         - '#Parameter \#1 \$json of function json_decode expects string, string\|false given#'
         - '#Parameter \#1 \$string of function base64_encode expects string, string\|false given#'

@@ -54,9 +54,19 @@ class FaxService
             $params['coverPageId'] = $options['coverPageId'];
         }
 
-        $params['callbackUrl'] = isset($options['callbackUrl'])
-            ? $options['callbackUrl']
-            : $this->getDefaultCallbackUrl();
+        // Only set callback URL if it's explicitly provided and is a valid public URL
+        if (isset($options['callbackUrl']) && !empty($options['callbackUrl'])) {
+            $params['callbackUrl'] = $options['callbackUrl'];
+        } elseif (!empty($GLOBALS['site_addr_oath'] ?? '')) {
+            $callbackUrl = $this->getDefaultCallbackUrl();
+            // Only set if it's not localhost/internal IP
+            if (!preg_match('/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./', $callbackUrl)) {
+                $params['callbackUrl'] = $callbackUrl;
+            } else {
+                $this->logger->debug("Skipping callback URL (localhost detected): {$callbackUrl}");
+            }
+        }
+        // If no valid callback URL, don't set it (Sinch will use default behavior)
 
         $params['maxRetries'] = $options['maxRetries'] ?? $this->config->getDefaultRetryCount();
 
@@ -188,8 +198,9 @@ class FaxService
         $sql = "INSERT INTO oce_sinch_faxes (
             sinch_fax_id, direction, from_number, to_number, status, num_pages,
             file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
+            error_code, error_message,
             sinch_create_time, sinch_completed_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $bind = [
             $faxData['id'] ?? '',
@@ -204,6 +215,8 @@ class FaxService
             $options['user_id'] ?? null,
             $faxData['callbackUrl'] ?? null,
             $faxData['coverPageId'] ?? null,
+            $faxData['errorCode'] ?? null,
+            $faxData['errorMessage'] ?? null,
             $faxData['createTime'] ?? null,
             $faxData['completedTime'] ?? null,
         ];
