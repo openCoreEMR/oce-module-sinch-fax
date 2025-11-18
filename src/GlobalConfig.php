@@ -28,6 +28,7 @@ class GlobalConfig
     public const CONFIG_OPTION_FILE_STORAGE_PATH = 'oce_sinch_fax_file_storage_path';
     public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
+    public const CONFIG_OPTION_ENABLE_STATUS_POLLING = 'oce_sinch_fax_enable_status_polling';
 
     public function isEnabled(): bool
     {
@@ -93,10 +94,21 @@ class GlobalConfig
         return (int)($GLOBALS[self::CONFIG_OPTION_DEFAULT_RETRY_COUNT] ?? 3);
     }
 
+    public function isStatusPollingEnabled(): bool
+    {
+        return (bool)($GLOBALS[self::CONFIG_OPTION_ENABLE_STATUS_POLLING] ?? false);
+    }
+
+    public function hasPublicCallbackUrl(): bool
+    {
+        // Check if we have a public (non-localhost) site address for callbacks
+        $siteAddr = $GLOBALS['site_addr_oath'] ?? '';
+        return !empty($siteAddr) && !preg_match('/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./', (string) $siteAddr);
+    }
+
     public function isConfigured(): bool
     {
         return !empty($this->getProjectId())
-            && !empty($this->getServiceId())
             && (
                 ($this->getAuthMethod() === 'basic' && !empty($this->getApiKey()) && !empty($this->getApiSecret()))
                 || ($this->getAuthMethod() === 'oauth' && !empty($this->getOAuthToken()))
@@ -123,7 +135,7 @@ class GlobalConfig
             ],
             self::CONFIG_OPTION_SERVICE_ID => [
                 'title' => 'Sinch Service ID',
-                'description' => 'Your Sinch service ID from the dashboard',
+                'description' => 'Your Sinch service ID (optional - only required for fax-to-email features)',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
@@ -140,13 +152,13 @@ class GlobalConfig
             self::CONFIG_OPTION_API_KEY => [
                 'title' => 'API Key',
                 'description' => 'Your Sinch API key (for Basic Auth)',
-                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
+                'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
             self::CONFIG_OPTION_API_SECRET => [
                 'title' => 'API Secret',
                 'description' => 'Your Sinch API secret (for Basic Auth)',
-                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
+                'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
             self::CONFIG_OPTION_OAUTH_TOKEN => [
@@ -192,6 +204,12 @@ class GlobalConfig
                 'description' => 'Number of times to retry sending a failed fax',
                 'type' => GlobalSetting::DATA_TYPE_NUMBER,
                 'default' => 3
+            ],
+            self::CONFIG_OPTION_ENABLE_STATUS_POLLING => [
+                'title' => 'Enable Status Polling',
+                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes (enabled automatically for localhost/testing)',
+                'type' => GlobalSetting::DATA_TYPE_BOOL,
+                'default' => false
             ]
         ];
     }

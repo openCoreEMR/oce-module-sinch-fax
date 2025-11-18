@@ -51,12 +51,12 @@ class SinchFaxClient
         ];
 
         if ($this->authMethod === 'basic') {
-            $apiKey = $this->config->getApiKey();
-            $apiSecret = $this->config->getApiSecret();
+            $apiKey = trim($this->config->getApiKey());
+            $apiSecret = trim($this->config->getApiSecret());
             $credentials = base64_encode("{$apiKey}:{$apiSecret}");
             $headers['Authorization'] = "Basic {$credentials}";
         } elseif ($this->authMethod === 'oauth') {
-            $token = $this->config->getOAuthToken();
+            $token = trim($this->config->getOAuthToken());
             $headers['Authorization'] = "Bearer {$token}";
         }
 
@@ -109,6 +109,24 @@ class SinchFaxClient
                 $multipart[] = ['name' => 'maxRetries', 'contents' => (string)$params['maxRetries']];
             }
 
+            // Log request details for debugging
+            $url = "{$this->baseUrl}/v3/projects/{$this->projectId}/faxes";
+            $apiKey = trim($this->config->getApiKey());
+            $apiSecret = trim($this->config->getApiSecret());
+            $maskedKey = substr($apiKey, 0, 4) . '...' . substr($apiKey, -4);
+            $maskedSecret = substr($apiSecret, 0, 4) . '...' . substr($apiSecret, -4);
+            $this->logger->debug("Sinch Fax API Request: POST {$url}");
+            $this->logger->debug("Auth method: {$this->authMethod}");
+            $this->logger->debug("API Key: {$maskedKey} (length: " . strlen($apiKey) . ")");
+            $this->logger->debug("API Secret: {$maskedSecret} (length: " . strlen($apiSecret) . ")");
+
+            // Show what the combined credentials look like before encoding
+            $combined = "{$apiKey}:{$apiSecret}";
+            $maskedCombined = substr($combined, 0, 10) . '...' . substr($combined, -10);
+            $this->logger->debug("Combined credentials: {$maskedCombined}");
+
+            $this->logger->debug("Request params: to={$params['to']}, files=" . count($params['files'] ?? []));
+
             $response = $this->httpClient->post(
                 "/v3/projects/{$this->projectId}/faxes",
                 [
@@ -117,9 +135,15 @@ class SinchFaxClient
             );
 
             $body = $response->getBody()->getContents();
+            $this->logger->debug("Sinch Fax API Response: " . $body);
             return json_decode($body, true);
         } catch (GuzzleException $e) {
+            // Log detailed error information
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
+            if (method_exists($e, 'getResponse') && $e->getResponse() !== null) {
+                $responseBody = $e->getResponse()->getBody()->getContents();
+                $this->logger->error('Sinch API Response Body: ' . $responseBody);
+            }
             throw new \Exception('Failed to send fax: ' . $e->getMessage());
         }
     }

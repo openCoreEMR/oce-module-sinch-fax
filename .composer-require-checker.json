@@ -32,7 +32,8 @@
     "Core",
     "standard",
     "curl",
-    "json"
+    "json",
+    "pcre"
   ],
   "scan-files": []
 }

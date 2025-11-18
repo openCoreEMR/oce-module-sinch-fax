@@ -16,16 +16,16 @@ use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Csrf\CsrfUtils;
 
-if (!CsrfUtils::verifyCsrfToken($_GET['csrf_token'] ?? '')) {
-    CsrfUtils::csrfNotVerified();
-}
-
 $config = new GlobalConfig();
 $faxService = new FaxService($config);
 
 $action = $_GET['action'] ?? 'list';
 
 if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verify CSRF token for POST requests
+    if (!CsrfUtils::verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        CsrfUtils::csrfNotVerified();
+    }
     $to = $_POST['to'] ?? '';
     $patientId = $_POST['patient_id'] ?? null;
     $coverPageId = $_POST['cover_page_id'] ?? null;
@@ -76,6 +76,31 @@ try {
     while ($row = sqlFetchArray($result)) {
         $faxes[] = $row;
     }
+
+    // Update status for any faxes that are still in progress
+    // Only poll if: callbacks are disabled (localhost) OR polling is explicitly enabled
+    $shouldPoll = !$config->hasPublicCallbackUrl() || $config->isStatusPollingEnabled();
+
+    if ($shouldPoll) {
+        foreach ($faxes as &$fax) {
+            if ($fax['status'] === 'IN_PROGRESS' && !empty($fax['sinch_fax_id'])) {
+                try {
+                    // Query Sinch API for latest status
+                    $updatedFax = $faxService->getFax($fax['sinch_fax_id']);
+                    if (isset($updatedFax['status']) && $updatedFax['status'] !== $fax['status']) {
+                        // Update database with new status
+                        $updateSql = "UPDATE oce_sinch_faxes SET status = ?, updated_at = NOW() WHERE id = ?";
+                        sqlStatement($updateSql, [$updatedFax['status'], $fax['id']]);
+                        // Update the array for display
+                        $fax['status'] = $updatedFax['status'];
+                    }
+                } catch (\Exception $e) {
+                    error_log("Error updating fax status for {$fax['sinch_fax_id']}: " . $e->getMessage());
+                }
+            }
+        }
+        unset($fax); // Break reference
+    }
 } catch (\Exception $e) {
     error_log("Error loading faxes: " . $e->getMessage());
 }
@@ -110,6 +135,7 @@ try {
                     <thead>
                         <tr>
                             <th><?php echo xlt('Direction'); ?></th>
+                            <th><?php echo xlt('Fax ID'); ?></th>
                             <th><?php echo xlt('From'); ?></th>
                             <th><?php echo xlt('To'); ?></th>
                             <th><?php echo xlt('Status'); ?></th>
@@ -121,6 +147,7 @@ try {
                         <?php foreach ($faxes as $fax) : ?>
                         <tr>
                             <td><?php echo text($fax['direction']); ?></td>
+                            <td><small><?php echo text($fax['sinch_fax_id'] ?? ''); ?></small></td>
                             <td><?php echo text($fax['from_number']); ?></td>
                             <td><?php echo text($fax['to_number']); ?></td>
                             <td><?php echo text($fax['status']); ?></td>
