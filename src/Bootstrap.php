@@ -51,21 +51,19 @@ class Bootstrap
     {
         $this->addGlobalSettings();
         $this->addMenuItems();
+        $this->addDocumentViewerIntegration();
 
         if (!$this->globalsConfig->isConfigured()) {
-            $this->logger->debug('Sinch Fax is not configured. Skipping event subscriptions.');
+            $this->logger->debug('Sinch Fax is not configured. Skipping additional event subscriptions.');
             return;
         }
 
         if (!$this->globalsConfig->isEnabled()) {
-            $this->logger->debug('Sinch Fax is disabled. Skipping event subscriptions.');
+            $this->logger->debug('Sinch Fax is disabled. Skipping additional event subscriptions.');
             return;
         }
 
         $this->logger->debug('Sinch Fax module is enabled and configured');
-
-        // Add document viewer integration
-        $this->addDocumentViewerIntegration();
     }
 
     public function addDocumentViewerIntegration(): void
@@ -146,7 +144,7 @@ class Bootstrap
         }
     }
 
-    public function renderDocumentFaxButton(PatientDocumentEvent $event): void
+    public function renderDocumentFaxButton(): void
     {
         ?>
         <a class="btn btn-success btn-send-msg" href="" onclick="return doSinchFax(event, file, mime)">
@@ -155,7 +153,7 @@ class Bootstrap
         <?php
     }
 
-    public function renderDocumentFaxJavaScript(PatientDocumentEvent $event): void
+    public function renderDocumentFaxJavaScript(): void
     {
         $moduleName = self::MODULE_NAME;
         ?>
