@@ -161,8 +161,11 @@ class Bootstrap
             e.preventDefault();
             let btnClose = <?php echo xlj("Cancel"); ?>;
             let title = <?php echo xlj("Send Fax via Sinch"); ?>;
-            let url = top.webroot_url + '/interface/modules/custom_modules/<?php echo attr($moduleName); ?>/public/contact.php?isDocuments=1&type=fax&file=' +
-                encodeURIComponent(filePath) + '&mime=' + encodeURIComponent(mime) + '&docid=' + encodeURIComponent(docid);
+            let url = top.webroot_url +
+                '/interface/modules/custom_modules/<?php echo attr($moduleName); ?>/public/contact.php' +
+                '?isDocuments=1&type=fax&file=' + encodeURIComponent(filePath) +
+                '&mime=' + encodeURIComponent(mime) +
+                '&docid=' + encodeURIComponent(docid);
             dlgopen(url, 'sinchfaxto', 'modal-md', 'full', '', title, {
                 buttons: [],
                 sizeHeight: 'full',

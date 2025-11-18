@@ -122,7 +122,8 @@ class GlobalConfig
     {
         // Check if we have a public (non-localhost) site address for callbacks
         $siteAddr = $GLOBALS['site_addr_oath'] ?? '';
-        return !empty($siteAddr) && !preg_match('/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./', (string) $siteAddr);
+        $localhostPattern = '/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./';
+        return !empty($siteAddr) && !preg_match($localhostPattern, (string) $siteAddr);
     }
 
     public function isConfigured(): bool
@@ -226,7 +227,8 @@ class GlobalConfig
             ],
             self::CONFIG_OPTION_ENABLE_STATUS_POLLING => [
                 'title' => 'Enable Status Polling',
-                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes (enabled automatically for localhost/testing)',
+                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes ' .
+                    '(enabled automatically for localhost/testing)',
                 'type' => GlobalSetting::DATA_TYPE_BOOL,
                 'default' => false
             ]

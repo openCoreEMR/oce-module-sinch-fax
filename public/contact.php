@@ -156,7 +156,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label for="document_name"><?php echo xlt('Document'); ?>:</label>
-                <input type="text" class="form-control" id="document_name" value="<?php echo attr($documentName); ?>" readonly>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="document_name"
+                    value="<?php echo attr($documentName); ?>"
+                    readonly>
             </div>
 
             <?php if (!empty($pid)) : ?>
@@ -167,7 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <div class="form-group">
-                <label for="recipient"><?php echo xlt('Recipient Fax Number'); ?>: <span class="text-danger">*</span></label>
+                <label for="recipient">
+                    <?php echo xlt('Recipient Fax Number'); ?>: <span class="text-danger">*</span>
+                </label>
                 <input type="text" class="form-control" id="recipient" name="recipient"
                        placeholder="<?php echo xla('Enter fax number (e.g., +1234567890)'); ?>"
                        required autocomplete="off">

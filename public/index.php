@@ -94,12 +94,15 @@ try {
                     if (isset($updatedFax['status'])) {
                         // Check if anything changed (status, pages, or error details)
                         $hasChanges = ($updatedFax['status'] !== $fax['status']) ||
-                                    (isset($updatedFax['numberOfPages']) && $updatedFax['numberOfPages'] != $fax['num_pages']) ||
-                                    (!empty($updatedFax['errorMessage']) && empty($fax['error_message']));
+                                    (isset($updatedFax['numberOfPages']) &&
+                                        $updatedFax['numberOfPages'] != $fax['num_pages']) ||
+                                    (!empty($updatedFax['errorMessage']) &&
+                                        empty($fax['error_message']));
 
                         if ($hasChanges) {
                             // Update database with new status and error fields
-                            $updateSql = "UPDATE oce_sinch_faxes SET status = ?, num_pages = ?, error_code = ?, error_message = ?, updated_at = NOW() WHERE id = ?";
+                            $updateSql = "UPDATE oce_sinch_faxes SET status = ?, num_pages = ?, " .
+                                "error_code = ?, error_message = ?, updated_at = NOW() WHERE id = ?";
                             sqlStatement($updateSql, [
                                 $updatedFax['status'],
                                 $updatedFax['numberOfPages'] ?? 0,
