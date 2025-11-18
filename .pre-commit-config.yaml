@@ -60,6 +60,14 @@ repos:
     - php
     pass_filenames: false
 
+  - id: phpcs
+    name: PHP_CodeSniffer
+    entry: composer run-script phpcs
+    language: system
+    types:
+    - php
+    pass_filenames: false
+
   - id: phpstan
     name: PHPStan Static Analysis
     entry: composer run-script phpstan

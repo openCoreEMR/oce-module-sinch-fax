@@ -15,20 +15,26 @@
     "iterable",
     "void",
     "object",
+    "OpenEMR\\Common\\Crypto\\CryptoGen",
     "OpenEMR\\Common\\Logging\\SystemLogger",
     "OpenEMR\\Common\\Twig\\TwigContainer",
     "OpenEMR\\Core\\Kernel",
     "OpenEMR\\Events\\Globals\\GlobalsInitializedEvent",
+    "OpenEMR\\Events\\PatientDocuments\\PatientDocumentEvent",
     "OpenEMR\\Menu\\MenuEvent",
     "OpenEMR\\Services\\Globals\\GlobalSetting",
     "sqlStatement",
-    "xlt"
+    "xlt",
+    "xla",
+    "xlj",
+    "attr"
   ],
   "php-core-extensions": [
     "Core",
     "standard",
     "curl",
-    "json"
+    "json",
+    "pcre"
   ],
   "scan-files": []
 }
