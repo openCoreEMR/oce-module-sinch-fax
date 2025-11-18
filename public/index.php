@@ -83,16 +83,35 @@ try {
 
     if ($shouldPoll) {
         foreach ($faxes as &$fax) {
-            if ($fax['status'] === 'IN_PROGRESS' && !empty($fax['sinch_fax_id'])) {
+            // Poll if status is IN_PROGRESS, or if status is FAILURE but we don't have error details yet
+            $shouldPollFax = ($fax['status'] === 'IN_PROGRESS') ||
+                           ($fax['status'] === 'FAILURE' && empty($fax['error_message']));
+
+            if ($shouldPollFax && !empty($fax['sinch_fax_id'])) {
                 try {
                     // Query Sinch API for latest status
                     $updatedFax = $faxService->getFax($fax['sinch_fax_id']);
-                    if (isset($updatedFax['status']) && $updatedFax['status'] !== $fax['status']) {
-                        // Update database with new status
-                        $updateSql = "UPDATE oce_sinch_faxes SET status = ?, updated_at = NOW() WHERE id = ?";
-                        sqlStatement($updateSql, [$updatedFax['status'], $fax['id']]);
-                        // Update the array for display
-                        $fax['status'] = $updatedFax['status'];
+                    if (isset($updatedFax['status'])) {
+                        // Check if anything changed (status, pages, or error details)
+                        $hasChanges = ($updatedFax['status'] !== $fax['status']) ||
+                                    (isset($updatedFax['numberOfPages']) && $updatedFax['numberOfPages'] != $fax['num_pages']) ||
+                                    (!empty($updatedFax['errorMessage']) && empty($fax['error_message']));
+
+                        if ($hasChanges) {
+                            // Update database with new status and error fields
+                            $updateSql = "UPDATE oce_sinch_faxes SET status = ?, num_pages = ?, error_code = ?, error_message = ?, updated_at = NOW() WHERE id = ?";
+                            sqlStatement($updateSql, [
+                                $updatedFax['status'],
+                                $updatedFax['numberOfPages'] ?? 0,
+                                $updatedFax['errorCode'] ?? null,
+                                $updatedFax['errorMessage'] ?? null,
+                                $fax['id']
+                            ]);
+                            // Update the array for display
+                            $fax['status'] = $updatedFax['status'];
+                            $fax['num_pages'] = $updatedFax['numberOfPages'] ?? 0;
+                            $fax['error_message'] = $updatedFax['errorMessage'] ?? '';
+                        }
                     }
                 } catch (\Exception $e) {
                     error_log("Error updating fax status for {$fax['sinch_fax_id']}: " . $e->getMessage());
@@ -140,6 +159,7 @@ try {
                             <th><?php echo xlt('To'); ?></th>
                             <th><?php echo xlt('Status'); ?></th>
                             <th><?php echo xlt('Pages'); ?></th>
+                            <th><?php echo xlt('Error'); ?></th>
                             <th><?php echo xlt('Date'); ?></th>
                         </tr>
                     </thead>
@@ -152,6 +172,7 @@ try {
                             <td><?php echo text($fax['to_number']); ?></td>
                             <td><?php echo text($fax['status']); ?></td>
                             <td><?php echo text($fax['num_pages']); ?></td>
+                            <td><small><?php echo text($fax['error_message'] ?? ''); ?></small></td>
                             <td><?php echo text($fax['created_at']); ?></td>
                         </tr>
                         <?php endforeach; ?>

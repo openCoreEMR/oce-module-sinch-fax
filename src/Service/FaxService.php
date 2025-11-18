@@ -198,8 +198,9 @@ class FaxService
         $sql = "INSERT INTO oce_sinch_faxes (
             sinch_fax_id, direction, from_number, to_number, status, num_pages,
             file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
+            error_code, error_message,
             sinch_create_time, sinch_completed_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $bind = [
             $faxData['id'] ?? '',
@@ -214,6 +215,8 @@ class FaxService
             $options['user_id'] ?? null,
             $faxData['callbackUrl'] ?? null,
             $faxData['coverPageId'] ?? null,
+            $faxData['errorCode'] ?? null,
+            $faxData['errorMessage'] ?? null,
             $faxData['createTime'] ?? null,
             $faxData['completedTime'] ?? null,
         ];

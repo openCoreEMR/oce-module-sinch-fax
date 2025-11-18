@@ -59,34 +59,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Get the document and file path
             if ($isDocuments && !empty($document)) {
-                // Build the filesystem path using public methods
-                $filepath = $document->get_url_filepath();
-                $from_all = explode("/", (string) $filepath);
-                $from_filename = array_pop($from_all);
-                $from_pathname_array = [];
-                for ($i = 0; $i < $document->get_path_depth(); $i++) {
-                    $from_pathname_array[] = array_pop($from_all);
-                }
-                $from_pathname_array = array_reverse($from_pathname_array);
-                $from_pathname = implode("/", $from_pathname_array);
-                $fullPath = $GLOBALS['OE_SITE_DIR'] . '/documents/' . $from_pathname . '/' . $from_filename;
+                try {
+                    // Get decrypted document data
+                    $data = $document->get_data();
 
-                if (file_exists($fullPath)) {
-                    $options = [];
-                    if (!empty($pid)) {
-                        $options['patient_id'] = $pid;
+                    if (empty($data)) {
+                        $error = xlt("Document has no content");
+                    } else {
+                        // Create a temporary file with the decrypted content
+                        $tempDir = sys_get_temp_dir();
+                        $tempFile = tempnam($tempDir, 'sinch_fax_');
+
+                        // Add appropriate extension based on MIME type
+                        $extension = '.pdf'; // Default to PDF
+                        $docMimeType = $document->get_mimetype();
+                        if ($docMimeType === 'image/tiff' || $docMimeType === 'image/tif') {
+                            $extension = '.tif';
+                        } elseif ($docMimeType === 'image/png') {
+                            $extension = '.png';
+                        } elseif ($docMimeType === 'image/jpeg' || $docMimeType === 'image/jpg') {
+                            $extension = '.jpg';
+                        }
+
+                        // Rename temp file with proper extension
+                        $tempFileWithExt = $tempFile . $extension;
+                        rename($tempFile, $tempFileWithExt);
+
+                        // Write decrypted data to temp file
+                        file_put_contents($tempFileWithExt, $data);
+
+                        $options = [];
+                        if (!empty($pid)) {
+                            $options['patient_id'] = $pid;
+                        }
+                        if (!empty($docId)) {
+                            $options['document_id'] = $docId;
+                        }
+
+                        // Send the fax
+                        $result = $faxService->sendFax($recipient, [$tempFileWithExt], $options);
+
+                        // Clean up temp file
+                        unlink($tempFileWithExt);
+
+                        $success = xlt("Fax sent successfully");
+
+                        // Close dialog after success
+                        echo "<script>setTimeout(function() { dlgclose(); }, 2000);</script>";
                     }
-                    if (!empty($docId)) {
-                        $options['document_id'] = $docId;
-                    }
-
-                    $result = $faxService->sendFax($recipient, [$fullPath], $options);
-                    $success = xlt("Fax sent successfully");
-
-                    // Close dialog after success
-                    echo "<script>setTimeout(function() { dlgclose(); }, 2000);</script>";
-                } else {
-                    $error = xlt("Document file not found") . " (Path: " . text($fullPath) . ")";
+                } catch (\Exception $e) {
+                    $error = xlt("Error retrieving document") . ": " . text($e->getMessage());
                 }
             } else {
                 $error = xlt("No document specified");
