@@ -24,11 +24,17 @@
     "OpenEMR\\Events\\PatientDocuments\\PatientDocumentEvent",
     "OpenEMR\\Menu\\MenuEvent",
     "OpenEMR\\Services\\Globals\\GlobalSetting",
+    "Symfony\\Component\\Console\\Command\\Command",
+    "Symfony\\Component\\Console\\Input\\InputInterface",
+    "Symfony\\Component\\Console\\Output\\OutputInterface",
+    "Symfony\\Component\\Console\\Style\\SymfonyStyle",
     "sqlStatement",
+    "sqlQuery",
     "xlt",
     "xla",
     "xlj",
-    "attr"
+    "attr",
+    "date"
   ],
   "php-core-extensions": [
     "Core",

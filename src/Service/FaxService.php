@@ -251,6 +251,94 @@ class FaxService
         sqlStatement($sql, $bind);
     }
 
+    /**
+     * Poll for new incoming faxes
+     *
+     * @return int Number of new faxes found
+     */
+    public function pollIncomingFaxes(): int
+    {
+        $lastPollTime = $this->config->getLastPollTime();
+        $filters = [
+            'direction' => 'INBOUND',
+            'pageSize' => 100,
+        ];
+
+        // If we have a last poll time, only get faxes created after that time
+        if ($lastPollTime) {
+            $filters['createTime'] = 'gt:' . $lastPollTime;
+        }
+
+        $response = $this->listFaxes($filters);
+        $faxes = $response['faxes'] ?? [];
+        $newFaxCount = 0;
+
+        foreach ($faxes as $faxData) {
+            $faxId = $faxData['id'] ?? null;
+            if (!$faxId) {
+                continue;
+            }
+
+            // Check if we already have this fax
+            $existingSql = "SELECT COUNT(*) as count FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+            $existingResult = sqlQuery($existingSql, [$faxId]);
+
+            if ($existingResult['count'] > 0) {
+                continue;
+            }
+
+            // Download the fax content if available
+            $filePath = null;
+            if (($faxData['hasFile'] ?? 'false') === 'true') {
+                try {
+                    $filePath = $this->downloadAndSaveFax($faxId);
+                } catch (\Exception $e) {
+                    $this->logger->error("Failed to download incoming fax {$faxId}: " . $e->getMessage());
+                }
+            }
+
+            // Save to database
+            $this->saveIncomingFaxToDatabase($faxData, $filePath);
+            $newFaxCount++;
+        }
+
+        // Update last poll time
+        $currentTime = date('Y-m-d\TH:i:s\Z');
+        $this->config->setLastPollTime($currentTime);
+
+        return $newFaxCount;
+    }
+
+    /**
+     * @param array<string, mixed> $faxData
+     * @param string|null $filePath
+     */
+    private function saveIncomingFaxToDatabase(array $faxData, ?string $filePath): void
+    {
+        $sql = "INSERT INTO oce_sinch_faxes (
+            sinch_fax_id, direction, from_number, to_number, status, num_pages,
+            file_path, mime_type, error_code, error_message,
+            sinch_create_time, sinch_completed_time, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+
+        $bind = [
+            $faxData['id'] ?? '',
+            'INBOUND',
+            $faxData['from'] ?? '',
+            $faxData['to'] ?? '',
+            $faxData['status'] ?? 'UNKNOWN',
+            $faxData['numberOfPages'] ?? 0,
+            $filePath,
+            'application/pdf',
+            $faxData['errorCode'] ?? null,
+            $faxData['errorMessage'] ?? null,
+            $faxData['createTime'] ?? null,
+            $faxData['completedTime'] ?? null,
+        ];
+
+        sqlStatement($sql, $bind);
+    }
+
     private function getDefaultCallbackUrl(): string
     {
         $webroot = $this->config->getWebroot();
