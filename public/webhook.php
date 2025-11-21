@@ -13,6 +13,14 @@
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Controller\WebhookController;
+use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
+
+// Check if webhooks are enabled
+$config = new GlobalConfig();
+if (!$config->isWebhooksEnabled()) {
+    http_response_code(404);
+    exit;
+}
 
 $controller = new WebhookController();
 $controller->handleWebhook();

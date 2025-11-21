@@ -38,35 +38,38 @@ class GlobalConfig
     public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
     public const CONFIG_OPTION_ENABLE_STATUS_POLLING = 'oce_sinch_fax_enable_status_polling';
+    public const CONFIG_OPTION_ENABLE_WEBHOOKS = 'oce_sinch_fax_enable_webhooks';
+    public const CONFIG_OPTION_ENABLE_INCOMING_POLLING = 'oce_sinch_fax_enable_incoming_polling';
+    public const CONFIG_OPTION_LAST_POLL_TIME = 'oce_sinch_fax_last_poll_time';
 
     public function isEnabled(): bool
     {
-        return (bool)$this->globals->get(self::CONFIG_OPTION_ENABLED, false);
+        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLED, false);
     }
 
     public function getProjectId(): string
     {
-        return $this->globals->get(self::CONFIG_OPTION_PROJECT_ID, '');
+        return $this->globals->getString(self::CONFIG_OPTION_PROJECT_ID, '');
     }
 
     public function getServiceId(): string
     {
-        return $this->globals->get(self::CONFIG_OPTION_SERVICE_ID, '');
+        return $this->globals->getString(self::CONFIG_OPTION_SERVICE_ID, '');
     }
 
     public function getAuthMethod(): string
     {
-        return $this->globals->get(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
+        return $this->globals->getString(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
     }
 
     public function getApiKey(): string
     {
-        return $this->globals->get(self::CONFIG_OPTION_API_KEY, '');
+        return $this->globals->getString(self::CONFIG_OPTION_API_KEY, '');
     }
 
     public function getApiSecret(): string
     {
-        $value = $this->globals->get(self::CONFIG_OPTION_API_SECRET, '');
+        $value = $this->globals->getString(self::CONFIG_OPTION_API_SECRET, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -77,7 +80,7 @@ class GlobalConfig
 
     public function getOAuthToken(): string
     {
-        $value = $this->globals->get(self::CONFIG_OPTION_OAUTH_TOKEN, '');
+        $value = $this->globals->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -88,12 +91,12 @@ class GlobalConfig
 
     public function getRegion(): string
     {
-        return $this->globals->get(self::CONFIG_OPTION_REGION, 'global');
+        return $this->globals->getString(self::CONFIG_OPTION_REGION, 'global');
     }
 
     public function getWebhookSecret(): string
     {
-        $value = $this->globals->get(self::CONFIG_OPTION_WEBHOOK_SECRET, '');
+        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_SECRET, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -104,49 +107,70 @@ class GlobalConfig
 
     public function getFileStoragePath(): string
     {
-        $path = $this->globals->get(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
+        $path = $this->globals->getString(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
         if (empty($path)) {
-            $path = $this->globals->get('OE_SITE_DIR', '') . '/documents/sinch_faxes';
+            $path = $this->globals->getString('OE_SITE_DIR', '') . '/documents/sinch_faxes';
         }
         return $path;
     }
 
     public function getAutoReceive(): bool
     {
-        return (bool)$this->globals->get(self::CONFIG_OPTION_AUTO_RECEIVE, true);
+        return $this->globals->getBoolean(self::CONFIG_OPTION_AUTO_RECEIVE, true);
     }
 
     public function getDefaultRetryCount(): int
     {
-        return (int)$this->globals->get(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
+        return $this->globals->getInt(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
     }
 
     public function isStatusPollingEnabled(): bool
     {
-        return (bool)$this->globals->get(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
+        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
+    }
+
+    public function isWebhooksEnabled(): bool
+    {
+        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_WEBHOOKS, true);
+    }
+
+    public function isIncomingPollingEnabled(): bool
+    {
+        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_INCOMING_POLLING, false);
+    }
+
+    public function getLastPollTime(): ?string
+    {
+        return $this->globals->get(self::CONFIG_OPTION_LAST_POLL_TIME);
+    }
+
+    public function setLastPollTime(string $time): void
+    {
+        $this->globals->set(self::CONFIG_OPTION_LAST_POLL_TIME, $time);
+        sqlQuery("UPDATE globals SET gl_value = ? WHERE gl_name = ?", [$time, self::CONFIG_OPTION_LAST_POLL_TIME]);
     }
 
     public function hasPublicCallbackUrl(): bool
     {
         // Check if we have a public (non-localhost) site address for callbacks
-        $siteAddr = $this->globals->get('site_addr_oath', '');
+        $siteAddr = $this->globals->getString('site_addr_oath', '');
         $localhostPattern = '/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./';
-        return !empty($siteAddr) && !preg_match($localhostPattern, (string) $siteAddr);
+        return !empty($siteAddr) && !preg_match($localhostPattern, $siteAddr);
     }
 
     public function getSiteAddrOath(): string
     {
-        return $this->globals->get('site_addr_oath', '');
+        return $this->globals->getString('site_addr_oath', '');
     }
 
     public function getWebroot(): string
     {
-        return $this->globals->get('webroot', '');
+        return $this->globals->getString('webroot', '');
     }
 
     public function getAssetsStaticRelative(): string
     {
-        return $this->globals->get('assets_static_relative', '');
+        return $this->globals->getString('assets_static_relative', '');
     }
 
     public function isConfigured(): bool
@@ -252,6 +276,20 @@ class GlobalConfig
                 'title' => 'Enable Status Polling',
                 'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes ' .
                     '(enabled automatically for localhost/testing)',
+                'type' => GlobalSetting::DATA_TYPE_BOOL,
+                'default' => false
+            ],
+            self::CONFIG_OPTION_ENABLE_WEBHOOKS => [
+                'title' => 'Enable Webhooks',
+                'description' => 'Enable webhook endpoint for receiving fax status updates and ' .
+                    'incoming faxes from Sinch',
+                'type' => GlobalSetting::DATA_TYPE_BOOL,
+                'default' => true
+            ],
+            self::CONFIG_OPTION_ENABLE_INCOMING_POLLING => [
+                'title' => 'Enable Incoming Fax Polling',
+                'description' => 'Poll Sinch API for new incoming faxes (useful when webhooks are ' .
+                    'disabled or unavailable)',
                 'type' => GlobalSetting::DATA_TYPE_BOOL,
                 'default' => false
             ]

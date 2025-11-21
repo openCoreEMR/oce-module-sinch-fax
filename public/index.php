@@ -61,6 +61,15 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// Poll for incoming faxes if enabled
+if ($config->isIncomingPollingEnabled()) {
+    try {
+        $faxService->pollIncomingFaxes();
+    } catch (\Exception $e) {
+        error_log("Error polling for incoming faxes: " . $e->getMessage());
+    }
+}
+
 $filters = [];
 if (isset($_GET['direction'])) {
     $filters['direction'] = $_GET['direction'];
@@ -140,6 +149,35 @@ try {
 <body>
     <div class="container-fluid mt-3">
         <h2><?php echo xlt('OpenCoreEMR Sinch Fax'); ?></h2>
+
+        <?php
+        // Display configuration status
+        $webhooksEnabled = $config->isWebhooksEnabled();
+        $pollingEnabled = $config->isIncomingPollingEnabled();
+        $lastPollTime = $config->getLastPollTime();
+        ?>
+        <div class="alert alert-info">
+            <strong><?php echo xlt('Configuration Status'); ?>:</strong>
+            <ul class="mb-0">
+                <li>
+                    <strong><?php echo xlt('Webhooks'); ?>:</strong>
+                    <?php if ($webhooksEnabled) : ?>
+                        <span class="badge badge-success"><?php echo xlt('Enabled'); ?></span>
+                    <?php else : ?>
+                        <span class="badge badge-warning"><?php echo xlt('Disabled'); ?></span>
+                    <?php endif; ?>
+                </li>
+                <?php if ($pollingEnabled) : ?>
+                <li>
+                    <strong><?php echo xlt('Incoming Fax Polling'); ?>:</strong>
+                    <span class="badge badge-success"><?php echo xlt('Enabled'); ?></span>
+                    <?php if ($lastPollTime) : ?>
+                        <br><small><?php echo xlt('Last poll'); ?>: <?php echo text($lastPollTime); ?></small>
+                    <?php endif; ?>
+                </li>
+                <?php endif; ?>
+            </ul>
+        </div>
 
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
