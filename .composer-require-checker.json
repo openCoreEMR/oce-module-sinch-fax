@@ -19,6 +19,7 @@
     "OpenEMR\\Common\\Logging\\SystemLogger",
     "OpenEMR\\Common\\Twig\\TwigContainer",
     "OpenEMR\\Core\\Kernel",
+    "OpenEMR\\Core\\OEGlobalsBag",
     "OpenEMR\\Events\\Globals\\GlobalsInitializedEvent",
     "OpenEMR\\Events\\PatientDocuments\\PatientDocumentEvent",
     "OpenEMR\\Menu\\MenuEvent",
