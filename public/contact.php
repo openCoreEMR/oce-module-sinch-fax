@@ -14,12 +14,15 @@ $sessionAllowWrite = true;
 require_once(__DIR__ . "/../../../../globals.php");
 require_once(__DIR__ . "/../../../../../library/classes/Document.class.php");
 
+use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Core\Header;
 
+$config = new GlobalConfig();
+
 // Check if module is enabled
-if (empty($GLOBALS['oce_sinch_fax_enabled'])) {
+if (!$config->isEnabled()) {
     die("<h3>" . xlt("Sinch Fax module is not enabled") . "</h3>");
 }
 

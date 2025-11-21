@@ -15,6 +15,7 @@ namespace OpenCoreEMR\Modules\SinchFax;
 use OpenEMR\Common\Logging\SystemLogger;
 use OpenEMR\Common\Twig\TwigContainer;
 use OpenEMR\Core\Kernel;
+use OpenEMR\Core\OEGlobalsBag;
 use OpenEMR\Events\Globals\GlobalsInitializedEvent;
 use OpenEMR\Events\PatientDocuments\PatientDocumentEvent;
 use OpenEMR\Menu\MenuEvent;
@@ -28,16 +29,19 @@ class Bootstrap
     private readonly GlobalConfig $globalsConfig;
     private readonly \Twig\Environment $twig;
     private readonly SystemLogger $logger;
+    private readonly OEGlobalsBag $globals;
 
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
-        ?Kernel $kernel = null
+        ?Kernel $kernel = null,
+        ?OEGlobalsBag $globals = null
     ) {
         if (!$kernel instanceof \OpenEMR\Core\Kernel) {
             $kernel = new Kernel();
         }
 
-        $this->globalsConfig = new GlobalConfig();
+        $this->globals = $globals ?? OEGlobalsBag::getInstance();
+        $this->globalsConfig = new GlobalConfig($this->globals);
 
         $templatePath = \dirname(__DIR__) . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR;
         $twig = new TwigContainer($templatePath, $kernel);
@@ -89,8 +93,6 @@ class Bootstrap
 
     public function addGlobalSettingsSection(GlobalsInitializedEvent $event): void
     {
-        global $GLOBALS;
-
         $service = $event->getGlobalsService();
         $section = xlt("OpenCoreEMR Sinch Fax Module");
         $service->createSection($section, 'Fax');
@@ -98,7 +100,7 @@ class Bootstrap
         $settings = $this->globalsConfig->getGlobalSettingSectionConfiguration();
 
         foreach ($settings as $key => $config) {
-            $value = $GLOBALS[$key] ?? $config['default'];
+            $value = $this->globals->get($key, $config['default']);
             $service->appendToSection(
                 $section,
                 $key,

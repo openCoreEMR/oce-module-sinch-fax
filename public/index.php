@@ -134,7 +134,7 @@ try {
     <title><?php echo xlt('OpenCoreEMR Sinch Fax'); ?></title>
     <link
         rel="stylesheet"
-        href="<?php echo $GLOBALS['assets_static_relative']; ?>/bootstrap/dist/css/bootstrap.min.css"
+        href="<?php echo $config->getAssetsStaticRelative(); ?>/bootstrap/dist/css/bootstrap.min.css"
     >
 </head>
 <body>
@@ -211,7 +211,7 @@ try {
         </div>
     </div>
 
-    <script src="<?php echo $GLOBALS['assets_static_relative']; ?>/jquery/dist/jquery.min.js"></script>
-    <script src="<?php echo $GLOBALS['assets_static_relative']; ?>/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo $config->getAssetsStaticRelative(); ?>/jquery/dist/jquery.min.js"></script>
+    <script src="<?php echo $config->getAssetsStaticRelative(); ?>/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -57,7 +57,7 @@ class FaxService
         // Only set callback URL if it's explicitly provided and is a valid public URL
         if (isset($options['callbackUrl']) && !empty($options['callbackUrl'])) {
             $params['callbackUrl'] = $options['callbackUrl'];
-        } elseif (!empty($GLOBALS['site_addr_oath'] ?? '')) {
+        } elseif (!empty($this->config->getSiteAddrOath())) {
             $callbackUrl = $this->getDefaultCallbackUrl();
             // Only set if it's not localhost/internal IP
             if (!preg_match('/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./', $callbackUrl)) {
@@ -253,11 +253,9 @@ class FaxService
 
     private function getDefaultCallbackUrl(): string
     {
-        global $GLOBALS;
-        $webroot = $GLOBALS['webroot'] ?? '';
-        $site = $_SESSION['site_id'] ?? 'default';
+        $webroot = $this->config->getWebroot();
 
-        return $GLOBALS['site_addr_oath'] . $webroot .
+        return $this->config->getSiteAddrOath() . $webroot .
                '/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php';
     }
 }

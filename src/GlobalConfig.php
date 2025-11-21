@@ -12,11 +12,19 @@
 
 namespace OpenCoreEMR\Modules\SinchFax;
 
+use OpenEMR\Core\OEGlobalsBag;
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Common\Crypto\CryptoGen;
 
 class GlobalConfig
 {
+    private readonly OEGlobalsBag $globals;
+
+    public function __construct(?OEGlobalsBag $globals = null)
+    {
+        $this->globals = $globals ?? OEGlobalsBag::getInstance();
+    }
+
     public const CONFIG_OPTION_ENABLED = 'oce_sinch_fax_enabled';
     public const CONFIG_OPTION_PROJECT_ID = 'oce_sinch_fax_project_id';
     public const CONFIG_OPTION_SERVICE_ID = 'oce_sinch_fax_service_id';
@@ -33,32 +41,32 @@ class GlobalConfig
 
     public function isEnabled(): bool
     {
-        return (bool)($GLOBALS[self::CONFIG_OPTION_ENABLED] ?? false);
+        return (bool)$this->globals->get(self::CONFIG_OPTION_ENABLED, false);
     }
 
     public function getProjectId(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_PROJECT_ID] ?? '';
+        return $this->globals->get(self::CONFIG_OPTION_PROJECT_ID, '');
     }
 
     public function getServiceId(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_SERVICE_ID] ?? '';
+        return $this->globals->get(self::CONFIG_OPTION_SERVICE_ID, '');
     }
 
     public function getAuthMethod(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_AUTH_METHOD] ?? 'basic';
+        return $this->globals->get(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
     }
 
     public function getApiKey(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_API_KEY] ?? '';
+        return $this->globals->get(self::CONFIG_OPTION_API_KEY, '');
     }
 
     public function getApiSecret(): string
     {
-        $value = $GLOBALS[self::CONFIG_OPTION_API_SECRET] ?? '';
+        $value = $this->globals->get(self::CONFIG_OPTION_API_SECRET, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -69,7 +77,7 @@ class GlobalConfig
 
     public function getOAuthToken(): string
     {
-        $value = $GLOBALS[self::CONFIG_OPTION_OAUTH_TOKEN] ?? '';
+        $value = $this->globals->get(self::CONFIG_OPTION_OAUTH_TOKEN, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -80,12 +88,12 @@ class GlobalConfig
 
     public function getRegion(): string
     {
-        return $GLOBALS[self::CONFIG_OPTION_REGION] ?? 'global';
+        return $this->globals->get(self::CONFIG_OPTION_REGION, 'global');
     }
 
     public function getWebhookSecret(): string
     {
-        $value = $GLOBALS[self::CONFIG_OPTION_WEBHOOK_SECRET] ?? '';
+        $value = $this->globals->get(self::CONFIG_OPTION_WEBHOOK_SECRET, '');
         if (!empty($value)) {
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
@@ -96,34 +104,49 @@ class GlobalConfig
 
     public function getFileStoragePath(): string
     {
-        $path = $GLOBALS[self::CONFIG_OPTION_FILE_STORAGE_PATH] ?? '';
+        $path = $this->globals->get(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
         if (empty($path)) {
-            $path = $GLOBALS['OE_SITE_DIR'] . '/documents/sinch_faxes';
+            $path = $this->globals->get('OE_SITE_DIR', '') . '/documents/sinch_faxes';
         }
         return $path;
     }
 
     public function getAutoReceive(): bool
     {
-        return (bool)($GLOBALS[self::CONFIG_OPTION_AUTO_RECEIVE] ?? true);
+        return (bool)$this->globals->get(self::CONFIG_OPTION_AUTO_RECEIVE, true);
     }
 
     public function getDefaultRetryCount(): int
     {
-        return (int)($GLOBALS[self::CONFIG_OPTION_DEFAULT_RETRY_COUNT] ?? 3);
+        return (int)$this->globals->get(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
     }
 
     public function isStatusPollingEnabled(): bool
     {
-        return (bool)($GLOBALS[self::CONFIG_OPTION_ENABLE_STATUS_POLLING] ?? false);
+        return (bool)$this->globals->get(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
     }
 
     public function hasPublicCallbackUrl(): bool
     {
         // Check if we have a public (non-localhost) site address for callbacks
-        $siteAddr = $GLOBALS['site_addr_oath'] ?? '';
+        $siteAddr = $this->globals->get('site_addr_oath', '');
         $localhostPattern = '/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./';
         return !empty($siteAddr) && !preg_match($localhostPattern, (string) $siteAddr);
+    }
+
+    public function getSiteAddrOath(): string
+    {
+        return $this->globals->get('site_addr_oath', '');
+    }
+
+    public function getWebroot(): string
+    {
+        return $this->globals->get('webroot', '');
+    }
+
+    public function getAssetsStaticRelative(): string
+    {
+        return $this->globals->get('assets_static_relative', '');
     }
 
     public function isConfigured(): bool
