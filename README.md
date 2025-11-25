@@ -47,7 +47,7 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
 1. Navigate to **Administration > Globals > Sinch Fax**
 2. Configure the following settings:
    - **Sinch Project ID**: Your Sinch project ID
-   - **Sinch Service ID**: Your Sinch service ID
+   - **Sinch Service ID**: Your Sinch service ID (optional)
    - **API Authentication**: Choose Basic Auth or OAuth2
    - **API Key/Secret**: Your Sinch API credentials
    - **API Region**: Select your preferred region (or leave as 'global')

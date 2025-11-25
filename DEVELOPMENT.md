@@ -213,12 +213,11 @@ This emulates all aspects of a real fax without billing.
 2. Fax queue management
 3. Retry logic for failed faxes
 4. Document viewer integration
-5. Email-to-fax gateway
-6. Enhanced patient chart integration
-7. Fax templates
-8. Scheduled fax sending
-9. Fax broadcast (bulk sending)
-10. Advanced reporting and analytics
+5. Enhanced patient chart integration
+6. Fax templates
+7. Scheduled fax sending
+8. Fax broadcast (bulk sending)
+9. Advanced reporting and analytics
 
 ## Troubleshooting
 
