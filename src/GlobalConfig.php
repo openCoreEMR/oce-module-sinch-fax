@@ -202,7 +202,7 @@ class GlobalConfig
             ],
             self::CONFIG_OPTION_SERVICE_ID => [
                 'title' => 'Sinch Service ID',
-                'description' => 'Your Sinch service ID (optional - only required for fax-to-email features)',
+                'description' => 'Your Sinch service ID (optional)',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
