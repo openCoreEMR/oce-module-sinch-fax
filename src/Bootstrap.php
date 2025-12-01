@@ -15,7 +15,6 @@ namespace OpenCoreEMR\Modules\SinchFax;
 use OpenEMR\Common\Logging\SystemLogger;
 use OpenEMR\Common\Twig\TwigContainer;
 use OpenEMR\Core\Kernel;
-use OpenEMR\Core\OEGlobalsBag;
 use OpenEMR\Events\Globals\GlobalsInitializedEvent;
 use OpenEMR\Events\PatientDocuments\PatientDocumentEvent;
 use OpenEMR\Menu\MenuEvent;
@@ -29,22 +28,16 @@ class Bootstrap
     private readonly GlobalConfig $globalsConfig;
     private readonly \Twig\Environment $twig;
     private readonly SystemLogger $logger;
-    private readonly OEGlobalsBag $globals;
 
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
-        ?Kernel $kernel = null,
-        ?OEGlobalsBag $globals = null
+        private readonly Kernel $kernel = new Kernel(),
+        private readonly GlobalsAccessor $globals = new GlobalsAccessor()
     ) {
-        if (!$kernel instanceof \OpenEMR\Core\Kernel) {
-            $kernel = new Kernel();
-        }
-
-        $this->globals = $globals ?? OEGlobalsBag::getInstance();
         $this->globalsConfig = new GlobalConfig($this->globals);
 
         $templatePath = \dirname(__DIR__) . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR;
-        $twig = new TwigContainer($templatePath, $kernel);
+        $twig = new TwigContainer($templatePath, $this->kernel);
         $this->twig = $twig->getTwig();
 
         $this->logger = new SystemLogger();

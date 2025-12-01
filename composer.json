@@ -28,6 +28,7 @@
   "require": {
     "php": ">=8.2",
     "ext-curl": "*",
+    "ext-filter": "*",
     "ext-json": "*",
     "guzzlehttp/guzzle": "^7.0",
     "openemr/oe-module-installer-plugin": "^0.1.5",

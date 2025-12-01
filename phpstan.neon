@@ -24,7 +24,6 @@ parameters:
     # Ignore missing OpenEMR classes during static analysis
     ignoreErrors:
         - '#Function (xlt|xla|xlj|text|attr|sqlStatement|sqlQuery|sqlFetchArray) not found#'
-        - '#Class OpenEMR\\#'
         - '#unknown class OpenEMR\\#'
         - '#Instantiated class OpenEMR\\#'
         - '#invalid type OpenEMR\\#'
