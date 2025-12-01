@@ -15,6 +15,7 @@ require_once __DIR__ . '/../../../../globals.php';
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Csrf\CsrfUtils;
+use OpenEMR\Common\Database\QueryUtils;
 
 $config = new GlobalConfig();
 $faxService = new FaxService($config);
@@ -81,10 +82,7 @@ if (isset($_GET['status'])) {
 $faxes = [];
 try {
     $sql = "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50";
-    $result = sqlStatement($sql);
-    while ($row = sqlFetchArray($result)) {
-        $faxes[] = $row;
-    }
+    $faxes = QueryUtils::fetchRecords($sql);
 
     // Update status for any faxes that are still in progress
     // Only poll if: callbacks are disabled (localhost) OR polling is explicitly enabled
@@ -112,7 +110,7 @@ try {
                             // Update database with new status and error fields
                             $updateSql = "UPDATE oce_sinch_faxes SET status = ?, num_pages = ?, " .
                                 "error_code = ?, error_message = ?, updated_at = NOW() WHERE id = ?";
-                            sqlStatement($updateSql, [
+                            QueryUtils::sqlStatementThrowException($updateSql, [
                                 $updatedFax['status'],
                                 $updatedFax['numberOfPages'] ?? 0,
                                 $updatedFax['errorCode'] ?? null,
