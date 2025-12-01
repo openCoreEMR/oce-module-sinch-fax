@@ -15,6 +15,7 @@ namespace OpenCoreEMR\Modules\SinchFax;
 use OpenEMR\Core\OEGlobalsBag;
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Common\Crypto\CryptoGen;
+use OpenEMR\Common\Database\QueryUtils;
 
 class GlobalConfig
 {
@@ -147,7 +148,10 @@ class GlobalConfig
     public function setLastPollTime(string $time): void
     {
         $this->globals->set(self::CONFIG_OPTION_LAST_POLL_TIME, $time);
-        sqlQuery("UPDATE globals SET gl_value = ? WHERE gl_name = ?", [$time, self::CONFIG_OPTION_LAST_POLL_TIME]);
+        QueryUtils::sqlStatementThrowException(
+            "UPDATE globals SET gl_value = ? WHERE gl_name = ?",
+            [$time, self::CONFIG_OPTION_LAST_POLL_TIME]
+        );
     }
 
     public function hasPublicCallbackUrl(): bool

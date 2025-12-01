@@ -16,6 +16,7 @@
     "void",
     "object",
     "OpenEMR\\Common\\Crypto\\CryptoGen",
+    "OpenEMR\\Common\\Database\\QueryUtils",
     "OpenEMR\\Common\\Logging\\SystemLogger",
     "OpenEMR\\Common\\Twig\\TwigContainer",
     "OpenEMR\\Core\\Kernel",

@@ -14,6 +14,7 @@ namespace OpenCoreEMR\Modules\SinchFax\Service;
 
 use OpenCoreEMR\Modules\SinchFax\Client\SinchFaxClient;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
+use OpenEMR\Common\Database\QueryUtils;
 use OpenEMR\Common\Logging\SystemLogger;
 
 class FaxService
@@ -221,7 +222,7 @@ class FaxService
             $faxData['completedTime'] ?? null,
         ];
 
-        sqlStatement($sql, $bind);
+        QueryUtils::sqlStatementThrowException($sql, $bind);
     }
 
     /**
@@ -248,7 +249,7 @@ class FaxService
             $faxId,
         ];
 
-        sqlStatement($sql, $bind);
+        QueryUtils::sqlStatementThrowException($sql, $bind);
     }
 
     /**
@@ -281,7 +282,7 @@ class FaxService
 
             // Check if we already have this fax
             $existingSql = "SELECT COUNT(*) as count FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
-            $existingResult = sqlQuery($existingSql, [$faxId]);
+            $existingResult = QueryUtils::querySingleRow($existingSql, [$faxId]);
 
             if ($existingResult['count'] > 0) {
                 continue;
@@ -336,7 +337,7 @@ class FaxService
             $faxData['completedTime'] ?? null,
         ];
 
-        sqlStatement($sql, $bind);
+        QueryUtils::sqlStatementThrowException($sql, $bind);
     }
 
     private function getDefaultCallbackUrl(): string
