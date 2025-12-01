@@ -12,18 +12,15 @@
 
 namespace OpenCoreEMR\Modules\SinchFax;
 
-use OpenEMR\Core\OEGlobalsBag;
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Common\Crypto\CryptoGen;
 use OpenEMR\Common\Database\QueryUtils;
 
 class GlobalConfig
 {
-    private readonly OEGlobalsBag $globals;
-
-    public function __construct(?OEGlobalsBag $globals = null)
-    {
-        $this->globals = $globals ?? OEGlobalsBag::getInstance();
+    public function __construct(
+        private readonly GlobalsAccessor $globals = new GlobalsAccessor()
+    ) {
     }
 
     public const CONFIG_OPTION_ENABLED = 'oce_sinch_fax_enabled';
