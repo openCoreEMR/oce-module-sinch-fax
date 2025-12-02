@@ -51,7 +51,10 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $files = [];
     foreach ($_FILES['files']['tmp_name'] as $key => $tmpName) {
         if ($_FILES['files']['error'][$key] === UPLOAD_ERR_OK) {
-            $files[] = $tmpName;
+            $files[] = [
+                'path' => $tmpName,
+                'filename' => $_FILES['files']['name'][$key]
+            ];
         }
     }
 

@@ -105,10 +105,26 @@ class SinchFaxClient
                         $this->logger->warning("First 4 bytes: " . bin2hex(substr($fileContents, 0, 4)));
                     }
 
+                    // Determine MIME type based on file extension
+                    $filename = $file['filename'] ?? basename((string) $file['path']);
+                    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    $mimeType = match ($extension) {
+                        'pdf' => 'application/pdf',
+                        'tif', 'tiff' => 'image/tiff',
+                        'png' => 'image/png',
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        default => 'application/pdf', // Default to PDF
+                    };
+
+                    $this->logger->debug("File MIME type: {$mimeType} (extension: {$extension})");
+
                     $multipart[] = [
                         'name' => 'file',
                         'contents' => $fileContents,
-                        'filename' => $file['filename'] ?? basename((string) $file['path'])
+                        'filename' => $filename,
+                        'headers' => [
+                            'Content-Type' => $mimeType
+                        ]
                     ];
                 }
             }

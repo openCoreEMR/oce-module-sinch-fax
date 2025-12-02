@@ -34,7 +34,7 @@ class FaxService
      * Send a fax
      *
      * @param string $to Recipient fax number
-     * @param array<int, string> $files Array of file paths to send
+     * @param array<int, string|array{path: string, filename?: string}> $files Array of file paths or file info arrays
      * @param array<string, mixed> $options Additional options
      * @return array<string, mixed> Fax information
      */
@@ -44,7 +44,13 @@ class FaxService
 
         $params = [
             'to' => $to,
-            'files' => array_map(fn($file) => ['path' => $file], $files),
+            'files' => array_map(function ($file) {
+                // Handle both old format (string path) and new format (array with path and filename)
+                if (is_array($file)) {
+                    return $file;
+                }
+                return ['path' => $file];
+            }, $files),
         ];
 
         if (isset($options['from'])) {
