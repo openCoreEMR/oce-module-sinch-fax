@@ -113,6 +113,8 @@ class SinchFaxClient
                         'tif', 'tiff' => 'image/tiff',
                         'png' => 'image/png',
                         'jpg', 'jpeg' => 'image/jpeg',
+                        'doc' => 'application/msword',
+                        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                         default => 'application/pdf', // Default to PDF
                     };
 
