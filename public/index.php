@@ -224,8 +224,10 @@ try {
                 <form
                     method="post"
                     enctype="multipart/form-data"
-                    action="?action=send&csrf_token=<?php echo attr(CsrfUtils::collectCsrfToken()); ?>"
+                    action="?action=send"
                 >
+                    <input type="hidden" name="csrf_token" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>">
+
                     <div class="form-group">
                         <label for="to"><?php echo xlt('Recipient Fax Number'); ?></label>
                         <input type="text" class="form-control" id="to" name="to" placeholder="+1234567890" required>
