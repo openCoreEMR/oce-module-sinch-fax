@@ -85,10 +85,46 @@ class SinchFaxClient
 
             if (isset($params['files'])) {
                 foreach ($params['files'] as $file) {
+                    // Read file contents into memory to ensure it's not encrypted/modified
+                    $fileContents = file_get_contents($file['path']);
+                    if ($fileContents === false) {
+                        throw new \Exception('Failed to read file: ' . $file['path']);
+                    }
+
+                    // Debug: Check file header to verify it's not encrypted
+                    $fileHeader = substr($fileContents, 0, 20);
+                    $this->logger->debug("File header (hex): " . bin2hex($fileHeader));
+                    $this->logger->debug("File header (text): " . substr($fileContents, 0, 10));
+                    $this->logger->debug("File size: " . strlen($fileContents) . " bytes");
+
+                    // Check if it's a valid PDF
+                    if (str_starts_with($fileContents, '%PDF')) {
+                        $this->logger->debug("Valid PDF header detected");
+                    } else {
+                        $this->logger->warning("File does not have PDF header - might be encrypted or wrong format!");
+                        $this->logger->warning("First 4 bytes: " . bin2hex(substr($fileContents, 0, 4)));
+                    }
+
+                    // Determine MIME type based on file extension
+                    $filename = $file['filename'] ?? basename((string) $file['path']);
+                    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                    $mimeType = match ($extension) {
+                        'pdf' => 'application/pdf',
+                        'tif', 'tiff' => 'image/tiff',
+                        'png' => 'image/png',
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        default => 'application/pdf', // Default to PDF
+                    };
+
+                    $this->logger->debug("File MIME type: {$mimeType} (extension: {$extension})");
+
                     $multipart[] = [
                         'name' => 'file',
-                        'contents' => fopen($file['path'], 'r'),
-                        'filename' => $file['filename'] ?? basename((string) $file['path'])
+                        'contents' => $fileContents,
+                        'filename' => $filename,
+                        'headers' => [
+                            'Content-Type' => $mimeType
+                        ]
                     ];
                 }
             }
