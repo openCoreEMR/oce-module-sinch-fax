@@ -20,6 +20,11 @@ use OpenEMR\Common\Database\QueryUtils;
 $config = new GlobalConfig();
 $faxService = new FaxService($config);
 
+// Initialize session for flash messages if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $action = $_GET['action'] ?? 'list';
 
 if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -32,12 +37,14 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $coverPageId = $_POST['cover_page_id'] ?? null;
 
     if (empty($to)) {
-        echo "Error: Recipient number is required";
+        $_SESSION['fax_error'] = "Recipient number is required";
+        header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 
     if (!isset($_FILES['files']) || empty($_FILES['files']['name'][0])) {
-        echo "Error: At least one file is required";
+        $_SESSION['fax_error'] = "At least one file is required";
+        header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
 
@@ -55,11 +62,15 @@ if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'coverPageId' => $coverPageId,
         ]);
 
-        echo "Fax sent successfully! ID: " . ($result['id'] ?? 'Unknown');
+        // Store success message and redirect to list view
+        $_SESSION['fax_success'] = "Fax sent successfully! ID: " . ($result['id'] ?? 'Unknown');
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
     } catch (\Exception $e) {
-        echo "Error sending fax: " . $e->getMessage();
+        $_SESSION['fax_error'] = "Error sending fax: " . $e->getMessage();
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
     }
-    exit;
 }
 
 // Poll for incoming faxes if enabled
@@ -149,6 +160,22 @@ try {
         <h2><?php echo xlt('OpenCoreEMR Sinch Fax'); ?></h2>
 
         <?php
+        // Display flash messages
+        if (isset($_SESSION['fax_success'])) {
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">' .
+                 text($_SESSION['fax_success']) .
+                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' .
+                 '<span aria-hidden="true">&times;</span></button></div>';
+            unset($_SESSION['fax_success']);
+        }
+        if (isset($_SESSION['fax_error'])) {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">' .
+                 text($_SESSION['fax_error']) .
+                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' .
+                 '<span aria-hidden="true">&times;</span></button></div>';
+            unset($_SESSION['fax_error']);
+        }
+
         // Display configuration status
         $webhooksEnabled = $config->isWebhooksEnabled();
         $pollingEnabled = $config->isIncomingPollingEnabled();
@@ -224,8 +251,10 @@ try {
                 <form
                     method="post"
                     enctype="multipart/form-data"
-                    action="?action=send&csrf_token=<?php echo attr(CsrfUtils::collectCsrfToken()); ?>"
+                    action="?action=send"
                 >
+                    <input type="hidden" name="csrf_token" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>">
+
                     <div class="form-group">
                         <label for="to"><?php echo xlt('Recipient Fax Number'); ?></label>
                         <input type="text" class="form-control" id="to" name="to" placeholder="+1234567890" required>
