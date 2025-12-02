@@ -87,7 +87,7 @@ class SinchFaxClient
                 foreach ($params['files'] as $file) {
                     $multipart[] = [
                         'name' => 'file',
-                        'contents' => fopen($file['path'], 'r'),
+                        'contents' => fopen($file['path'], 'rb'),
                         'filename' => $file['filename'] ?? basename((string) $file['path'])
                     ];
                 }
