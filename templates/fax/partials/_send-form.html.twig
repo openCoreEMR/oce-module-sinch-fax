@@ -1,0 +1,20 @@
+<form method="post" enctype="multipart/form-data" action="?action=send">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token|attr }}">
+
+    <div class="form-group">
+        <label for="to">{{ 'Recipient Fax Number'|xlt }}</label>
+        <input type="text" class="form-control" id="to" name="to" placeholder="+1234567890" required>
+    </div>
+
+    <div class="form-group">
+        <label for="files">{{ 'Files to Fax'|xlt }}</label>
+        <input type="file" class="form-control-file" id="files" name="files[]" multiple required>
+    </div>
+
+    <div class="form-group">
+        <label for="patient_id">{{ 'Patient ID (optional)'|xlt }}</label>
+        <input type="number" class="form-control" id="patient_id" name="patient_id">
+    </div>
+
+    <button type="submit" class="btn btn-primary">{{ 'Send Fax'|xlt }}</button>
+</form>

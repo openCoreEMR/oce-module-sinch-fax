@@ -14,13 +14,18 @@ require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Controller\WebhookController;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
+use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
+use Symfony\Component\HttpFoundation\Response;
 
 // Check if webhooks are enabled
-$config = new GlobalConfig();
+$globalsAccessor = new GlobalsAccessor();
+$config = new GlobalConfig($globalsAccessor);
 if (!$config->isWebhooksEnabled()) {
-    http_response_code(404);
-    exit;
+    $response = new Response('Not Found', Response::HTTP_NOT_FOUND);
+    $response->send();
+    return;
 }
 
-$controller = new WebhookController();
-$controller->handleWebhook();
+$controller = new WebhookController($globalsAccessor);
+$response = $controller->handleWebhook();
+$response->send();

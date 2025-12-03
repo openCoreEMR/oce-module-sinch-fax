@@ -12,9 +12,13 @@
 
 namespace OpenCoreEMR\Modules\SinchFax\Controller;
 
+use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Logging\SystemLogger;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class WebhookController
 {
@@ -22,9 +26,10 @@ class WebhookController
     private readonly GlobalConfig $config;
     private readonly SystemLogger $logger;
 
-    public function __construct()
+    public function __construct(?GlobalsAccessor $globalsAccessor = null)
     {
-        $this->config = new GlobalConfig();
+        $globalsAccessor = $globalsAccessor ?? new GlobalsAccessor();
+        $this->config = new GlobalConfig($globalsAccessor);
         $this->faxService = new FaxService($this->config);
         $this->logger = new SystemLogger();
     }
@@ -32,36 +37,31 @@ class WebhookController
     /**
      * Handle incoming webhook
      */
-    public function handleWebhook(): void
+    public function handleWebhook(): Response
     {
+        $request = Request::createFromGlobals();
+
         $this->logger->info("Webhook received", [
-            'method' => $_SERVER['REQUEST_METHOD'],
-            'content_type' => $_SERVER['CONTENT_TYPE'] ?? ''
+            'method' => $request->getMethod(),
+            'content_type' => $request->headers->get('Content-Type', '')
         ]);
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['error' => 'Method not allowed']);
-            return;
+        if (!$request->isMethod('POST')) {
+            return new JsonResponse(['error' => 'Method not allowed'], Response::HTTP_METHOD_NOT_ALLOWED);
         }
 
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        $contentType = $request->headers->get('Content-Type', '');
 
         if (str_contains((string) $contentType, 'multipart/form-data')) {
-            $data = $this->parseMultipartFormData();
+            $data = $this->parseMultipartFormData($request);
         } elseif (str_contains((string) $contentType, 'application/json')) {
-            $rawInput = file_get_contents('php://input');
-            $data = json_decode($rawInput, true);
+            $data = $request->toArray();
         } else {
-            http_response_code(400);
-            echo json_encode(['error' => 'Unsupported content type']);
-            return;
+            return new JsonResponse(['error' => 'Unsupported content type'], Response::HTTP_BAD_REQUEST);
         }
 
         if (!$data) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid request data']);
-            return;
+            return new JsonResponse(['error' => 'Invalid request data'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -73,35 +73,32 @@ class WebhookController
                 default => $this->logger->warning("Unknown webhook event: {$event}"),
             };
 
-            http_response_code(200);
-            echo json_encode(['status' => 'success']);
-        } catch (\Exception $e) {
+            return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
+        } catch (\Throwable $e) {
             $this->logger->error("Webhook processing error: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => 'Internal server error']);
+            return new JsonResponse(['error' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function parseMultipartFormData(): array
+    private function parseMultipartFormData(Request $request): array
     {
         $data = [];
 
-        $data['event'] = $_POST['event'] ?? '';
-        $data['eventTime'] = $_POST['eventTime'] ?? '';
+        $data['event'] = $request->request->get('event', '');
+        $data['eventTime'] = $request->request->get('eventTime', '');
 
-        if (isset($_POST['fax'])) {
-            $data['fax'] = json_decode((string) $_POST['fax'], true);
+        $faxJson = $request->request->get('fax');
+        if ($faxJson !== null) {
+            $data['fax'] = json_decode((string) $faxJson, true);
         }
 
-        if (isset($_FILES['file'])) {
-            $file = $_FILES['file'];
-            if ($file['error'] === UPLOAD_ERR_OK) {
-                $data['file'] = base64_encode(file_get_contents($file['tmp_name']));
-                $data['fileType'] = 'PDF';
-            }
+        $file = $request->files->get('file');
+        if ($file && $file->isValid()) {
+            $data['file'] = base64_encode(file_get_contents($file->getPathname()));
+            $data['fileType'] = 'PDF';
         }
 
         return $data;

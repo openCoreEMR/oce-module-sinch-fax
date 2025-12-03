@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
     `error_code` VARCHAR(50) DEFAULT NULL COMMENT 'Error code if fax failed',
     `error_message` TEXT DEFAULT NULL COMMENT 'Error message if fax failed',
     `patient_id` BIGINT(20) DEFAULT NULL COMMENT 'Associated patient ID',
+    `document_id` BIGINT(20) DEFAULT NULL COMMENT 'OpenEMR document ID if fax was moved to patient chart',
     `user_id` BIGINT(20) DEFAULT NULL COMMENT 'User who sent the fax (for outbound)',
     `callback_url` VARCHAR(500) DEFAULT NULL COMMENT 'Callback URL used for this fax',
     `cover_page_id` VARCHAR(255) DEFAULT NULL COMMENT 'Cover page ID if used',
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
     INDEX `idx_direction` (`direction`),
     INDEX `idx_status` (`status`),
     INDEX `idx_patient_id` (`patient_id`),
+    INDEX `idx_document_id` (`document_id`),
     INDEX `idx_user_id` (`user_id`),
     INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -62,3 +64,15 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_cover_pages` (
     UNIQUE INDEX `idx_name` (`name`),
     INDEX `idx_is_active` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create "Received Faxes" document category
+-- For fresh installs only - no duplicate checking needed
+INSERT INTO categories (id, name, parent, lft, rght, aco_spec)
+SELECT
+    1 + COALESCE(MAX(id), 0),
+    'Received Faxes',
+    1,
+    1 + COALESCE(MAX(lft), 0),
+    2 + COALESCE(MAX(lft), 0),
+    'patients|docs'
+FROM categories;
