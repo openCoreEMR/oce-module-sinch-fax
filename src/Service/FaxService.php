@@ -22,12 +22,14 @@ class FaxService
     private readonly SinchFaxClient $client;
     private readonly SystemLogger $logger;
     private readonly GlobalConfig $config;
+    private readonly CoverPageService $coverPageService;
 
-    public function __construct(?GlobalConfig $config = null)
+    public function __construct(?GlobalConfig $config = null, ?CoverPageService $coverPageService = null)
     {
         $this->config = $config ?? new GlobalConfig();
         $this->client = new SinchFaxClient($this->config);
         $this->logger = new SystemLogger();
+        $this->coverPageService = $coverPageService ?? new CoverPageService($this->config);
     }
 
     /**
@@ -53,8 +55,7 @@ class FaxService
         // Handle local cover page - prepend to files
         if (isset($options['coverPageId']) && !empty($options['coverPageId'])) {
             try {
-                $coverPageService = new CoverPageService($this->config);
-                $coverPage = $coverPageService->getCoverPage((int)$options['coverPageId']);
+                $coverPage = $this->coverPageService->getCoverPage((int)$options['coverPageId']);
                 
                 if ($coverPage && file_exists($coverPage['file_path'])) {
                     // Prepend cover page as the first file

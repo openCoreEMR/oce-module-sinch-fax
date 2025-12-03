@@ -67,6 +67,12 @@ class CoverPageService
         $filePath = $storagePath . DIRECTORY_SEPARATOR . $uniqueFilename;
 
         // Move uploaded file to storage
+        // Note: This method expects $tmpPath to be from $_FILES (uploaded file)
+        // If you need to handle regular files, use copy() instead
+        if (!is_uploaded_file($tmpPath)) {
+            throw new \Exception('Invalid file upload - security check failed');
+        }
+        
         if (!move_uploaded_file($tmpPath, $filePath)) {
             throw new \Exception('Failed to save cover page file');
         }
@@ -139,14 +145,17 @@ class CoverPageService
             throw new \Exception('Cover page not found');
         }
 
-        // Delete file from filesystem
-        if (file_exists($coverPage['file_path'])) {
-            unlink($coverPage['file_path']);
-        }
-
-        // Delete from database
+        // Delete from database first to maintain consistency
         $sql = "DELETE FROM oce_sinch_cover_pages WHERE id = ?";
         QueryUtils::sqlStatementThrowException($sql, [$id]);
+
+        // Delete file from filesystem
+        if (file_exists($coverPage['file_path'])) {
+            if (!unlink($coverPage['file_path'])) {
+                $this->logger->warning("Failed to delete cover page file: {$coverPage['file_path']}");
+                // Don't throw exception - database record is already deleted
+            }
+        }
 
         $this->logger->info("Cover page deleted: {$coverPage['name']} (ID: {$id})");
 

@@ -44,8 +44,25 @@ if ($action === 'upload_cover' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    if (!isset($_FILES['cover_file']) || $_FILES['cover_file']['error'] !== UPLOAD_ERR_OK) {
+    if (!isset($_FILES['cover_file'])) {
         $_SESSION['fax_error'] = "Please select a PDF file to upload";
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    // Provide detailed error messages for different upload errors
+    $uploadError = $_FILES['cover_file']['error'];
+    if ($uploadError !== UPLOAD_ERR_OK) {
+        $errorMessage = match ($uploadError) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => "File is too large. Maximum upload size exceeded.",
+            UPLOAD_ERR_PARTIAL => "File upload was interrupted. Please try again.",
+            UPLOAD_ERR_NO_FILE => "No file was selected. Please choose a PDF file.",
+            UPLOAD_ERR_NO_TMP_DIR => "Server configuration error: temporary directory missing.",
+            UPLOAD_ERR_CANT_WRITE => "Server error: failed to write file to disk.",
+            UPLOAD_ERR_EXTENSION => "File upload blocked by server extension.",
+            default => "Unknown file upload error occurred.",
+        };
+        $_SESSION['fax_error'] = $errorMessage;
         header('Location: ' . $_SERVER['PHP_SELF']);
         exit;
     }
