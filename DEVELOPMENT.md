@@ -51,17 +51,26 @@ oce-module-sinch-fax/
 - Business logic layer
 - Database integration
 - Methods:
-  - `sendFax()` - Send and track faxes
+  - `sendFax()` - Send and track faxes (with cover page support)
   - `downloadAndSaveFax()` - Download and store fax files
   - `processIncomingFax()` - Handle incoming fax webhooks
   - `processFaxCompleted()` - Handle fax completion webhooks
 
-#### 4. WebhookController (`src/Controller/WebhookController.php`)
+#### 4. CoverPageService (`src/Service/CoverPageService.php`)
+- Manages cover page templates
+- Methods:
+  - `uploadCoverPage()` - Upload and store cover page PDF
+  - `listCoverPages()` - List all cover pages
+  - `getCoverPage()` - Get cover page details by ID
+  - `deleteCoverPage()` - Delete a cover page
+  - `processCoverPage()` - Process template variables (future implementation)
+
+#### 5. WebhookController (`src/Controller/WebhookController.php`)
 - Handles incoming webhooks from Sinch
 - Supports both multipart/form-data and application/json
 - Processes INCOMING_FAX and FAX_COMPLETED events
 
-#### 5. Bootstrap (`src/Bootstrap.php`)
+#### 6. Bootstrap (`src/Bootstrap.php`)
 - Initializes the module
 - Registers global settings
 - Adds menu items
@@ -124,6 +133,7 @@ composer require opencoreemr/oce-module-sinch-fax
 ## Usage
 
 ### Sending a Fax
+
 ```php
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 
@@ -133,9 +143,30 @@ $result = $faxService->sendFax(
     ['/path/to/file.pdf'],    // files
     [
         'patient_id' => 123,
-        'coverPageId' => 'my-cover-page'
+        'coverPageId' => 1     // Local cover page ID
     ]
 );
+```
+
+### Managing Cover Pages
+
+```php
+use OpenCoreEMR\Modules\SinchFax\Service\CoverPageService;
+
+$coverPageService = new CoverPageService();
+
+// Upload a cover page
+$coverPage = $coverPageService->uploadCoverPage(
+    'Standard Cover',              // name
+    '/tmp/uploaded_file.pdf',      // temp file path
+    'cover_template.pdf'           // original filename
+);
+
+// List cover pages
+$coverPages = $coverPageService->listCoverPages(true); // active only
+
+// Delete a cover page
+$coverPageService->deleteCoverPage(1);
 ```
 
 ### Webhook URL

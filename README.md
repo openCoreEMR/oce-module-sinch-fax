@@ -6,6 +6,7 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
 
 - **Send Faxes**: Send faxes to one or multiple recipients
 - **Receive Faxes**: Automatically receive and store incoming faxes
+- **Cover Pages**: Upload and attach custom cover page templates to faxes
 - **Webhook Support**: Real-time notifications for fax status updates
 - **Multiple File Formats**: Support for PDF, TIFF, PNG, JPEG, DOC, and DOCX
 - **Security**: Encrypted storage of API credentials, secure file handling
@@ -109,6 +110,37 @@ Upon successful submission, you'll receive a fax ID that can be used to track th
 4. Use filters to search by date, direction, status, or patient
 
 ![Fax List](.docs/screenshots/fax-list.png)
+
+### Managing Cover Pages
+
+Cover pages allow you to attach a professional header to your faxes with sender and recipient information.
+
+1. Navigate to **Modules > OpenCoreEMR Sinch Fax**
+2. Click the **Cover Pages** tab
+3. Enter a name for your cover page template
+4. Upload a PDF file to use as the cover page
+5. Click **Upload Cover Page**
+
+Once uploaded, cover pages can be selected when sending faxes from either the module interface or the document viewer.
+
+#### Using Cover Pages
+
+When sending a fax:
+1. Select a cover page from the **Cover Page** dropdown (optional)
+2. The cover page will be automatically prepended as the first page of your fax
+
+#### Template Variables
+
+Cover pages support dynamic template variables for future enhancement:
+- `{{from}}` - Sender name/facility
+- `{{to}}` - Recipient name
+- `{{date}}` - Current date
+- `{{time}}` - Current time
+- `{{patient}}` - Patient name (if linked)
+- `{{pages}}` - Number of pages
+- `{{subject}}` - Fax subject/notes
+
+> **Note:** Template variable substitution requires PDF editing capabilities and will be implemented in a future version. Currently, cover pages are attached as-is.
 
 ## Security
 
