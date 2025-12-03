@@ -16,10 +16,12 @@ require_once(__DIR__ . "/../../../../../library/classes/Document.class.php");
 
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
+use OpenCoreEMR\Modules\SinchFax\Service\CoverPageService;
 use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Core\Header;
 
 $config = new GlobalConfig();
+$coverPageService = new CoverPageService($config);
 
 // Check if module is enabled
 if (!$config->isEnabled()) {
@@ -98,6 +100,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (!empty($docId)) {
                             $options['document_id'] = $docId;
                         }
+                        
+                        // Add cover page if selected
+                        $coverPageId = $_POST['cover_page_id'] ?? '';
+                        if (!empty($coverPageId)) {
+                            $options['coverPageId'] = $coverPageId;
+                        }
 
                         // Send the fax
                         $result = $faxService->sendFax($recipient, [$tempFileWithExt], $options);
@@ -120,6 +128,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = xlt("Error sending fax") . ": " . text($e->getMessage());
         }
     }
+}
+
+// Load cover pages
+$coverPages = [];
+try {
+    $coverPages = $coverPageService->listCoverPages(true);
+} catch (\Exception $e) {
+    error_log("Error loading cover pages: " . $e->getMessage());
 }
 
 ?>
@@ -183,6 +199,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        required autocomplete="off">
                 <small class="form-text text-muted">
                     <?php echo xlt('Enter fax number in E.164 format (e.g., +1234567890)'); ?>
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="cover_page_id"><?php echo xlt('Cover Page (optional)'); ?></label>
+                <select class="form-control" id="cover_page_id" name="cover_page_id">
+                    <option value=""><?php echo xlt('-- No Cover Page --'); ?></option>
+                    <?php foreach ($coverPages as $coverPage) : ?>
+                        <option value="<?php echo attr($coverPage['id']); ?>">
+                            <?php echo text($coverPage['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="form-text text-muted">
+                    <?php echo xlt('Select a cover page template to attach to your fax'); ?>
                 </small>
             </div>
 

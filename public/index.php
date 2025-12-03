@@ -13,12 +13,14 @@
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
+use OpenCoreEMR\Modules\SinchFax\Service\CoverPageService;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Common\Database\QueryUtils;
 
 $config = new GlobalConfig();
 $faxService = new FaxService($config);
+$coverPageService = new CoverPageService($config);
 
 // Initialize session for flash messages if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -26,6 +28,63 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 $action = $_GET['action'] ?? 'list';
+
+// Handle cover page actions
+if ($action === 'upload_cover' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verify CSRF token for POST requests
+    if (!CsrfUtils::verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        CsrfUtils::csrfNotVerified();
+    }
+
+    $name = $_POST['cover_name'] ?? '';
+
+    if (empty($name)) {
+        $_SESSION['fax_error'] = "Cover page name is required";
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    if (!isset($_FILES['cover_file']) || $_FILES['cover_file']['error'] !== UPLOAD_ERR_OK) {
+        $_SESSION['fax_error'] = "Please select a PDF file to upload";
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    try {
+        $coverPageService->uploadCoverPage(
+            $name,
+            $_FILES['cover_file']['tmp_name'],
+            $_FILES['cover_file']['name']
+        );
+        $_SESSION['fax_success'] = "Cover page uploaded successfully!";
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    } catch (\Exception $e) {
+        $_SESSION['fax_error'] = "Error uploading cover page: " . $e->getMessage();
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
+
+if ($action === 'delete_cover' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verify CSRF token for POST requests
+    if (!CsrfUtils::verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        CsrfUtils::csrfNotVerified();
+    }
+
+    $coverId = $_POST['cover_id'] ?? 0;
+
+    try {
+        $coverPageService->deleteCoverPage((int)$coverId);
+        $_SESSION['fax_success'] = "Cover page deleted successfully!";
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    } catch (\Exception $e) {
+        $_SESSION['fax_error'] = "Error deleting cover page: " . $e->getMessage();
+        header('Location: ' . $_SERVER['PHP_SELF']);
+        exit;
+    }
+}
 
 if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // Verify CSRF token for POST requests
@@ -148,6 +207,14 @@ try {
     error_log("Error loading faxes: " . $e->getMessage());
 }
 
+// Load cover pages
+$coverPages = [];
+try {
+    $coverPages = $coverPageService->listCoverPages(true);
+} catch (\Exception $e) {
+    error_log("Error loading cover pages: " . $e->getMessage());
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -214,6 +281,9 @@ try {
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#send"><?php echo xlt('Send Fax'); ?></a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#cover-pages"><?php echo xlt('Cover Pages'); ?></a>
+            </li>
         </ul>
 
         <div class="tab-content mt-3">
@@ -269,12 +339,116 @@ try {
                     </div>
 
                     <div class="form-group">
+                        <label for="cover_page_id"><?php echo xlt('Cover Page (optional)'); ?></label>
+                        <select class="form-control" id="cover_page_id" name="cover_page_id">
+                            <option value=""><?php echo xlt('-- No Cover Page --'); ?></option>
+                            <?php foreach ($coverPages as $coverPage) : ?>
+                                <option value="<?php echo attr($coverPage['id']); ?>">
+                                    <?php echo text($coverPage['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-text text-muted">
+                            <?php echo xlt('Select a cover page template to attach to your fax'); ?>
+                        </small>
+                    </div>
+
+                    <div class="form-group">
                         <label for="patient_id"><?php echo xlt('Patient ID (optional)'); ?></label>
                         <input type="number" class="form-control" id="patient_id" name="patient_id">
                     </div>
 
                     <button type="submit" class="btn btn-primary"><?php echo xlt('Send Fax'); ?></button>
                 </form>
+            </div>
+
+            <div id="cover-pages" class="tab-pane fade">
+                <h4><?php echo xlt('Cover Page Management'); ?></h4>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><?php echo xlt('Upload New Cover Page'); ?></h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data" action="?action=upload_cover">
+                            <input type="hidden" name="csrf_token" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>">
+                            
+                            <div class="form-group">
+                                <label for="cover_name"><?php echo xlt('Cover Page Name'); ?></label>
+                                <input type="text" class="form-control" id="cover_name" name="cover_name" required>
+                                <small class="form-text text-muted">
+                                    <?php echo xlt('A descriptive name for this cover page template'); ?>
+                                </small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="cover_file"><?php echo xlt('PDF File'); ?></label>
+                                <input type="file" class="form-control-file" id="cover_file" name="cover_file" accept="application/pdf,.pdf" required>
+                                <small class="form-text text-muted">
+                                    <?php echo xlt('Upload a PDF file to use as a cover page template'); ?>
+                                </small>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-upload"></i> <?php echo xlt('Upload Cover Page'); ?>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5><?php echo xlt('Existing Cover Pages'); ?></h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (empty($coverPages)) : ?>
+                            <p class="text-muted"><?php echo xlt('No cover pages uploaded yet.'); ?></p>
+                        <?php else : ?>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th><?php echo xlt('Name'); ?></th>
+                                        <th><?php echo xlt('Created'); ?></th>
+                                        <th><?php echo xlt('Actions'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($coverPages as $coverPage) : ?>
+                                        <tr>
+                                            <td><?php echo text($coverPage['name']); ?></td>
+                                            <td><?php echo text($coverPage['created_at']); ?></td>
+                                            <td>
+                                                <form method="post" action="?action=delete_cover" style="display: inline;" 
+                                                      onsubmit="return confirm('<?php echo xla('Are you sure you want to delete this cover page?'); ?>');">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>">
+                                                    <input type="hidden" name="cover_id" value="<?php echo attr($coverPage['id']); ?>">
+                                                    <button type="submit" class="btn btn-sm btn-danger">
+                                                        <i class="fa fa-trash"></i> <?php echo xlt('Delete'); ?>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    <h6><?php echo xlt('Template Variables Support'); ?></h6>
+                    <p><?php echo xlt('Cover pages can include dynamic template variables that will be replaced with actual values when sending faxes:'); ?></p>
+                    <ul>
+                        <li><code>{{from}}</code> - <?php echo xlt('Sender name/facility'); ?></li>
+                        <li><code>{{to}}</code> - <?php echo xlt('Recipient name'); ?></li>
+                        <li><code>{{date}}</code> - <?php echo xlt('Current date'); ?></li>
+                        <li><code>{{time}}</code> - <?php echo xlt('Current time'); ?></li>
+                        <li><code>{{patient}}</code> - <?php echo xlt('Patient name (if linked)'); ?></li>
+                        <li><code>{{pages}}</code> - <?php echo xlt('Number of pages'); ?></li>
+                        <li><code>{{subject}}</code> - <?php echo xlt('Fax subject/notes'); ?></li>
+                    </ul>
+                    <p class="mb-0"><small><?php echo xlt('Note: Template variable substitution requires PDF editing capabilities. For now, cover pages are attached as-is.'); ?></small></p>
+                </div>
             </div>
         </div>
     </div>

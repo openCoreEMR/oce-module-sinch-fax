@@ -42,23 +42,41 @@ class FaxService
     {
         $this->logger->info("Sending fax to {$to}");
 
+        $filesList = array_map(function ($file) {
+            // Handle both old format (string path) and new format (array with path and filename)
+            if (is_array($file)) {
+                return $file;
+            }
+            return ['path' => $file];
+        }, $files);
+
+        // Handle local cover page - prepend to files
+        if (isset($options['coverPageId']) && !empty($options['coverPageId'])) {
+            try {
+                $coverPageService = new CoverPageService($this->config);
+                $coverPage = $coverPageService->getCoverPage((int)$options['coverPageId']);
+                
+                if ($coverPage && file_exists($coverPage['file_path'])) {
+                    // Prepend cover page as the first file
+                    array_unshift($filesList, [
+                        'path' => $coverPage['file_path'],
+                        'filename' => basename($coverPage['file_path'])
+                    ]);
+                    $this->logger->info("Added cover page: {$coverPage['name']}");
+                }
+            } catch (\Exception $e) {
+                $this->logger->error("Error adding cover page: " . $e->getMessage());
+                // Continue without cover page rather than failing the fax
+            }
+        }
+
         $params = [
             'to' => $to,
-            'files' => array_map(function ($file) {
-                // Handle both old format (string path) and new format (array with path and filename)
-                if (is_array($file)) {
-                    return $file;
-                }
-                return ['path' => $file];
-            }, $files),
+            'files' => $filesList,
         ];
 
         if (isset($options['from'])) {
             $params['from'] = $options['from'];
-        }
-
-        if (isset($options['coverPageId'])) {
-            $params['coverPageId'] = $options['coverPageId'];
         }
 
         // Only set callback URL if it's explicitly provided and is a valid public URL
