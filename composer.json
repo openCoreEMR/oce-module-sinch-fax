@@ -75,7 +75,7 @@
     "php-lint": "git ls-files -z '*.php' | xargs -0 -n1 php -l",
     "phpcbf": "phpcbf",
     "phpcs": "phpcs",
-    "phpstan": "phpstan analyse",
+    "phpstan": "phpstan --memory-limit=1g analyse",
     "rector": "rector process --dry-run",
     "rector-fix": "rector process",
     "require-checker": "composer-require-checker check --config-file=.composer-require-checker.json"
