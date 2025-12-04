@@ -6,7 +6,9 @@
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
         "version.php"
-      ]
+      ],
+      "include-component-in-tag": false,
+      "include-v-in-tag": false
     }
   },
   "bump-minor-pre-major": true,
@@ -59,6 +61,10 @@
       "type": "ci",
       "section": "Continuous Integration",
       "hidden": true
+    },
+    {
+      "type": "deps",
+      "section": "Dependencies"
     }
   ]
 }

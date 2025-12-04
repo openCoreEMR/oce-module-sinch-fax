@@ -24,6 +24,7 @@ jobs:
           ci
           chore
           revert
+          deps
         requireScope: false
         subjectPattern: ^(?![A-Z]).+$
         subjectPatternError: |
