@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * Fax Download Controller - handles viewing and downloading fax files
+ *
+ * @package   OpenCoreEMR
+ * @link      http://www.open-emr.org
+ * @author    Michael A. Smith <michael@opencoreemr.com>
+ * @copyright Copyright (c) 2025 OpenCoreEMR Inc
+ * @license   GNU General Public License 3
+ */
+
+namespace OpenCoreEMR\Modules\SinchFax\Controller;
+
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxAccessDeniedException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxConfigurationException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxNotFoundException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxUnauthorizedException;
+use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
+use OpenEMR\Common\Database\QueryUtils;
+use OpenEMR\Common\Logging\SystemLogger;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+
+class FaxDownloadController
+{
+    private readonly SystemLogger $logger;
+
+    public function __construct(private readonly GlobalConfig $config)
+    {
+        $this->logger = new SystemLogger();
+    }
+
+    /**
+     * Download a fax file
+     */
+    public function download(int $faxId): BinaryFileResponse
+    {
+        // Verify user is authenticated
+        if (empty($_SESSION['authUserID'])) {
+            throw new FaxUnauthorizedException("Unauthorized");
+        }
+
+        // Get fax record from database
+        $sql = "SELECT * FROM oce_sinch_faxes WHERE id = ?";
+        $fax = QueryUtils::querySingleRow($sql, [$faxId]);
+
+        if (!$fax) {
+            throw new FaxNotFoundException("Fax not found");
+        }
+
+        $filePath = $fax['file_path'];
+
+        if (empty($filePath)) {
+            throw new FaxNotFoundException("Fax file not available");
+        }
+
+        // Security check: ensure file is within the allowed storage directory
+        $storagePath = $this->config->getFileStoragePath();
+        $realFilePath = realpath($filePath);
+        $realStoragePath = realpath($storagePath);
+
+        if ($realFilePath === false) {
+            $this->logger->error("Fax file not found: {$filePath}");
+            throw new FaxNotFoundException("File not found");
+        }
+
+        if ($realStoragePath === false) {
+            $this->logger->error("Storage path not found: {$storagePath}");
+            throw new FaxConfigurationException("Configuration error");
+        }
+
+        if (!str_starts_with($realFilePath, $realStoragePath)) {
+            $this->logger->error("Attempted path traversal attack: {$filePath}");
+            throw new FaxAccessDeniedException("Access denied");
+        }
+
+        // Check if file exists
+        if (!file_exists($realFilePath)) {
+            $this->logger->error("Fax file does not exist: {$realFilePath}");
+            throw new FaxNotFoundException("File not found");
+        }
+
+        // Log the download
+        $this->logger->info("User {$_SESSION['authUserID']} downloading fax {$faxId}");
+
+        // Create binary file response
+        $response = new BinaryFileResponse($realFilePath);
+
+        // Set content disposition to inline (view in browser)
+        $response->setContentDisposition(
+            ResponseHeaderBag::DISPOSITION_INLINE,
+            'fax_' . $fax['sinch_fax_id'] . '.pdf'
+        );
+
+        // Set MIME type
+        $mimeType = $fax['mime_type'] ?? 'application/pdf';
+        $response->headers->set('Content-Type', $mimeType);
+
+        return $response;
+    }
+
+    /**
+     * Check if a fax has a downloadable file
+     */
+    public function hasFile(int $faxId): bool
+    {
+        $sql = "SELECT file_path FROM oce_sinch_faxes WHERE id = ?";
+        $result = QueryUtils::querySingleRow($sql, [$faxId]);
+
+        if (!$result || empty($result['file_path'])) {
+            return false;
+        }
+
+        return file_exists($result['file_path']);
+    }
+}

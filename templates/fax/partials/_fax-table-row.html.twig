@@ -1,0 +1,26 @@
+<tr>
+    <td>{{ fax.direction|text }}</td>
+    <td><small>{{ fax.sinch_fax_id|default('')|text }}</small></td>
+    <td>{{ fax.from_number|text }}</td>
+    <td>{{ fax.to_number|text }}</td>
+    <td>{{ fax.status|text }}</td>
+    <td>{{ fax.num_pages|text }}</td>
+    <td><small>{{ fax.error_message|default('')|text }}</small></td>
+    <td>{{ fax.created_at|text }}</td>
+    <td>
+        {% if fax.document_id %}
+            <span class="text-success">
+                <i class="fa fa-check-circle"></i> {{ 'Moved to Patient'|xlt }} {{ fax.patient_id }}
+            </span>
+        {% elseif fax.file_path %}
+            <a href="download.php?fax_id={{ fax.id }}" class="btn btn-sm btn-primary" target="_blank">
+                <i class="fa fa-download"></i> {{ 'View/Download'|xlt }}
+            </a>
+            <button type="button" class="btn btn-sm btn-success" onclick="showMoveToPatientDialog({{ fax.id }}, {{ fax.patient_id|default(0) }})">
+                <i class="fa fa-folder-open"></i> {{ 'Move to Patient'|xlt }}
+            </button>
+        {% else %}
+            <span class="text-muted">{{ 'No file'|xlt }}</span>
+        {% endif %}
+    </td>
+</tr>

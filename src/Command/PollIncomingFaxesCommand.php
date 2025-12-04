@@ -71,7 +71,7 @@ class PollIncomingFaxesCommand extends Command
             $io->text(sprintf('Last poll time: %s', $lastPollTime ?? 'Never'));
 
             return Command::SUCCESS;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $io->error(sprintf('Error polling for incoming faxes: %s', $e->getMessage()));
             return Command::FAILURE;
         }

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ 'OpenCoreEMR Sinch Fax'|xlt }}</title>
+    <link rel="stylesheet" href="{{ assets_path }}/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container-fluid mt-3">
+        <h2>{{ 'OpenCoreEMR Sinch Fax'|xlt }}</h2>
+
+        {# Flash messages #}
+        {% if success_message %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ success_message|text }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endif %}
+
+        {% if error_message %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error_message|text }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endif %}
+
+        {# Configuration status #}
+        {% include 'fax/partials/_config-status.html.twig' %}
+
+        {# Navigation tabs #}
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#list">{{ 'Fax List'|xlt }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#send">{{ 'Send Fax'|xlt }}</a>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            {# Fax list tab #}
+            <div id="list" class="tab-pane fade show active">
+                <h4>{{ 'Recent Faxes'|xlt }}</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>{{ 'Direction'|xlt }}</th>
+                            <th>{{ 'Fax ID'|xlt }}</th>
+                            <th>{{ 'From'|xlt }}</th>
+                            <th>{{ 'To'|xlt }}</th>
+                            <th>{{ 'Status'|xlt }}</th>
+                            <th>{{ 'Pages'|xlt }}</th>
+                            <th>{{ 'Error'|xlt }}</th>
+                            <th>{{ 'Date'|xlt }}</th>
+                            <th>{{ 'Actions'|xlt }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fax in faxes %}
+                            {% include 'fax/partials/_fax-table-row.html.twig' with {'fax': fax} %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# Send fax tab #}
+            <div id="send" class="tab-pane fade">
+                <h4>{{ 'Send a Fax'|xlt }}</h4>
+                {% include 'fax/partials/_send-form.html.twig' %}
+            </div>
+        </div>
+    </div>
+
+    {# Move to Patient Modal #}
+    <div class="modal fade" id="moveToPatientModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ 'Move Fax to Patient Chart'|xlt }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form method="post" action="index.php?action=move_to_patient" id="moveToPatientForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token|attr }}">
+                        <input type="hidden" name="fax_id" id="move_fax_id" value="">
+
+                        <div class="form-group">
+                            <label for="move_patient_id">{{ 'Patient ID'|xlt }}</label>
+                            <input type="number" class="form-control" id="move_patient_id" name="patient_id" required>
+                            <small class="form-text text-muted">{{ 'Enter the patient ID to attach this fax to'|xlt }}</small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small>{{ 'The fax will be saved to the "Received Faxes" category. You can recategorize it later in the patient\'s Documents section.'|xlt }}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ 'Cancel'|xlt }}</button>
+                        <button type="submit" class="btn btn-primary">{{ 'Move to Patient'|xlt }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ assets_path }}/jquery/dist/jquery.min.js"></script>
+    <script src="{{ assets_path }}/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showMoveToPatientDialog(faxId, patientId) {
+            $('#move_fax_id').val(faxId);
+            if (patientId > 0) {
+                $('#move_patient_id').val(patientId);
+            }
+            $('#moveToPatientModal').modal('show');
+        }
+    </script>
+</body>
+</html>
