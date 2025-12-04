@@ -1,0 +1,19 @@
+name: Update Packagist
+
+on:
+  push:
+    branches:
+    - '**'
+  delete:
+  release:
+    types:
+    - published
+
+jobs:
+  update-packagist:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Update Packagist
+      run: |
+        curl --json '{"repository":{"url":"https://packagist.org/packages/opencoreemr/oce-module-sinch-fax"}}' \
+          'https://packagist.org/api/update-package?username=opencoreemr&apiToken=${{ secrets.PACKAGIST_UPDATE_KEY }}'
