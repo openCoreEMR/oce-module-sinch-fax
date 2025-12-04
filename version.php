@@ -10,11 +10,13 @@
  * @license   GNU General Public License 3
  */
 
+// Default version when not in a git repository
+// This is automatically updated by release-please
+const DEFAULT_VERSION = '1.0.0';
+
 // Calculate and unpack version information into global variables that OpenEMR expects
 [$v_major, $v_minor, $v_patch, $v_tag, $v_database] = (function (
-    string $default_major,
-    string $default_minor,
-    string $default_patch
+    string $defaultVersion
 ): array {
     /**
      * Execute a git command in the module directory
@@ -75,10 +77,12 @@
         }
     }
 
-    // Not in a git repository or git command failed - use default version
-    return [$default_major, $default_minor, $default_patch, '', 1];
-})(
-    default_major: '1',
-    default_minor: '0',
-    default_patch: '0'
-);
+    // Not in a git repository or git command failed - parse and use default version
+    if (preg_match('/^(\d+)\.(\d+)\.(\d+)/', $defaultVersion, $matches)) {
+        [, $v_major, $v_minor, $v_patch] = $matches;
+        return [$v_major, $v_minor, $v_patch, '', 1];
+    }
+
+    // Fallback if DEFAULT_VERSION is malformed
+    return ['1', '0', '0', '', 1];
+})(DEFAULT_VERSION);

@@ -1,0 +1,21 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+    - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Release Please
+      uses: googleapis/release-please-action@v4
+      with:
+          # This assumes you're using a personal access token stored as a secret
+          # If you want to use the default GITHUB_TOKEN, you can remove this line
+        token: ${{ secrets.GITHUB_TOKEN }}
