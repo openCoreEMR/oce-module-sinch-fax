@@ -12,6 +12,10 @@
 
 namespace OpenCoreEMR\Modules\SinchFax;
 
+use OpenCoreEMR\Modules\SinchFax\Controller\FaxListController;
+use OpenCoreEMR\Modules\SinchFax\Controller\DocumentFaxController;
+use OpenCoreEMR\Modules\SinchFax\Controller\FaxDownloadController;
+use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Logging\SystemLogger;
 use OpenEMR\Common\Twig\TwigContainer;
 use OpenEMR\Core\Kernel;
@@ -171,5 +175,37 @@ class Bootstrap
             return false;
         }
         <?php
+    }
+
+    /**
+     * Get FaxListController instance
+     */
+    public function getFaxListController(): FaxListController
+    {
+        return new FaxListController(
+            $this->globalsConfig,
+            new FaxService($this->globalsConfig),
+            $this->twig
+        );
+    }
+
+    /**
+     * Get DocumentFaxController instance
+     */
+    public function getDocumentFaxController(): DocumentFaxController
+    {
+        return new DocumentFaxController(
+            $this->globalsConfig,
+            new FaxService($this->globalsConfig),
+            $this->twig
+        );
+    }
+
+    /**
+     * Get FaxDownloadController instance
+     */
+    public function getFaxDownloadController(): FaxDownloadController
+    {
+        return new FaxDownloadController($this->globalsConfig);
     }
 }

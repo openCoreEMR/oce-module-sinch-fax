@@ -1,0 +1,22 @@
+<div class="alert alert-info">
+    <strong>{{ 'Configuration Status'|xlt }}:</strong>
+    <ul class="mb-0">
+        <li>
+            <strong>{{ 'Webhooks'|xlt }}:</strong>
+            {% if config.webhooks_enabled %}
+                <span class="badge badge-success">{{ 'Enabled'|xlt }}</span>
+            {% else %}
+                <span class="badge badge-warning">{{ 'Disabled'|xlt }}</span>
+            {% endif %}
+        </li>
+        {% if config.polling_enabled %}
+        <li>
+            <strong>{{ 'Incoming Fax Polling'|xlt }}:</strong>
+            <span class="badge badge-success">{{ 'Enabled'|xlt }}</span>
+            {% if config.last_poll_time %}
+                <br><small>{{ 'Last poll'|xlt }}: {{ config.last_poll_time|text }}</small>
+            {% endif %}
+        </li>
+        {% endif %}
+    </ul>
+</div>

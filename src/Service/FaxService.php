@@ -192,6 +192,26 @@ class FaxService
 
         $this->updateFaxStatus($faxId, $faxData);
 
+        // Download and save the file if it's completed and we don't have it yet
+        $status = $faxData['status'] ?? '';
+        if ($status === 'COMPLETED' || $status === 'SUCCESS') {
+            // Check if we already have the file
+            $checkSql = "SELECT file_path FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+            $existingFax = QueryUtils::querySingleRow($checkSql, [$faxId]);
+
+            if ($existingFax && empty($existingFax['file_path'])) {
+                try {
+                    $filePath = $this->downloadAndSaveFax($faxId);
+                    $updatePathSql = "UPDATE oce_sinch_faxes " .
+                                     "SET file_path = ?, updated_at = NOW() WHERE sinch_fax_id = ?";
+                    QueryUtils::sqlStatementThrowException($updatePathSql, [$filePath, $faxId]);
+                    $this->logger->info("Downloaded completed fax {$faxId} to {$filePath}");
+                } catch (\Throwable $e) {
+                    $this->logger->error("Failed to download completed fax {$faxId}: " . $e->getMessage());
+                }
+            }
+        }
+
         return true;
     }
 
@@ -259,6 +279,38 @@ class FaxService
     }
 
     /**
+     * Download files for completed faxes that don't have files yet
+     *
+     * @return int Number of files downloaded
+     */
+    public function downloadMissingFiles(): int
+    {
+        $sql = "SELECT sinch_fax_id FROM oce_sinch_faxes
+                WHERE (status = 'COMPLETED' OR status = 'SUCCESS')
+                AND (file_path IS NULL OR file_path = '')
+                AND document_id IS NULL";
+
+        $faxes = QueryUtils::fetchRecords($sql);
+        $downloadedCount = 0;
+
+        foreach ($faxes as $fax) {
+            $faxId = $fax['sinch_fax_id'];
+            try {
+                $filePath = $this->downloadAndSaveFax($faxId);
+                $updatePathSql = "UPDATE oce_sinch_faxes " .
+                                 "SET file_path = ?, updated_at = NOW() WHERE sinch_fax_id = ?";
+                QueryUtils::sqlStatementThrowException($updatePathSql, [$filePath, $faxId]);
+                $this->logger->info("Downloaded missing file for fax {$faxId}");
+                $downloadedCount++;
+            } catch (\Throwable $e) {
+                $this->logger->error("Failed to download file for fax {$faxId}: " . $e->getMessage());
+            }
+        }
+
+        return $downloadedCount;
+    }
+
+    /**
      * Poll for new incoming faxes
      *
      * @return int Number of new faxes found
@@ -287,19 +339,45 @@ class FaxService
             }
 
             // Check if we already have this fax
-            $existingSql = "SELECT COUNT(*) as count FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
-            $existingResult = QueryUtils::querySingleRow($existingSql, [$faxId]);
+            $existingSql = "SELECT id, file_path, status FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+            $existingFax = QueryUtils::querySingleRow($existingSql, [$faxId]);
 
-            if ($existingResult['count'] > 0) {
+            if ($existingFax) {
+                // If fax exists but has no file and is completed, retry download
+                $status = $faxData['status'] ?? '';
+                $isCompleted = ($status === 'COMPLETED' || $status === 'SUCCESS');
+                $hasFile = $faxData['hasFile'] ?? null;
+                $fileAvailable = (in_array($hasFile, [true, 'true', 1], true));
+
+                if (empty($existingFax['file_path']) && ($isCompleted || $fileAvailable)) {
+                    try {
+                        $filePath = $this->downloadAndSaveFax($faxId);
+                        $updateSql = "UPDATE oce_sinch_faxes " .
+                                     "SET file_path = ?, updated_at = NOW() WHERE sinch_fax_id = ?";
+                        QueryUtils::sqlStatementThrowException($updateSql, [$filePath, $faxId]);
+                        $this->logger->info("Retried and downloaded fax {$faxId} to {$filePath}");
+                    } catch (\Throwable $e) {
+                        $this->logger->error("Retry failed to download fax {$faxId}: " . $e->getMessage());
+                    }
+                }
                 continue;
             }
 
             // Download the fax content if available
+            // Try to download for completed faxes or when hasFile indicates availability
             $filePath = null;
-            if (($faxData['hasFile'] ?? 'false') === 'true') {
+            $status = $faxData['status'] ?? '';
+            $hasFile = $faxData['hasFile'] ?? null;
+
+            // hasFile can be boolean true, string "true", or number 1
+            $fileAvailable = (in_array($hasFile, [true, 'true', 1], true));
+            $isCompleted = ($status === 'COMPLETED' || $status === 'SUCCESS');
+
+            if ($fileAvailable || $isCompleted) {
                 try {
                     $filePath = $this->downloadAndSaveFax($faxId);
-                } catch (\Exception $e) {
+                    $this->logger->info("Downloaded incoming fax {$faxId} to {$filePath}");
+                } catch (\Throwable $e) {
                     $this->logger->error("Failed to download incoming fax {$faxId}: " . $e->getMessage());
                 }
             }
@@ -344,6 +422,101 @@ class FaxService
         ];
 
         QueryUtils::sqlStatementThrowException($sql, $bind);
+    }
+
+    /**
+     * Get or create "Received Faxes" category
+     *
+     * @return int Category ID
+     * @throws \Exception
+     */
+    private function getReceivedFaxesCategoryId(): int
+    {
+        // Try to find existing category
+        $sql = "SELECT id FROM categories WHERE name = ? AND parent = 1";
+        $category = QueryUtils::querySingleRow($sql, ['Received Faxes']);
+
+        if ($category) {
+            return (int)$category['id'];
+        }
+
+        // Create the category if it doesn't exist
+        $insertSql = "INSERT INTO categories (name, parent, lft, rght, aco_spec) VALUES (?, 1, 0, 0, 'patients|docs')";
+        QueryUtils::sqlStatementThrowException($insertSql, ['Received Faxes']);
+
+        // Get the newly created category ID
+        $category = QueryUtils::querySingleRow($sql, ['Received Faxes']);
+
+        if (!$category) {
+            throw new \Exception("Failed to create 'Received Faxes' category");
+        }
+
+        $this->logger->info("Created 'Received Faxes' document category");
+
+        return (int)$category['id'];
+    }
+
+    /**
+     * Move fax to patient document tree
+     *
+     * @param int $faxId Internal fax database ID
+     * @param int $patientId Patient ID
+     * @return int Created document ID
+     * @throws \Exception
+     */
+    public function moveToPatientDocuments(int $faxId, int $patientId): int
+    {
+        $faxSql = "SELECT * FROM oce_sinch_faxes WHERE id = ?";
+        $fax = QueryUtils::querySingleRow($faxSql, [$faxId]);
+
+        if (!$fax) {
+            throw new \Exception("Fax not found");
+        }
+
+        if ($fax['document_id']) {
+            throw new \Exception("Fax has already been moved to patient chart (Document ID: {$fax['document_id']})");
+        }
+
+        if (empty($fax['file_path']) || !file_exists($fax['file_path'])) {
+            throw new \Exception("Fax file not found");
+        }
+
+        $fileContents = file_get_contents($fax['file_path']);
+        if ($fileContents === false) {
+            throw new \Exception("Unable to read fax file");
+        }
+
+        $filename = basename((string) $fax['file_path']);
+        if ($fax['direction'] === 'INBOUND') {
+            $filename = "Incoming_Fax_{$fax['from_number']}_{$fax['sinch_fax_id']}.pdf";
+        } else {
+            $filename = "Outgoing_Fax_{$fax['to_number']}_{$fax['sinch_fax_id']}.pdf";
+        }
+
+        // Get or create the "Received Faxes" category
+        $categoryId = $this->getReceivedFaxesCategoryId();
+
+        $document = new \Document();
+        $result = $document->createDocument(
+            $patientId,
+            $categoryId,
+            $filename,
+            $fax['mime_type'] ?? 'application/pdf',
+            $fileContents
+        );
+
+        if (!empty($result)) {
+            throw new \Exception("Failed to create document: " . $result);
+        }
+
+        $documentId = $document->get_id();
+
+        $updateSql = "UPDATE oce_sinch_faxes SET document_id = ?, patient_id = ?, updated_at = NOW() WHERE id = ?";
+        QueryUtils::sqlStatementThrowException($updateSql, [$documentId, $patientId, $faxId]);
+
+        $this->logger->info("Moved fax {$faxId} to patient {$patientId} as document {$documentId}");
+
+        return $documentId;
     }
 
     private function getDefaultCallbackUrl(): string

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <title>{{ 'Send Fax via OpenCoreEMR Sinch'|xlt }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            padding: 15px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .alert {
+            margin-bottom: 1rem;
+        }
+        .btn {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h4>{{ 'Send Fax via OpenCoreEMR Sinch'|xlt }}</h4>
+
+        {% if error_message %}
+            <div class="alert alert-danger" role="alert">
+                {{ error_message|raw }}
+            </div>
+        {% endif %}
+
+        {% if success_message %}
+            <div class="alert alert-success" role="alert">
+                {{ success_message|raw }}
+            </div>
+        {% endif %}
+
+        <form method="post" id="fax-form">
+            <input type="hidden" name="csrf_token_form" value="{{ csrf_token|attr }}" />
+            <input type="hidden" name="is_documents" value="{{ is_documents }}" />
+            <input type="hidden" name="doc_id" value="{{ doc_id|attr }}" />
+            <input type="hidden" name="patient_id" value="{{ patient_id|attr }}" />
+
+            <div class="form-group">
+                <label for="document_name">{{ 'Document'|xlt }}:</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="document_name"
+                    value="{{ document_name|attr }}"
+                    readonly>
+            </div>
+
+            {% if patient_id %}
+            <div class="form-group">
+                <label for="patient_id_display">{{ 'Patient ID'|xlt }}:</label>
+                <input type="text" class="form-control" id="patient_id_display" value="{{ patient_id|attr }}" readonly>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="recipient">
+                    {{ 'Recipient Fax Number'|xlt }}: <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="recipient" name="recipient"
+                       placeholder="{{ 'Enter fax number (e.g., +1234567890)'|xla }}"
+                       required autocomplete="off">
+                <small class="form-text text-muted">
+                    {{ 'Enter fax number in E.164 format (e.g., +1234567890)'|xlt }}
+                </small>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-fax"></i> {{ 'Send Fax'|xlt }}
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="dlgclose();">
+                    {{ 'Cancel'|xlt }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        $(function() {
+            // Focus on recipient field when dialog opens
+            $('#recipient').focus();
+
+            // Handle form submission
+            $('#fax-form').on('submit', function(e) {
+                const recipient = $('#recipient').val().trim();
+                if (!recipient) {
+                    e.preventDefault();
+                    alert({{ 'Please enter a recipient fax number'|xlj }});
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
