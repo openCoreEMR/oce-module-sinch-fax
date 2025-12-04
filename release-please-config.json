@@ -5,11 +5,7 @@
       "package-name": "oce-module-sinch-fax",
       "changelog-path": "CHANGELOG.md",
       "extra-files": [
-        {
-          "type": "php",
-          "path": "version.php",
-          "glob": false
-        }
+        "version.php"
       ]
     }
   },
