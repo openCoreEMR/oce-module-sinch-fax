@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.0...0.5.1) (2025-12-04)
+
+
+### Bug Fixes
+
+* **version:** update DEFAULT_VERSION to 0.5.0 and add release-please marker ([#34](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/34)) ([8a83fe6](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/8a83fe6812052f2533957e8d08352d84cf958786))
+
+
+### Dependencies
+
+* **github-actions:** bump actions/checkout from 4 to 6 ([#29](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/29)) ([b88d376](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b88d376eed246d5fae452c427f0a0bba2f5ae4b1))
+
 ## [0.5.0](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.1.0...0.5.0) (2025-12-04)
 
 
