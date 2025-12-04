@@ -7,9 +7,7 @@ updates:
 - package-ecosystem: composer
   directory: /
   schedule:
-    interval: weekly
-    day: monday
-    time: 09:00
+    interval: daily
   labels:
   - dependencies
   - composer
@@ -21,9 +19,7 @@ updates:
 - package-ecosystem: github-actions
   directory: /
   schedule:
-    interval: weekly
-    day: monday
-    time: 09:00
+    interval: daily
   labels:
   - dependencies
   - github-actions
