@@ -101,6 +101,25 @@ Upon successful submission, you'll receive a fax ID that can be used to track th
 
 > **Note:** The screenshots show demo data. Patient information displayed is for demonstration purposes only, and `+19898989898` is Sinch's demo fax number for testing.
 
+### Receiving Faxes
+
+Incoming faxes are automatically received via webhook and stored in the module:
+
+1. Navigate to **Modules > OpenCoreEMR Sinch Fax**
+2. Click the **Fax List** tab to view all received faxes
+3. Locate the received fax you want to assign to a patient
+4. Click the **Move to Patient** button
+5. Select the patient to associate the fax with
+
+![Fax List with Received Faxes](.docs/screenshots/fax-list-received.png)
+
+Once moved to a patient, the fax will:
+- Appear in the patient's **Documents** tab under the **Received Faxes** category
+- Remain visible in the Fax List but marked as **"Moved to Patient X"** in the Actions column
+- Be managed like any other patient document in the patient's chart
+
+![Received Faxes in Patient Documents](.docs/screenshots/patient-documents-received-faxes.png)
+
 ### Viewing Faxes
 
 1. Navigate to **Modules > OpenCoreEMR Sinch Fax**
