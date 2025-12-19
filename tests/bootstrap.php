@@ -22,6 +22,11 @@ require_once __DIR__ . '/Mocks/MockCryptoGen.php';
 require_once __DIR__ . '/Mocks/MockCsrfUtils.php';
 require_once __DIR__ . '/Mocks/MockGlobalSetting.php';
 require_once __DIR__ . '/Mocks/MockDocument.php';
+require_once __DIR__ . '/Mocks/MockKernel.php';
+require_once __DIR__ . '/Mocks/MockTwigContainer.php';
+require_once __DIR__ . '/Mocks/MockGlobalsInitializedEvent.php';
+require_once __DIR__ . '/Mocks/MockMenuEvent.php';
+require_once __DIR__ . '/Mocks/MockPatientDocumentEvent.php';
 
 // Define OpenEMR global functions used in controllers
 if (!function_exists('xlt')) {
@@ -39,6 +44,26 @@ if (!function_exists('text')) {
      * Mock text sanitization function - just returns the input string
      */
     function text(string $text): string
+    {
+        return $text;
+    }
+}
+
+if (!function_exists('xlj')) {
+    /**
+     * Mock JSON translation function - returns JSON-encoded string
+     */
+    function xlj(string $text): string
+    {
+        return json_encode($text);
+    }
+}
+
+if (!function_exists('attr')) {
+    /**
+     * Mock attribute sanitization function - just returns the input string
+     */
+    function attr(string $text): string
     {
         return $text;
     }
