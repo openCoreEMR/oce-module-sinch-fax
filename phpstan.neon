@@ -29,4 +29,3 @@ parameters:
         - '#invalid type OpenEMR\\#'
         - '#class Document#'
         - '#Property .+ is never read, only written#'
-        - '#Parameter \#1 \$string of function base64_encode expects string, string\|false given#'
