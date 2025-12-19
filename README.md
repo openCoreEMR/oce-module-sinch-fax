@@ -5,8 +5,6 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
 ## Features
 
 - **Send Faxes**: Send faxes to one or multiple recipients
-- **Receive Faxes**: Automatically receive and store incoming faxes
-- **Webhook Support**: Real-time notifications for fax status updates
 - **Multiple File Formats**: Support for PDF, TIFF, PNG, JPEG, DOC, and DOCX
 - **Security**: Encrypted storage of API credentials, secure file handling
 - **Patient Integration**: Link faxes to patient records
@@ -50,7 +48,6 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
    - **API Authentication**: Choose Basic Auth or OAuth2
    - **API Key/Secret**: Your Sinch API credentials
    - **API Region**: Select your preferred region (or leave as 'global')
-   - **Webhook URL**: URL where Sinch will send notifications (auto-configured)
 
 3. Save the settings
 
@@ -134,7 +131,6 @@ Once moved to a patient, the fax will:
 - API credentials are encrypted in the database
 - Fax files are stored with restricted permissions
 - All file uploads are validated
-- Webhook endpoints verify Sinch authentication
 - Audit logging for all fax operations
 
 ## Support

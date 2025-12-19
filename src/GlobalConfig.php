@@ -31,14 +31,10 @@ class GlobalConfig
     public const CONFIG_OPTION_API_SECRET = 'oce_sinch_fax_api_secret';
     public const CONFIG_OPTION_OAUTH_TOKEN = 'oce_sinch_fax_oauth_token';
     public const CONFIG_OPTION_REGION = 'oce_sinch_fax_region';
-    public const CONFIG_OPTION_WEBHOOK_SECRET = 'oce_sinch_fax_webhook_secret';
     public const CONFIG_OPTION_FILE_STORAGE_PATH = 'oce_sinch_fax_file_storage_path';
     public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
     public const CONFIG_OPTION_ENABLE_STATUS_POLLING = 'oce_sinch_fax_enable_status_polling';
-    public const CONFIG_OPTION_ENABLE_WEBHOOKS = 'oce_sinch_fax_enable_webhooks';
-    public const CONFIG_OPTION_ENABLE_INCOMING_POLLING = 'oce_sinch_fax_enable_incoming_polling';
-    public const CONFIG_OPTION_LAST_POLL_TIME = 'oce_sinch_fax_last_poll_time';
 
     public function isEnabled(): bool
     {
@@ -92,17 +88,6 @@ class GlobalConfig
         return $this->globals->getString(self::CONFIG_OPTION_REGION, 'global');
     }
 
-    public function getWebhookSecret(): string
-    {
-        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_SECRET, '');
-        if (!empty($value)) {
-            $cryptoGen = new CryptoGen();
-            $decrypted = $cryptoGen->decryptStandard($value);
-            return $decrypted !== false ? $decrypted : '';
-        }
-        return '';
-    }
-
     public function getFileStoragePath(): string
     {
         $path = $this->globals->getString(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
@@ -125,38 +110,6 @@ class GlobalConfig
     public function isStatusPollingEnabled(): bool
     {
         return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
-    }
-
-    public function isWebhooksEnabled(): bool
-    {
-        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_WEBHOOKS, true);
-    }
-
-    public function isIncomingPollingEnabled(): bool
-    {
-        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_INCOMING_POLLING, false);
-    }
-
-    public function getLastPollTime(): ?string
-    {
-        return $this->globals->get(self::CONFIG_OPTION_LAST_POLL_TIME);
-    }
-
-    public function setLastPollTime(string $time): void
-    {
-        $this->globals->set(self::CONFIG_OPTION_LAST_POLL_TIME, $time);
-        QueryUtils::sqlStatementThrowException(
-            "UPDATE globals SET gl_value = ? WHERE gl_name = ?",
-            [$time, self::CONFIG_OPTION_LAST_POLL_TIME]
-        );
-    }
-
-    public function hasPublicCallbackUrl(): bool
-    {
-        // Check if we have a public (non-localhost) site address for callbacks
-        $siteAddr = $this->globals->getString('site_addr_oath', '');
-        $localhostPattern = '/localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\./';
-        return !empty($siteAddr) && !preg_match($localhostPattern, $siteAddr);
     }
 
     public function getSiteAddrOath(): string
@@ -249,12 +202,6 @@ class GlobalConfig
                     'apse2' => 'South East Asia 2'
                 ]
             ],
-            self::CONFIG_OPTION_WEBHOOK_SECRET => [
-                'title' => 'Webhook Secret',
-                'description' => 'Secret key for validating incoming webhooks (auto-generated if empty)',
-                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
-                'default' => ''
-            ],
             self::CONFIG_OPTION_FILE_STORAGE_PATH => [
                 'title' => 'File Storage Path',
                 'description' => 'Path where fax files will be stored (leave empty for default)',
@@ -275,24 +222,9 @@ class GlobalConfig
             ],
             self::CONFIG_OPTION_ENABLE_STATUS_POLLING => [
                 'title' => 'Enable Status Polling',
-                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes ' .
-                    '(enabled automatically for localhost/testing)',
-                'type' => GlobalSetting::DATA_TYPE_BOOL,
-                'default' => false
-            ],
-            self::CONFIG_OPTION_ENABLE_WEBHOOKS => [
-                'title' => 'Enable Webhooks',
-                'description' => 'Enable webhook endpoint for receiving fax status updates and ' .
-                    'incoming faxes from Sinch',
+                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes',
                 'type' => GlobalSetting::DATA_TYPE_BOOL,
                 'default' => true
-            ],
-            self::CONFIG_OPTION_ENABLE_INCOMING_POLLING => [
-                'title' => 'Enable Incoming Fax Polling',
-                'description' => 'Poll Sinch API for new incoming faxes (useful when webhooks are ' .
-                    'disabled or unavailable)',
-                'type' => GlobalSetting::DATA_TYPE_BOOL,
-                'default' => false
             ]
         ];
     }

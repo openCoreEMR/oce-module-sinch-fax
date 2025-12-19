@@ -109,15 +109,6 @@ class FaxListController
      */
     private function showFaxList(Request $request): Response
     {
-        // Poll for incoming faxes if enabled
-        if ($this->config->isIncomingPollingEnabled()) {
-            try {
-                $this->faxService->pollIncomingFaxes();
-            } catch (\Throwable $e) {
-                error_log("Error polling for incoming faxes: " . $e->getMessage());
-            }
-        }
-
         // Build filter conditions
         $whereClauses = [];
         $binds = [];
@@ -146,9 +137,7 @@ class FaxListController
             $faxes = QueryUtils::fetchRecords($sql, $binds);
 
             // Update status for any faxes that are still in progress
-            $shouldPoll = !$this->config->hasPublicCallbackUrl() || $this->config->isStatusPollingEnabled();
-
-            if ($shouldPoll) {
+            if ($this->config->isStatusPollingEnabled()) {
                 foreach ($faxes as &$fax) {
                     $shouldPollFax = ($fax['status'] === 'IN_PROGRESS') ||
                                    ($fax['status'] === 'FAILURE' && empty($fax['error_message']));
@@ -197,11 +186,6 @@ class FaxListController
         // Render template
         $content = $this->twig->render('fax/list.html.twig', [
             'faxes' => $faxes,
-            'config' => [
-                'webhooks_enabled' => $this->config->isWebhooksEnabled(),
-                'polling_enabled' => $this->config->isIncomingPollingEnabled(),
-                'last_poll_time' => $this->config->getLastPollTime(),
-            ],
             'success_message' => $successMessage,
             'error_message' => $errorMessage,
             'csrf_token' => CsrfUtils::collectCsrfToken(),
