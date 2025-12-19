@@ -61,7 +61,7 @@ jobs:
       run: composer phpunit-coverage
 
     - name: Upload coverage reports to Codecov
-      if: matrix.php-version == '8.2' && secrets.CODECOV_TOKEN != ''
+      if: matrix.php-version == '8.2'
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
