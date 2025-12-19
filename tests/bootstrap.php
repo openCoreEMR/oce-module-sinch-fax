@@ -15,6 +15,9 @@
 // Load Composer autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Suppress error_log output during tests by redirecting to null
+ini_set('error_log', '/dev/null');
+
 // Load mock classes before anything else to prevent "class not found" errors
 require_once __DIR__ . '/Mocks/MockSystemLogger.php';
 require_once __DIR__ . '/Mocks/MockQueryUtils.php';

@@ -7,7 +7,9 @@
          displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnTestsThatTriggerDeprecations="true"
          displayDetailsOnTestsThatTriggerNotices="true"
-         displayDetailsOnTestsThatTriggerErrors="true">
+         displayDetailsOnTestsThatTriggerErrors="true"
+         stderr="true"
+         beStrictAboutOutputDuringTests="false">
     <testsuites>
         <testsuite name="Unit Tests">
             <directory>tests/Unit</directory>
