@@ -53,19 +53,12 @@ jobs:
       run: composer install --prefer-dist --no-progress --no-interaction
 
     - name: Run tests
+      if: matrix.php-version != '8.2'
       run: composer test
 
     - name: Run tests with coverage
       if: matrix.php-version == '8.2'
-      run: composer phpunit-coverage
-
-    - name: Upload coverage reports to Codecov
-      if: matrix.php-version == '8.2'
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        echo "::group::Running PHPUnit with Coverage"
+        vendor/bin/phpunit --coverage-text --colors=never
+        echo "::endgroup::"
