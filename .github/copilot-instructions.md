@@ -49,7 +49,7 @@ Public PHP files should be short! Just dispatch a controller and send a response
  * [Description of endpoint]
  *
  * @package   OpenCoreEMR
- * @link      http://www.open-emr.org
+ * @link      https://opencoreemr.com
  * @author    [Author Name] <email@example.com>
  * @copyright Copyright (c) 2025 OpenCoreEMR Inc
  * @license   GNU General Public License 3
