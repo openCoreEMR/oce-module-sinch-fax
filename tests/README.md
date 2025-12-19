@@ -114,8 +114,8 @@ docker compose run --rm phpunit-coverage
 # Run a specific test file
 docker compose run --rm phpunit vendor/bin/phpunit tests/Unit/GlobalConfigTest.php
 
-# Run tests with verbose output
-docker compose run --rm phpunit vendor/bin/phpunit --testdox --verbose
+# Run tests with detailed output
+docker compose run --rm phpunit vendor/bin/phpunit --testdox
 
 # Clean up
 docker compose down
