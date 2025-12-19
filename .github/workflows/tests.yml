@@ -60,5 +60,13 @@ jobs:
       if: matrix.php-version == '8.2'
       run: |
         echo "::group::Running PHPUnit with Coverage"
-        vendor/bin/phpunit --coverage-text --colors=never
+        vendor/bin/phpunit --coverage-text --coverage-html coverage-report --colors=never
         echo "::endgroup::"
+
+    - name: Upload coverage report
+      if: matrix.php-version == '8.2'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage-report/
+        retention-days: 14
