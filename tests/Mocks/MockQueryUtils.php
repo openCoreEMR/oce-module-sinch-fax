@@ -28,6 +28,12 @@ class QueryUtils
     private static array $mockResults = [];
 
     /**
+     * Queue of results for sequential calls to the same query
+     * @var array<string, array<int, array<int, array<string, mixed>>>>
+     */
+    private static array $mockResultQueue = [];
+
+    /**
      * @param string $sql
      * @param array<mixed> $binds
      * @return array<int, array<string, mixed>>
@@ -50,8 +56,15 @@ class QueryUtils
     {
         self::$queries[] = ['sql' => $sql, 'binds' => $binds];
 
-        // Return mock results if set
         $key = self::generateKey($sql, $binds);
+
+        // Check queue first for sequential results
+        if (!empty(self::$mockResultQueue[$key])) {
+            $results = array_shift(self::$mockResultQueue[$key]);
+            return !empty($results) ? $results[0] : null;
+        }
+
+        // Fall back to static mock results
         $results = self::$mockResults[$key] ?? [];
         return !empty($results) ? $results[0] : null;
     }
@@ -105,6 +118,24 @@ class QueryUtils
     public static function clearMockResults(): void
     {
         self::$mockResults = [];
+        self::$mockResultQueue = [];
+    }
+
+    /**
+     * Queue a result for sequential calls to the same query
+     * Results are returned in FIFO order
+     *
+     * @param string $sql
+     * @param array<mixed> $binds
+     * @param array<int, array<string, mixed>> $results
+     */
+    public static function queueMockResult(string $sql, array $binds, array $results): void
+    {
+        $key = self::generateKey($sql, $binds);
+        if (!isset(self::$mockResultQueue[$key])) {
+            self::$mockResultQueue[$key] = [];
+        }
+        self::$mockResultQueue[$key][] = $results;
     }
 
     /**

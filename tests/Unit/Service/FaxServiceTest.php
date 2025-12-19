@@ -74,45 +74,79 @@ class FaxServiceTest extends TestCase
         $this->assertInstanceOf(FaxService::class, $this->faxService);
     }
 
-    public function testDownloadAndSaveFaxCreatesDirectory(): void
+    public function testGetReceivedFaxesCategoryIdReturnsExisting(): void
     {
-        // Create a test file to return as download
-        $mockContent = '%PDF-1.4 test fax content';
+        // Set up mock to return existing category
+        QueryUtils::setMockResult(
+            "SELECT id FROM categories WHERE name = ? AND parent = 1",
+            ['Received Faxes'],
+            [['id' => 42]]
+        );
 
-        $mockClient = $this->createMock(SinchFaxClient::class);
-        $mockClient->method('downloadFax')
-            ->with('test-fax-123')
-            ->willReturn($mockContent);
+        // Use reflection to call private method
+        $reflection = new \ReflectionClass($this->faxService);
+        $method = $reflection->getMethod('getReceivedFaxesCategoryId');
+        $method->setAccessible(true);
 
-        // Create a testable service with mock client
-        $testService = new class($this->config, $mockClient) extends FaxService {
-            public function __construct(GlobalConfig $config, private $mockClient) {
-                parent::__construct($config);
-            }
+        $categoryId = $method->invoke($this->faxService);
 
-            public function downloadAndSaveFax(string $faxId): string {
-                $content = $this->mockClient->downloadFax($faxId);
-                $storagePath = $this->config->getFileStoragePath();
+        $this->assertEquals(42, $categoryId);
+    }
 
-                if (!is_dir($storagePath)) {
-                    mkdir($storagePath, 0770, true);
-                }
+    public function testGetReceivedFaxesCategoryIdCreatesNew(): void
+    {
+        // Set up mock to return nothing first, then return new category using queue
+        QueryUtils::queueMockResult(
+            "SELECT id FROM categories WHERE name = ? AND parent = 1",
+            ['Received Faxes'],
+            []  // First call returns nothing
+        );
 
-                $filename = $faxId . '.pdf';
-                $filePath = $storagePath . DIRECTORY_SEPARATOR . $filename;
+        QueryUtils::queueMockResult(
+            "SELECT id FROM categories WHERE name = ? AND parent = 1",
+            ['Received Faxes'],
+            [['id' => 99]]  // Second call returns newly created category
+        );
 
-                file_put_contents($filePath, $content);
-                chmod($filePath, 0660);
+        // Use reflection to call private method
+        $reflection = new \ReflectionClass($this->faxService);
+        $method = $reflection->getMethod('getReceivedFaxesCategoryId');
+        $method->setAccessible(true);
 
-                return $filePath;
-            }
-        };
+        $categoryId = $method->invoke($this->faxService);
 
-        $filePath = $testService->downloadAndSaveFax('test-fax-123');
+        $this->assertEquals(99, $categoryId);
 
-        $this->assertFileExists($filePath);
-        $this->assertStringContainsString('test-fax-123.pdf', $filePath);
-        $this->assertEquals($mockContent, file_get_contents($filePath));
+        // Verify INSERT was called
+        $queries = QueryUtils::getQueries();
+        $insertQuery = array_filter($queries, fn($q) => str_contains($q['sql'], 'INSERT INTO categories'));
+        $this->assertNotEmpty($insertQuery);
+    }
+
+    public function testGetReceivedFaxesCategoryIdThrowsWhenCreationFails(): void
+    {
+        // Set up mock to return nothing both times (creation fails) using queue
+        QueryUtils::queueMockResult(
+            "SELECT id FROM categories WHERE name = ? AND parent = 1",
+            ['Received Faxes'],
+            []  // First call returns nothing
+        );
+
+        QueryUtils::queueMockResult(
+            "SELECT id FROM categories WHERE name = ? AND parent = 1",
+            ['Received Faxes'],
+            []  // Second call also returns nothing (creation failed)
+        );
+
+        // Use reflection to call private method
+        $reflection = new \ReflectionClass($this->faxService);
+        $method = $reflection->getMethod('getReceivedFaxesCategoryId');
+        $method->setAccessible(true);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Failed to create 'Received Faxes' category");
+
+        $method->invoke($this->faxService);
     }
 
     public function testMoveToPatientDocumentsThrowsExceptionWhenFaxNotFound(): void
