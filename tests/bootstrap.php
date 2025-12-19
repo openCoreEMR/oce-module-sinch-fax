@@ -21,6 +21,28 @@ require_once __DIR__ . '/Mocks/MockQueryUtils.php';
 require_once __DIR__ . '/Mocks/MockCryptoGen.php';
 require_once __DIR__ . '/Mocks/MockCsrfUtils.php';
 require_once __DIR__ . '/Mocks/MockGlobalSetting.php';
+require_once __DIR__ . '/Mocks/MockDocument.php';
+
+// Define OpenEMR global functions used in controllers
+if (!function_exists('xlt')) {
+    /**
+     * Mock translation function - just returns the input string
+     */
+    function xlt(string $text): string
+    {
+        return $text;
+    }
+}
+
+if (!function_exists('text')) {
+    /**
+     * Mock text sanitization function - just returns the input string
+     */
+    function text(string $text): string
+    {
+        return $text;
+    }
+}
 
 // Define constants used in tests
 if (!defined('DIRECTORY_SEPARATOR')) {
