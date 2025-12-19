@@ -1,0 +1,21 @@
+services:
+  phpunit:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+    - .:/app
+    - /app/vendor    # Use container's vendor for better performance
+    command: vendor/bin/phpunit --testdox
+
+  phpunit-coverage:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+    - .:/app
+    - /app/vendor
+    - ./htmlcov:/app/htmlcov    # Mount coverage directory to host
+    command: vendor/bin/phpunit --coverage-html htmlcov --coverage-text
+    environment:
+      XDEBUG_MODE: coverage

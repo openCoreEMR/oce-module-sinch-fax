@@ -40,6 +40,7 @@
     "ergebnis/composer-normalize": "^2.44",
     "maglnet/composer-require-checker": "^4.0",
     "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.0",
     "squizlabs/php_codesniffer": "^4.0"
   },
@@ -48,6 +49,11 @@
   "autoload": {
     "psr-4": {
       "OpenCoreEMR\\Modules\\SinchFax\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OpenCoreEMR\\Modules\\SinchFax\\Tests\\": "tests/"
     }
   },
   "config": {
@@ -76,8 +82,11 @@
     "phpcbf": "phpcbf",
     "phpcs": "phpcs",
     "phpstan": "phpstan --memory-limit=1g analyse",
+    "phpunit": "phpunit --testdox",
+    "phpunit-coverage": "phpunit --coverage-html htmlcov --coverage-text",
     "rector": "rector process --dry-run",
     "rector-fix": "rector process",
-    "require-checker": "composer-require-checker check --config-file=.composer-require-checker.json"
+    "require-checker": "composer-require-checker check --config-file=.composer-require-checker.json",
+    "test": "@phpunit"
   }
 }

@@ -25,8 +25,14 @@ class SinchFaxClient
     private readonly string $projectId;
     private readonly string $authMethod;
 
-    public function __construct(private readonly GlobalConfig $config)
-    {
+    /**
+     * @param GlobalConfig $config Module configuration
+     * @param Client|null $httpClient Optional HTTP client for testing
+     */
+    public function __construct(
+        private readonly GlobalConfig $config,
+        ?Client $httpClient = null
+    ) {
         $this->logger = new SystemLogger();
         $this->projectId = $config->getProjectId();
         $this->authMethod = $config->getAuthMethod();
@@ -34,7 +40,7 @@ class SinchFaxClient
         $region = $config->getRegion();
         $this->baseUrl = $region === 'global' ? 'https://fax.api.sinch.com' : "https://{$region}.fax.api.sinch.com";
 
-        $this->httpClient = new Client([
+        $this->httpClient = $httpClient ?? new Client([
             'base_uri' => $this->baseUrl,
             'timeout' => 30.0,
             'headers' => $this->getAuthHeaders(),
