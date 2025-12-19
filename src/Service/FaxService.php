@@ -21,11 +21,9 @@ class FaxService
 {
     private readonly SinchFaxClient $client;
     private readonly SystemLogger $logger;
-    private readonly GlobalConfig $config;
 
-    public function __construct(?GlobalConfig $config = null)
+    public function __construct(private readonly GlobalConfig $config = new GlobalConfig())
     {
-        $this->config = $config ?? new GlobalConfig();
         $this->client = new SinchFaxClient($this->config);
         $this->logger = new SystemLogger();
     }

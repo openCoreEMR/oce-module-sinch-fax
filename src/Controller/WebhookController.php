@@ -28,7 +28,7 @@ class WebhookController
 
     public function __construct(?GlobalsAccessor $globalsAccessor = null)
     {
-        $globalsAccessor = $globalsAccessor ?? new GlobalsAccessor();
+        $globalsAccessor ??= new GlobalsAccessor();
         $this->config = new GlobalConfig($globalsAccessor);
         $this->faxService = new FaxService($this->config);
         $this->logger = new SystemLogger();
