@@ -14,7 +14,7 @@ namespace OpenCoreEMR\Modules\SinchFax;
 
 use OpenEMR\Services\Globals\GlobalSetting;
 use OpenEMR\Common\Crypto\CryptoGen;
-use OpenEMR\Common\Database\QueryUtils;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 class GlobalConfig
 {
@@ -35,6 +35,9 @@ class GlobalConfig
     public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
     public const CONFIG_OPTION_ENABLE_STATUS_POLLING = 'oce_sinch_fax_enable_status_polling';
+    public const CONFIG_OPTION_WEBHOOK_USERNAME = 'oce_sinch_fax_webhook_username';
+    public const CONFIG_OPTION_WEBHOOK_PASSWORD = 'oce_sinch_fax_webhook_password';
+    public const CONFIG_OPTION_WEBHOOK_IP_WHITELIST = 'oce_sinch_fax_webhook_ip_whitelist';
 
     public function isEnabled(): bool
     {
@@ -110,6 +113,80 @@ class GlobalConfig
     public function isStatusPollingEnabled(): bool
     {
         return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
+    }
+
+    public function getWebhookUsername(): string
+    {
+        return $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_USERNAME, '');
+    }
+
+    public function getWebhookPassword(): string
+    {
+        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
+        if (!empty($value)) {
+            $cryptoGen = new CryptoGen();
+            $decrypted = $cryptoGen->decryptStandard($value);
+            return $decrypted !== false ? $decrypted : '';
+        }
+        return '';
+    }
+
+    /**
+     * Get the webhook IP whitelist as an array of IP addresses or CIDR ranges
+     *
+     * @return array<int, string>
+     */
+    public function getWebhookIpWhitelist(): array
+    {
+        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST, '');
+        if (empty($value)) {
+            return [];
+        }
+        // Split by newlines and filter empty values
+        $lines = explode("\n", $value);
+        $entries = [];
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed !== '') {
+                $entries[] = $trimmed;
+            }
+        }
+        return $entries;
+    }
+
+    /**
+     * Check if webhook authentication is configured
+     */
+    public function isWebhookAuthConfigured(): bool
+    {
+        return !empty($this->getWebhookUsername()) && !empty($this->getWebhookPassword());
+    }
+
+    /**
+     * Verify webhook Basic Auth credentials
+     */
+    public function verifyWebhookAuth(string $username, string $password): bool
+    {
+        if (!$this->isWebhookAuthConfigured()) {
+            return false;
+        }
+        return $username === $this->getWebhookUsername()
+            && $password === $this->getWebhookPassword();
+    }
+
+    /**
+     * Check if an IP address is in the whitelist
+     * Supports both raw IPs and CIDR notation (e.g., 192.168.1.0/24)
+     * Returns true if whitelist is empty (no restriction) or IP matches
+     */
+    public function isIpWhitelisted(string $ip): bool
+    {
+        $whitelist = $this->getWebhookIpWhitelist();
+        if (empty($whitelist)) {
+            return true; // No whitelist = allow all
+        }
+
+        return IpUtils::checkIp($ip, $whitelist);
     }
 
     public function getSiteAddrOath(): string
@@ -225,6 +302,24 @@ class GlobalConfig
                 'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes',
                 'type' => GlobalSetting::DATA_TYPE_BOOL,
                 'default' => true
+            ],
+            self::CONFIG_OPTION_WEBHOOK_USERNAME => [
+                'title' => 'Webhook Username',
+                'description' => 'Username for HTTP Basic Auth on webhook endpoint (required for Sinch callbacks)',
+                'type' => GlobalSetting::DATA_TYPE_TEXT,
+                'default' => ''
+            ],
+            self::CONFIG_OPTION_WEBHOOK_PASSWORD => [
+                'title' => 'Webhook Password',
+                'description' => 'Password for HTTP Basic Auth on webhook endpoint (required for Sinch callbacks)',
+                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
+                'default' => ''
+            ],
+            self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => [
+                'title' => 'Webhook IP Whitelist',
+                'description' => 'Allowed IPs for webhooks (one per line, supports CIDR). Empty = allow all.',
+                'type' => GlobalSetting::DATA_TYPE_TEXT,
+                'default' => ''
             ]
         ];
     }

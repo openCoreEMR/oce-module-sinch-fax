@@ -74,14 +74,16 @@ class FaxListController
         }
 
         $uploadedFiles = $request->files->get('files');
-        if (!$uploadedFiles || empty($uploadedFiles[0])) {
+        if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
             $_SESSION['fax_error'] = "At least one file is required";
             return $this->redirect($request);
         }
 
         $files = [];
         foreach ($uploadedFiles as $uploadedFile) {
-            if ($uploadedFile->isValid()) {
+            $isValidUpload = $uploadedFile instanceof \Symfony\Component\HttpFoundation\File\UploadedFile
+                && $uploadedFile->isValid();
+            if ($isValidUpload) {
                 $files[] = [
                     'path' => $uploadedFile->getPathname(),
                     'filename' => $uploadedFile->getClientOriginalName()
@@ -96,7 +98,8 @@ class FaxListController
                 'coverPageId' => $coverPageId,
             ]);
 
-            $_SESSION['fax_success'] = "Fax sent successfully! ID: " . ($result['id'] ?? 'Unknown');
+            $faxId = isset($result['id']) && is_scalar($result['id']) ? (string)$result['id'] : 'Unknown';
+            $_SESSION['fax_success'] = "Fax sent successfully! ID: " . $faxId;
         } catch (\Throwable $e) {
             $_SESSION['fax_error'] = "Error sending fax: " . $e->getMessage();
         }
@@ -239,11 +242,10 @@ class FaxListController
 
         $queryString = http_build_query($queryParams);
         // Use the actual script name, not getPathInfo() which may be wrong in OpenEMR
-        $scriptName = $request->server->get(
-            'SCRIPT_NAME',
-            '/interface/modules/custom_modules/oce-module-sinch-fax/public/index.php'
-        );
-        $uri = $queryString ? $scriptName . '?' . $queryString : $scriptName;
+        $scriptNameParam = $request->server->get('SCRIPT_NAME');
+        $scriptName = is_string($scriptNameParam) ? $scriptNameParam
+            : '/interface/modules/custom_modules/oce-module-sinch-fax/public/index.php';
+        $uri = $queryString !== '' ? $scriptName . '?' . $queryString : $scriptName;
 
         return new RedirectResponse($uri);
     }

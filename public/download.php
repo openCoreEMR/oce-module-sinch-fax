@@ -21,13 +21,17 @@ use Symfony\Component\HttpFoundation\Response;
 // Get kernel and bootstrap module
 $globalsAccessor = new GlobalsAccessor();
 $kernel = $globalsAccessor->get('kernel');
+if (!$kernel instanceof \OpenEMR\Core\Kernel) {
+    throw new \RuntimeException('OpenEMR Kernel not available');
+}
 $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
 
 // Get controller
 $controller = $bootstrap->getFaxDownloadController();
 
 // Get fax ID from request
-$faxId = (int)($_GET['fax_id'] ?? 0);
+$faxIdParam = $_GET['fax_id'] ?? 0;
+$faxId = is_numeric($faxIdParam) ? (int)$faxIdParam : 0;
 
 if (empty($faxId)) {
     throw new FaxValidationException("Missing fax ID");

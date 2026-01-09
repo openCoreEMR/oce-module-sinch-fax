@@ -1,5 +1,5 @@
 parameters:
-    level: 8
+    level: 9
     paths:
         - src
         - public
@@ -28,11 +28,7 @@ parameters:
 
         # OpenEMR classes not available without full OpenEMR installation
         # reportUnmatched: false allows CI to pass when OpenEMR IS installed
-        - message: '#unknown class OpenEMR\\#'
-          reportUnmatched: false
-        - message: '#Instantiated class OpenEMR\\#'
-          reportUnmatched: false
-        - message: '#invalid type OpenEMR\\#'
+        - message: '#OpenEMR#'
           reportUnmatched: false
 
         # Class Document from OpenEMR not typed properly
@@ -40,11 +36,3 @@ parameters:
 
         # Never-read properties are intentional (event handlers, etc.)
         - '#Property .+ is never read, only written#'
-
-        # OpenEMR GlobalsService::createSection() has incorrect PHPDoc
-        # The $beforeSection param is documented as bool but accepts string|false
-        # This is an upstream OpenEMR documentation issue
-        -
-            message: '#Parameter \#2 \$beforeSection of method OpenEMR\\Services\\Globals\\GlobalsService::createSection\(\) expects bool, string given#'
-            path: src/Bootstrap.php
-            reportUnmatched: false
