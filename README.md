@@ -121,8 +121,24 @@ Once moved to a patient, the fax will:
 
 1. Navigate to **Modules > OpenCoreEMR Sinch Fax**
 2. Click the **Fax List** tab to view all sent and received faxes
-3. The list shows direction, fax ID, recipient/sender, status, and timestamp
-4. Use filters to search by date, direction, status, or patient
+3. The list shows direction, fax ID, recipient/sender, status, pages, and timestamp
+
+**Fax States:**
+- **Unread** - New inbound faxes (highlighted with bold text)
+- **Read** - Viewed faxes (outbound faxes default to read)
+- **Archived** - Hidden from default view
+
+**Filtering:**
+- Filter by direction (Inbound/Outbound)
+- Toggle "Show Archived" to include archived faxes
+
+**Bulk Actions:**
+- Select multiple faxes using checkboxes
+- Mark as Read, Mark as Unread, or Archive in bulk
+
+**Automatic Actions:**
+- Faxes are automatically marked as read when downloaded/viewed
+- Reconciliation runs on page load to detect any faxes missed by webhooks
 
 ![Fax List](.docs/screenshots/fax-list.png)
 

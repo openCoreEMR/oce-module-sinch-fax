@@ -39,7 +39,6 @@ This document describes end-to-end testing workflows for the Sinch Fax module.
 | File Storage Path | Custom storage location (uses default if empty) |
 | Auto-Receive Faxes | Enable webhook processing for inbound faxes |
 | Default Retry Count | Number of retry attempts (default: 3) |
-| Enable Status Polling | Poll Sinch API for status updates |
 
 ### Webhook Settings (Required for Inbound Faxes)
 
@@ -132,9 +131,9 @@ task webhook:test:completed
 task webhook:test:failed
 ```
 
-#### Status Polling (if enabled)
+#### Reconciliation
 
-The module can poll Sinch API for status updates if "Enable Status Polling" is configured.
+On each fax list page load, the module queries the Sinch API to detect any faxes that may have been missed due to webhook delivery failures. Missed faxes appear with an error message indicating the document was not received.
 
 ### 5. Database Verification
 

@@ -10,6 +10,17 @@ Sinch sends webhooks to notify of fax events:
 
 **CRITICAL (HIPAA Mode):** In HIPAA mode, fax documents are ONLY available during webhook delivery. They cannot be retrieved later via API. This makes webhook handling essential for inbound faxes.
 
+## Reconciliation
+
+If webhooks fail to deliver (network issues, server downtime, etc.), the module includes a reconciliation mechanism:
+
+- On each fax list page load, the module queries Sinch for recent inbound faxes
+- Any faxes not already in the local database are created with an error message
+- These "reconciled" faxes appear with: *"Fax acknowledged, but document was not received by OpenEMR. Contact sender to re-send."*
+- The last sync time is tracked to avoid re-processing
+
+**Note:** In HIPAA mode, reconciled faxes cannot retrieve the document content—only metadata is available. The sender must re-send the fax.
+
 ## Webhook Authentication
 
 The Sinch Fax webhook endpoint requires:
