@@ -1,21 +1,86 @@
-services:
-  phpunit:
-    build:
-      context: .
-      dockerfile: Dockerfile.test
-    volumes:
-    - .:/app
-    - /app/vendor    # Use container's vendor for better performance
-    command: vendor/bin/phpunit --testdox
+# OpenEMR module development environment
+#
+# Extends OpenEMR's development-easy services with overrides:
+# - Random ports instead of fixed (8300, 9300, etc.)
+# - Module mounted into OpenEMR's custom_modules directory
+# - PHPUnit services available via profiles
 
-  phpunit-coverage:
+services:
+  openemr:
+    extends:
+      file: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+      service: openemr
+    ports: !override
+    - "80"
+    - "443"
+    volumes:
+    - .:/var/www/localhost/htdocs/openemr/interface/modules/custom_modules/oce-module-sinch-fax:rw
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://localhost:443/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 3m
+
+  mysql:
+    extends:
+      file: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+      service: mysql
+    ports: !override
+    - "3306"
+
+  phpmyadmin:
+    extends:
+      file: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+      service: phpmyadmin
+    ports: !override
+    - "80"
+
+  couchdb:
+    extends:
+      file: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+      service: couchdb
+    ports: !override
+    - "5984"
+    - "6984"
+
+  openldap:
+    extends:
+      file: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+      service: openldap
+
+  # PHPUnit test runner
+  phpunit:
+    profiles: [test]
     build:
       context: .
       dockerfile: Dockerfile.test
     volumes:
     - .:/app
     - /app/vendor
-    - ./htmlcov:/app/htmlcov    # Mount coverage directory to host
+    command: vendor/bin/phpunit --testdox
+
+  # PHPUnit with coverage
+  phpunit-coverage:
+    profiles: [test]
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+    - .:/app
+    - /app/vendor
+    - ./htmlcov:/app/htmlcov
     command: vendor/bin/phpunit --coverage-html htmlcov --coverage-text
     environment:
       XDEBUG_MODE: coverage
+
+volumes:
+  databasevolume: {}
+  assetvolume: {}
+  themevolume: {}
+  sitesvolume: {}
+  nodemodules: {}
+  vendordir: {}
+  ccdanodemodules: {}
+  logvolume: {}
+  couchdbvolume: {}

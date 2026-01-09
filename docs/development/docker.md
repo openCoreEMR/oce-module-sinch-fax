@@ -1,5 +1,30 @@
 # Docker Development Environment
 
+## Architecture
+
+The `compose.yml` in this repository extends OpenEMR's development-easy Docker setup:
+
+```
+compose.yml (this repo)
+    └── extends: vendor/openemr/openemr/docker/development-easy/docker-compose.yml
+```
+
+**What compose.yml does:**
+- Extends all services from OpenEMR's docker-compose.yml using `extends:`
+- Overrides ports with `!override` to use random ports (avoids conflicts)
+- Mounts this module into OpenEMR's custom_modules directory
+- Adds a healthcheck for the openemr service (waits for HTTP 200)
+- Includes PHPUnit services with `[test]` profile
+
+**Why this approach:**
+- OpenEMR is installed as a Composer dependency in `vendor/openemr/openemr/`
+- We reuse OpenEMR's official Docker setup without duplicating configuration
+- Changes to OpenEMR's Docker setup are automatically inherited
+- Project name is derived from directory (`oce-module-sinch-fax`)
+
+**First startup after purge:**
+The first `docker compose up -d --wait` after a fresh install takes 2-3 minutes while OpenEMR initializes. The healthcheck has a 3-minute start period to accommodate this.
+
 ## Quick Start Commands
 
 ```bash
@@ -169,11 +194,16 @@ docker compose exec -T mysql mariadb -uroot -proot openemr < module_backup.sql
 
 ## Environment Details
 
-**Services:**
+**Services (from OpenEMR's docker-compose):**
 - `openemr` - OpenEMR application server (Alpine Linux, PHP 8.2, Apache)
 - `mysql` - MariaDB 11.4 database
 - `phpmyadmin` - Web-based MySQL admin interface
-- `phpunit` / `phpunit-coverage` - Test runners
+- `couchdb` - CouchDB for document storage
+- `openldap` - LDAP server for authentication testing
+
+**Services (from this repo's compose.yml):**
+- `phpunit` - Test runner (profile: test)
+- `phpunit-coverage` - Test runner with coverage (profile: test)
 
 **Volumes:**
 - `databasevolume` - Persistent MySQL data
