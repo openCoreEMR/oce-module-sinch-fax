@@ -45,6 +45,7 @@ class FaxListController
         return match ($action) {
             'send' => $this->handleSendFax($request),
             'move_to_patient' => $this->handleMoveToPatient($request),
+            'update_read_status' => $this->handleUpdateReadStatus($request),
             'list' => $this->showFaxList($request),
             default => $this->showFaxList($request),
         };
@@ -112,73 +113,45 @@ class FaxListController
      */
     private function showFaxList(Request $request): Response
     {
+        // Reconcile with Sinch API to detect missed webhooks
+        try {
+            $missedFaxes = $this->faxService->reconcileInboundFaxes();
+            if (!empty($missedFaxes)) {
+                $this->logger->info("Reconciled " . count($missedFaxes) . " missed faxes");
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error("Reconciliation failed: " . $e->getMessage());
+        }
+
         // Build filter conditions
         $whereClauses = [];
         $binds = [];
 
+        // Direction filter
         $direction = $request->query->get('direction');
-        if (!empty($direction)) {
-            $whereClauses[] = "direction = ?";
+        if (!empty($direction) && in_array($direction, ['INBOUND', 'OUTBOUND'], true)) {
+            $whereClauses[] = 'direction = ?';
             $binds[] = $direction;
         }
 
-        $status = $request->query->get('status');
-        if (!empty($status)) {
-            $whereClauses[] = "status = ?";
-            $binds[] = $status;
+        // Show archived filter (default: exclude archived)
+        $showArchived = $request->query->get('show_archived') === '1';
+        if (!$showArchived) {
+            $whereClauses[] = "read_status != 'archived'";
         }
 
         // Fetch faxes from database
         $faxes = [];
         try {
-            $sql = "SELECT * FROM oce_sinch_faxes";
+            $sql = 'SELECT * FROM oce_sinch_faxes';
             if (!empty($whereClauses)) {
-                $sql .= " WHERE " . implode(" AND ", $whereClauses);
+                $sql .= ' WHERE ' . implode(' AND ', $whereClauses);
             }
-            $sql .= " ORDER BY created_at DESC LIMIT 50";
+            $sql .= ' ORDER BY created_at DESC LIMIT 50';
 
             $faxes = QueryUtils::fetchRecords($sql, $binds);
-
-            // Update status for any faxes that are still in progress
-            if ($this->config->isStatusPollingEnabled()) {
-                foreach ($faxes as &$fax) {
-                    $shouldPollFax = ($fax['status'] === 'IN_PROGRESS') ||
-                                   ($fax['status'] === 'FAILURE' && empty($fax['error_message']));
-
-                    if ($shouldPollFax && !empty($fax['sinch_fax_id'])) {
-                        try {
-                            $updatedFax = $this->faxService->getFax($fax['sinch_fax_id']);
-                            if (isset($updatedFax['status'])) {
-                                $hasChanges = ($updatedFax['status'] !== $fax['status']) ||
-                                            (isset($updatedFax['numberOfPages']) &&
-                                                $updatedFax['numberOfPages'] != $fax['num_pages']) ||
-                                            (!empty($updatedFax['errorMessage']) &&
-                                                empty($fax['error_message']));
-
-                                if ($hasChanges) {
-                                    $updateSql = "UPDATE oce_sinch_faxes SET status = ?, num_pages = ?, " .
-                                        "error_code = ?, error_message = ?, updated_at = NOW() WHERE id = ?";
-                                    QueryUtils::sqlStatementThrowException($updateSql, [
-                                        $updatedFax['status'],
-                                        $updatedFax['numberOfPages'] ?? 0,
-                                        $updatedFax['errorCode'] ?? null,
-                                        $updatedFax['errorMessage'] ?? null,
-                                        $fax['id']
-                                    ]);
-                                    $fax['status'] = $updatedFax['status'];
-                                    $fax['num_pages'] = $updatedFax['numberOfPages'] ?? 0;
-                                    $fax['error_message'] = $updatedFax['errorMessage'] ?? '';
-                                }
-                            }
-                        } catch (\Throwable $e) {
-                            error_log("Error updating fax status for {$fax['sinch_fax_id']}: " . $e->getMessage());
-                        }
-                    }
-                }
-                unset($fax);
-            }
         } catch (\Throwable $e) {
-            error_log("Error loading faxes: " . $e->getMessage());
+            $this->logger->error("Error loading faxes: " . $e->getMessage());
         }
 
         // Get flash messages
@@ -193,9 +166,73 @@ class FaxListController
             'error_message' => $errorMessage,
             'csrf_token' => CsrfUtils::collectCsrfToken(),
             'assets_path' => $this->config->getAssetsStaticRelative(),
+            'current_direction' => $direction,
+            'show_archived' => $showArchived,
         ]);
 
         return new Response($content);
+    }
+
+    /**
+     * Handle read status updates (mark_read, mark_unread, archive)
+     */
+    private function handleUpdateReadStatus(Request $request): Response
+    {
+        if (!$request->isMethod('POST')) {
+            return $this->redirect($request);
+        }
+
+        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''))) {
+            CsrfUtils::csrfNotVerified();
+        }
+
+        $newStatus = $request->request->get('read_status');
+        if (!in_array($newStatus, ['unread', 'read', 'archived'], true)) {
+            $_SESSION['fax_error'] = 'Invalid read status';
+            return $this->redirect($request);
+        }
+
+        // Get fax IDs - can be single or multiple (bulk action)
+        $faxIds = $request->request->all('fax_ids');
+        if (empty($faxIds)) {
+            $singleId = $request->request->get('fax_id');
+            if ($singleId) {
+                $faxIds = [$singleId];
+            }
+        }
+
+        if (empty($faxIds)) {
+            $_SESSION['fax_error'] = 'No faxes selected';
+            return $this->redirect($request);
+        }
+
+        // Sanitize IDs to integers
+        $faxIds = array_map(intval(...), $faxIds);
+        $faxIds = array_filter($faxIds, fn($id) => $id > 0);
+
+        if (empty($faxIds)) {
+            $_SESSION['fax_error'] = 'Invalid fax IDs';
+            return $this->redirect($request);
+        }
+
+        try {
+            $placeholders = implode(',', array_fill(0, count($faxIds), '?'));
+            $sql = "UPDATE oce_sinch_faxes SET read_status = ?, updated_at = NOW() WHERE id IN ({$placeholders})";
+            $binds = array_merge([$newStatus], $faxIds);
+            QueryUtils::sqlStatementThrowException($sql, $binds);
+
+            $count = count($faxIds);
+            $statusLabel = match ($newStatus) {
+                'read' => 'read',
+                'unread' => 'unread',
+                'archived' => 'archived',
+            };
+            $_SESSION['fax_success'] = "Marked {$count} fax(es) as {$statusLabel}";
+        } catch (\Throwable $e) {
+            $_SESSION['fax_error'] = 'Error updating fax status: ' . $e->getMessage();
+        }
+
+        return $this->redirect($request);
     }
 
     /**

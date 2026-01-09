@@ -34,7 +34,6 @@ class GlobalConfig
     public const CONFIG_OPTION_FILE_STORAGE_PATH = 'oce_sinch_fax_file_storage_path';
     public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
-    public const CONFIG_OPTION_ENABLE_STATUS_POLLING = 'oce_sinch_fax_enable_status_polling';
     public const CONFIG_OPTION_WEBHOOK_USERNAME = 'oce_sinch_fax_webhook_username';
     public const CONFIG_OPTION_WEBHOOK_PASSWORD = 'oce_sinch_fax_webhook_password';
     public const CONFIG_OPTION_WEBHOOK_IP_WHITELIST = 'oce_sinch_fax_webhook_ip_whitelist';
@@ -108,11 +107,6 @@ class GlobalConfig
     public function getDefaultRetryCount(): int
     {
         return $this->globals->getInt(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
-    }
-
-    public function isStatusPollingEnabled(): bool
-    {
-        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLE_STATUS_POLLING, false);
     }
 
     public function getWebhookUsername(): string
@@ -296,12 +290,6 @@ class GlobalConfig
                 'description' => 'Number of times to retry sending a failed fax',
                 'type' => GlobalSetting::DATA_TYPE_NUMBER,
                 'default' => 3
-            ],
-            self::CONFIG_OPTION_ENABLE_STATUS_POLLING => [
-                'title' => 'Enable Status Polling',
-                'description' => 'Automatically poll Sinch API for fax status updates when viewing faxes',
-                'type' => GlobalSetting::DATA_TYPE_BOOL,
-                'default' => true
             ],
             self::CONFIG_OPTION_WEBHOOK_USERNAME => [
                 'title' => 'Webhook Username',

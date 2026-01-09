@@ -35,7 +35,6 @@ class GlobalConfigTest extends TestCase
             GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => '/tmp/faxes',
             GlobalConfig::CONFIG_OPTION_AUTO_RECEIVE => true,
             GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 5,
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
             'site_addr_oath' => 'https://example.com',
             'webroot' => '/var/www',
             'assets_static_relative' => '/assets',
@@ -144,11 +143,6 @@ class GlobalConfigTest extends TestCase
         $config = new GlobalConfig($mockGlobals);
 
         $this->assertEquals(3, $config->getDefaultRetryCount());
-    }
-
-    public function testIsStatusPollingEnabled(): void
-    {
-        $this->assertTrue($this->config->isStatusPollingEnabled());
     }
 
     public function testGetSiteAddrOath(): void

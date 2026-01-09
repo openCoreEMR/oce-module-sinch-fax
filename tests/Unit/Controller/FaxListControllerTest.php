@@ -60,7 +60,6 @@ class FaxListControllerTest extends TestCase
             GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => false,
             'assets_static_relative' => '/assets',
         ]);
 
@@ -93,8 +92,13 @@ class FaxListControllerTest extends TestCase
 
     public function testDispatchDefaultAction(): void
     {
+        // Mock reconciliation call
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willReturn([]);
+
         QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
+            "SELECT * FROM oce_sinch_faxes WHERE read_status != 'archived' ORDER BY created_at DESC LIMIT 50",
             [],
             []
         );
@@ -107,8 +111,12 @@ class FaxListControllerTest extends TestCase
 
     public function testDispatchListAction(): void
     {
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willReturn([]);
+
         QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
+            "SELECT * FROM oce_sinch_faxes WHERE read_status != 'archived' ORDER BY created_at DESC LIMIT 50",
             [],
             []
         );
@@ -119,20 +127,24 @@ class FaxListControllerTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
     }
 
-    public function testShowFaxListWithFilters(): void
+    public function testShowFaxListWithDirectionFilter(): void
     {
         $_GET['direction'] = 'INBOUND';
-        $_GET['status'] = 'COMPLETED';
+
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willReturn([]);
 
         QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes WHERE direction = ? AND status = ? ORDER BY created_at DESC LIMIT 50",
-            ['INBOUND', 'COMPLETED'],
+            "SELECT * FROM oce_sinch_faxes WHERE direction = ? AND read_status != 'archived' ORDER BY created_at DESC LIMIT 50",
+            ['INBOUND'],
             [
                 [
                     'id' => 1,
                     'sinch_fax_id' => 'fax-123',
                     'direction' => 'INBOUND',
                     'status' => 'COMPLETED',
+                    'read_status' => 'unread',
                     'from_number' => '+1234567890',
                     'to_number' => '+0987654321',
                     'num_pages' => 3,
@@ -150,29 +162,18 @@ class FaxListControllerTest extends TestCase
         $this->assertStringContainsString('1 faxes', $content);
     }
 
-    public function testShowFaxListWithDirectionFilterOnly(): void
+    public function testShowFaxListWithShowArchived(): void
     {
-        $_GET['direction'] = 'OUTBOUND';
+        $_GET['show_archived'] = '1';
 
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willReturn([]);
+
+        // When show_archived=1, no read_status filter is applied
         QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes WHERE direction = ? ORDER BY created_at DESC LIMIT 50",
-            ['OUTBOUND'],
-            []
-        );
-
-        $response = $this->controller->dispatch('list');
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals(200, $response->getStatusCode());
-    }
-
-    public function testShowFaxListWithStatusFilterOnly(): void
-    {
-        $_GET['status'] = 'FAILURE';
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes WHERE status = ? ORDER BY created_at DESC LIMIT 50",
-            ['FAILURE'],
+            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
+            [],
             []
         );
 
@@ -187,8 +188,12 @@ class FaxListControllerTest extends TestCase
         $_SESSION['fax_success'] = 'Fax sent successfully!';
         $_SESSION['fax_error'] = 'Something went wrong';
 
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willReturn([]);
+
         QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
+            "SELECT * FROM oce_sinch_faxes WHERE read_status != 'archived' ORDER BY created_at DESC LIMIT 50",
             [],
             []
         );
@@ -205,287 +210,23 @@ class FaxListControllerTest extends TestCase
         $this->assertArrayNotHasKey('fax_error', $_SESSION);
     }
 
-    public function testShowFaxListWithDatabaseError(): void
+    public function testShowFaxListWithReconciliationError(): void
     {
-        // Don't set a mock result - this will cause fetchRecords to return empty array
+        // Reconciliation throws but list still works
+        $this->faxService->expects($this->once())
+            ->method('reconcileInboundFaxes')
+            ->willThrowException(new \Exception('API error'));
+
+        QueryUtils::setMockResult(
+            "SELECT * FROM oce_sinch_faxes WHERE read_status != 'archived' ORDER BY created_at DESC LIMIT 50",
+            [],
+            []
+        );
+
         $response = $this->controller->dispatch('list');
 
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals(200, $response->getStatusCode());
-    }
-
-    public function testShowFaxListWithStatusPollingEnabled(): void
-    {
-        // Create controller with status polling enabled
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
-            'assets_static_relative' => '/assets',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $controller = new FaxListController(
-            $config,
-            $this->faxService,
-            $this->twig
-        );
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
-            [],
-            [
-                [
-                    'id' => 1,
-                    'sinch_fax_id' => 'fax-123',
-                    'direction' => 'OUTBOUND',
-                    'status' => 'IN_PROGRESS',
-                    'from_number' => '+1234567890',
-                    'to_number' => '+0987654321',
-                    'num_pages' => 0,
-                    'error_message' => null,
-                    'created_at' => '2025-01-01 12:00:00',
-                ],
-            ]
-        );
-
-        // Mock the fax service to return updated status
-        $this->faxService->expects($this->once())
-            ->method('getFax')
-            ->with('fax-123')
-            ->willReturn([
-                'status' => 'COMPLETED',
-                'numberOfPages' => 5,
-            ]);
-
-        $response = $controller->dispatch('list');
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals(200, $response->getStatusCode());
-
-        // Verify the update query was executed
-        $queries = QueryUtils::getQueries();
-        $updateFound = false;
-        foreach ($queries as $query) {
-            if (str_contains($query['sql'], 'UPDATE oce_sinch_faxes SET status')) {
-                $updateFound = true;
-                break;
-            }
-        }
-        $this->assertTrue($updateFound, 'Update query should have been executed');
-    }
-
-    public function testShowFaxListWithStatusPollingFetchError(): void
-    {
-        // Create controller with status polling enabled
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
-            'assets_static_relative' => '/assets',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $controller = new FaxListController(
-            $config,
-            $this->faxService,
-            $this->twig
-        );
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
-            [],
-            [
-                [
-                    'id' => 1,
-                    'sinch_fax_id' => 'fax-123',
-                    'direction' => 'OUTBOUND',
-                    'status' => 'IN_PROGRESS',
-                    'from_number' => '+1234567890',
-                    'to_number' => '+0987654321',
-                    'num_pages' => 0,
-                    'error_message' => null,
-                    'created_at' => '2025-01-01 12:00:00',
-                ],
-            ]
-        );
-
-        // Mock the fax service to throw an exception
-        $this->faxService->expects($this->once())
-            ->method('getFax')
-            ->with('fax-123')
-            ->willThrowException(new \Exception('API error'));
-
-        $response = $controller->dispatch('list');
-
-        // Should still return successfully despite the error
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals(200, $response->getStatusCode());
-    }
-
-    public function testShowFaxListWithStatusPollingFailureNeedsErrorMessage(): void
-    {
-        // Create controller with status polling enabled
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
-            'assets_static_relative' => '/assets',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $controller = new FaxListController(
-            $config,
-            $this->faxService,
-            $this->twig
-        );
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
-            [],
-            [
-                [
-                    'id' => 1,
-                    'sinch_fax_id' => 'fax-456',
-                    'direction' => 'OUTBOUND',
-                    'status' => 'FAILURE',
-                    'from_number' => '+1234567890',
-                    'to_number' => '+0987654321',
-                    'num_pages' => 0,
-                    'error_message' => '', // Empty error message - should poll
-                    'created_at' => '2025-01-01 12:00:00',
-                ],
-            ]
-        );
-
-        // Mock the fax service to return error details
-        $this->faxService->expects($this->once())
-            ->method('getFax')
-            ->with('fax-456')
-            ->willReturn([
-                'status' => 'FAILURE',
-                'numberOfPages' => 0,
-                'errorCode' => 'BUSY',
-                'errorMessage' => 'Line busy',
-            ]);
-
-        $response = $controller->dispatch('list');
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals(200, $response->getStatusCode());
-    }
-
-    public function testShowFaxListNoPollingWhenNoChanges(): void
-    {
-        // Create controller with status polling enabled
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
-            'assets_static_relative' => '/assets',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $controller = new FaxListController(
-            $config,
-            $this->faxService,
-            $this->twig
-        );
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
-            [],
-            [
-                [
-                    'id' => 1,
-                    'sinch_fax_id' => 'fax-789',
-                    'direction' => 'OUTBOUND',
-                    'status' => 'IN_PROGRESS',
-                    'from_number' => '+1234567890',
-                    'to_number' => '+0987654321',
-                    'num_pages' => 0,
-                    'error_message' => null,
-                    'created_at' => '2025-01-01 12:00:00',
-                ],
-            ]
-        );
-
-        // Mock the fax service to return same status (no changes)
-        $this->faxService->expects($this->once())
-            ->method('getFax')
-            ->with('fax-789')
-            ->willReturn([
-                'status' => 'IN_PROGRESS',
-                'numberOfPages' => 0,
-            ]);
-
-        $response = $controller->dispatch('list');
-
-        $this->assertInstanceOf(Response::class, $response);
-
-        // Verify NO update query was executed since nothing changed
-        $queries = QueryUtils::getQueries();
-        foreach ($queries as $query) {
-            $this->assertStringNotContainsString(
-                'UPDATE oce_sinch_faxes SET status',
-                $query['sql'],
-                'No update should occur when status unchanged'
-            );
-        }
-    }
-
-    public function testShowFaxListSkipsPollingForCompletedFaxes(): void
-    {
-        // Create controller with status polling enabled
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
-            'assets_static_relative' => '/assets',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $controller = new FaxListController(
-            $config,
-            $this->faxService,
-            $this->twig
-        );
-
-        QueryUtils::setMockResult(
-            "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 50",
-            [],
-            [
-                [
-                    'id' => 1,
-                    'sinch_fax_id' => 'fax-completed',
-                    'direction' => 'OUTBOUND',
-                    'status' => 'COMPLETED', // Already completed
-                    'from_number' => '+1234567890',
-                    'to_number' => '+0987654321',
-                    'num_pages' => 5,
-                    'error_message' => null,
-                    'created_at' => '2025-01-01 12:00:00',
-                ],
-            ]
-        );
-
-        // getFax should NOT be called for completed faxes
-        $this->faxService->expects($this->never())
-            ->method('getFax');
-
-        $response = $controller->dispatch('list');
-
-        $this->assertInstanceOf(Response::class, $response);
     }
 
     public function testHandleSendFaxWithoutPost(): void

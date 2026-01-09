@@ -157,12 +157,16 @@ class FaxService
      */
     private function saveFaxToDatabase(array $faxData, string $direction, array $options = []): void
     {
-        $sql = "INSERT INTO oce_sinch_faxes (
-            sinch_fax_id, direction, from_number, to_number, status, num_pages,
-            file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
-            error_code, error_message,
-            sinch_create_time, sinch_completed_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Outbound faxes default to 'read', inbound to 'unread'
+        $readStatus = $direction === 'OUTBOUND' ? 'read' : 'unread';
+
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_faxes (
+                sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
+                error_code, error_message, sinch_create_time, sinch_completed_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            SQL;
 
         $bind = [
             $faxData['id'] ?? '',
@@ -170,6 +174,7 @@ class FaxService
             $faxData['from'] ?? '',
             $faxData['to'] ?? '',
             $faxData['status'] ?? 'UNKNOWN',
+            $readStatus,
             $faxData['numberOfPages'] ?? 0,
             $options['file_path'] ?? null,
             $options['mime_type'] ?? 'application/pdf',
@@ -272,16 +277,113 @@ class FaxService
     }
 
     /**
+     * Reconcile local fax records with Sinch API
+     *
+     * Queries Sinch for inbound faxes since last sync and creates records
+     * for any faxes we don't have locally (missed webhooks).
+     *
+     * @return array<string> List of missed fax IDs that were reconciled
+     */
+    public function reconcileInboundFaxes(): array
+    {
+        $lastSyncTime = $this->getLastSyncTime();
+
+        $filters = [
+            'direction' => 'INBOUND',
+            'pageSize' => 100,
+        ];
+
+        if ($lastSyncTime !== null) {
+            $filters['createTime'] = '>=' . $lastSyncTime->format('c');
+        }
+
+        $response = $this->client->listFaxes($filters);
+        /** @var array<int, array<string, mixed>> $faxes */
+        $faxes = is_array($response['faxes'] ?? null) ? $response['faxes'] : [];
+
+        $missedFaxIds = [];
+
+        foreach ($faxes as $faxItem) {
+            $faxIdRaw = $faxItem['id'] ?? null;
+            if (!is_scalar($faxIdRaw)) {
+                continue;
+            }
+            $faxId = (string)$faxIdRaw;
+
+            if (!$this->faxExistsLocally($faxId)) {
+                // Create record for missed fax - no file available
+                $errorMessage = 'Fax acknowledged, but document was not received by OpenEMR. '
+                    . 'Contact sender to re-send.';
+                $this->saveIncomingFaxToDatabase($faxItem, null, $errorMessage);
+                $missedFaxIds[] = $faxId;
+                $this->logger->warning("Reconciled missed fax: {$faxId}");
+            }
+        }
+
+        $this->updateLastSyncTime();
+
+        return $missedFaxIds;
+    }
+
+    /**
+     * Get the last sync time from the reconciliation table
+     */
+    private function getLastSyncTime(): ?\DateTimeImmutable
+    {
+        $sql = 'SELECT last_sync_time FROM oce_sinch_reconciliation WHERE id = 1';
+        $row = QueryUtils::querySingleRow($sql, []);
+
+        if ($row && !empty($row['last_sync_time'])) {
+            try {
+                return new \DateTimeImmutable($row['last_sync_time']);
+            } catch (\Throwable $e) {
+                $this->logger->error("Invalid last_sync_time in database: " . $e->getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Update the last sync time to now
+     */
+    private function updateLastSyncTime(): void
+    {
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_reconciliation (id, last_sync_time)
+            VALUES (1, NOW())
+            ON DUPLICATE KEY UPDATE last_sync_time = NOW()
+            SQL;
+        QueryUtils::sqlStatementThrowException($sql, []);
+    }
+
+    /**
+     * Check if a fax exists locally by Sinch fax ID
+     */
+    private function faxExistsLocally(string $sinchFaxId): bool
+    {
+        $sql = 'SELECT 1 FROM oce_sinch_faxes WHERE sinch_fax_id = ? LIMIT 1';
+        $row = QueryUtils::querySingleRow($sql, [$sinchFaxId]);
+        return $row !== null;
+    }
+
+    /**
      * @param array<string, mixed> $faxData
      * @param string|null $filePath
+     * @param string|null $errorMessage Optional error message override
      */
-    private function saveIncomingFaxToDatabase(array $faxData, ?string $filePath): void
-    {
-        $sql = "INSERT INTO oce_sinch_faxes (
-            sinch_fax_id, direction, from_number, to_number, status, num_pages,
-            file_path, mime_type, error_code, error_message,
-            sinch_create_time, sinch_completed_time, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    private function saveIncomingFaxToDatabase(
+        array $faxData,
+        ?string $filePath,
+        ?string $errorMessage = null
+    ): void {
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_faxes (
+                sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                file_path, mime_type, error_code, error_message,
+                sinch_create_time, sinch_completed_time, created_at
+            ) VALUES (?, ?, ?, ?, ?, 'unread', ?, ?, ?, ?, ?, ?, ?, NOW())
+            SQL;
 
         $bind = [
             $faxData['id'] ?? '',
@@ -293,7 +395,7 @@ class FaxService
             $filePath,
             'application/pdf',
             $faxData['errorCode'] ?? null,
-            $faxData['errorMessage'] ?? null,
+            $errorMessage ?? $faxData['errorMessage'] ?? null,
             $faxData['createTime'] ?? null,
             $faxData['completedTime'] ?? null,
         ];
@@ -360,9 +462,13 @@ class FaxService
         }
 
         if ($existingFax) {
-            // Update existing record if we now have a file
+            // Update existing record if we now have a file (handles reconciled faxes)
             if ($filePath && empty($existingFax['file_path'])) {
-                $updateSql = "UPDATE oce_sinch_faxes SET file_path = ?, updated_at = NOW() WHERE id = ?";
+                $updateSql = <<<'SQL'
+                    UPDATE oce_sinch_faxes
+                    SET file_path = ?, error_message = NULL, updated_at = NOW()
+                    WHERE id = ?
+                    SQL;
                 QueryUtils::sqlStatementThrowException($updateSql, [$filePath, $existingFax['id']]);
                 $this->logger->info("Updated fax {$faxId} with file: {$filePath}");
             }
@@ -413,14 +519,16 @@ class FaxService
 
         if ($existingFax) {
             // Update existing record with completion status
-            $updateSql = "UPDATE oce_sinch_faxes SET
-                status = ?,
-                num_pages = ?,
-                error_code = ?,
-                error_message = ?,
-                sinch_completed_time = ?,
-                updated_at = NOW()
-                WHERE id = ?";
+            $updateSql = <<<'SQL'
+                UPDATE oce_sinch_faxes SET
+                    status = ?,
+                    num_pages = ?,
+                    error_code = ?,
+                    error_message = ?,
+                    sinch_completed_time = ?,
+                    updated_at = NOW()
+                WHERE id = ?
+                SQL;
 
             QueryUtils::sqlStatementThrowException($updateSql, [
                 $status,
@@ -433,14 +541,19 @@ class FaxService
 
             $this->logger->info("Updated fax {$faxId} status to {$status}");
         } else {
-            // Create new record for this fax
+            // Create new record for this fax (outbound defaults to 'read')
             $this->logger->info("Fax {$faxId} not found, creating new record");
 
-            $direction = $faxData['direction'] ?? 'OUTBOUND';
-            $insertSql = "INSERT INTO oce_sinch_faxes (
-                sinch_fax_id, direction, from_number, to_number, status, num_pages,
-                error_code, error_message, sinch_create_time, sinch_completed_time, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+            $directionRaw = $faxData['direction'] ?? 'OUTBOUND';
+            $direction = is_string($directionRaw) ? $directionRaw : 'OUTBOUND';
+            $readStatus = $direction === 'OUTBOUND' ? 'read' : 'unread';
+
+            $insertSql = <<<'SQL'
+                INSERT INTO oce_sinch_faxes (
+                    sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                    error_code, error_message, sinch_create_time, sinch_completed_time, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                SQL;
 
             QueryUtils::sqlStatementThrowException($insertSql, [
                 $faxId,
@@ -448,6 +561,7 @@ class FaxService
                 $faxData['from'] ?? '',
                 $faxData['to'] ?? '',
                 $status,
+                $readStatus,
                 $numPages,
                 $errorCode,
                 $errorMessage,
