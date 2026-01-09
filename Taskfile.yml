@@ -1,0 +1,389 @@
+# https://taskfile.dev
+# Task runner for OpenEMR Sinch Fax Module development
+#
+# SEPARATION OF CONCERNS:
+#   Taskfile: Infrastructure operations (Docker, database, module management)
+#   Composer: Code quality checks (phpcs, phpstan, rector)
+#
+# WHY BOTH?
+#   - Composer scripts work in ANY environment (local, Docker, CI)
+#   - Taskfile provides convenience wrappers and Docker orchestration
+#   - Prevents bloated composer.json with Docker-specific commands
+#   - Taskfile can call Composer scripts (see check: tasks below)
+#
+# Installation: https://taskfile.dev/installation/
+#   macOS:   brew install go-task
+#   Linux:   sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+#
+# Usage:
+#   task --list              # Show all available tasks
+#   task dev:start           # Start Docker environment
+#   task module:install      # Install module in OpenEMR
+#   task check               # Run code quality checks (calls pre-commit/composer)
+
+version: '3'
+
+vars:
+  MODULE_PATH: /var/www/localhost/htdocs/openemr/interface/modules/custom_modules/oce-module-sinch-fax
+  DB_USER: root
+  DB_PASS: root
+  DB_NAME: openemr
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+    - task --list
+
+  # === Docker Environment ===
+
+  dev:start:
+    desc: Start Docker development environment
+    cmds:
+    - docker compose up -d --wait
+    - echo "OpenEMR started. Get port with 'task dev:port'"
+
+  dev:stop:
+    desc: Stop Docker environment (keeps data)
+    cmds:
+    - docker compose down
+    - echo "Docker environment stopped"
+
+  dev:restart:
+    desc: Restart Docker environment
+    cmds:
+    - docker compose restart
+    - echo "Docker environment restarted"
+
+  dev:reset:
+    desc: Stop and remove all data (fresh start)
+    prompt: This will delete ALL data. Continue?
+    cmds:
+    - docker compose down -v
+    - echo "All data removed. Run 'task dev:start' to start fresh"
+
+  dev:purge:
+    desc: Stop and remove all containers, volumes, and orphans
+    prompt: This will DELETE all Docker containers, volumes, and orphans. Continue?
+    cmds:
+    - docker compose down -v --remove-orphans
+    - echo "Docker environment purged"
+
+  dev:has-volumes:
+    desc: Check if Docker volumes exist (returns 0 if exist, 1 if not)
+    internal: true
+    cmds:
+    - test -n "$(docker volume ls -q --filter name=oce-module-sinch-fax)"
+
+  dev:logs:
+    desc: View OpenEMR logs (follow mode)
+    cmds:
+    - docker compose logs -f openemr
+
+  dev:logs:errors:
+    desc: View OpenEMR error logs only
+    cmds:
+    - docker compose logs -f openemr | grep -i error
+
+  dev:port:
+    desc: Get assigned port for OpenEMR
+    cmds:
+    - echo "OpenEMR HTTP port:"
+    - docker compose port openemr 80
+    - echo ""
+    - echo "Access OpenEMR at http://localhost:[PORT]"
+    - echo "Login - admin / pass"
+
+  dev:browse:
+    desc: Open OpenEMR in your default browser
+    cmds:
+    - |
+      HTTPS_PORT=$(docker compose port openemr 443 | cut -d: -f2)
+      if [ -z "$HTTPS_PORT" ]; then
+        echo "Could not detect HTTPS port. Is Docker running?"
+        exit 1
+      fi
+      URL="https://localhost:$HTTPS_PORT"
+      echo "Opening OpenEMR at $URL"
+      echo "Login credentials: admin / pass"
+      if command -v open > /dev/null 2>&1; then
+        open "$URL"
+      elif command -v xdg-open > /dev/null 2>&1; then
+        xdg-open "$URL"
+      else
+        echo "Could not find 'open' or 'xdg-open' command"
+        echo "Please open this URL manually: $URL"
+      fi
+
+  dev:shell:
+    desc: Access OpenEMR container shell
+    cmds:
+    - docker compose exec openemr bash
+
+  dev:status:
+    desc: Check Docker container status
+    cmds:
+    - docker compose ps
+
+  # === Module Management ===
+
+  module:install:
+    desc: Manually install module in OpenEMR (after registration)
+    cmds:
+    - echo "Module installation must be done via OpenEMR web interface:"
+    - echo "   1. Go to Administration > Modules > Manage Modules"
+    - echo "   2. Find 'oce-module-sinch-fax'"
+    - echo "   3. Click Register (if not registered)"
+    - echo "   4. Click Install"
+    - echo "   5. Click Enable"
+
+  module:cleanup:
+    desc: Drop all module database tables (for clean reinstall)
+    prompt: This will delete all module data. Continue?
+    cmds:
+    - docker compose exec -T mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} {{.DB_NAME}} < cleanup.sql
+    - echo "Module tables dropped. You can now reinstall the module."
+
+  module:tables:
+    desc: List all module database tables
+    cmds:
+    - docker compose exec mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} -e "SELECT table_name FROM information_schema.tables WHERE table_schema='{{.DB_NAME}}' AND table_name LIKE 'oce_sinch%'" {{.DB_NAME}} 2>&1 | grep -v "Using a password"
+
+  module:data:
+    desc: Show counts of data in module tables
+    cmds:
+    - |
+      docker compose exec mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} -e "
+      SELECT 'faxes' as table_name, COUNT(*) as count FROM oce_sinch_faxes
+      UNION ALL SELECT 'cover_pages', COUNT(*) FROM oce_sinch_cover_pages
+      UNION ALL SELECT 'services', COUNT(*) FROM oce_sinch_services
+      " {{.DB_NAME}} 2>&1 | grep -v "Using a password"
+
+  # === Database Access ===
+
+  db:shell:
+    desc: Access MariaDB database shell
+    cmds:
+    - docker compose exec mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} {{.DB_NAME}}
+
+  db:export:
+    desc: Export database to backup.sql
+    cmds:
+    - docker compose exec mysql mariadb-dump -u{{.DB_USER}} -p{{.DB_PASS}} {{.DB_NAME}} > backup.sql
+    - echo "Database exported to backup.sql"
+
+  db:import:
+    desc: Import database from backup.sql
+    prompt: This will overwrite the current database. Continue?
+    cmds:
+    - docker compose exec -T mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} {{.DB_NAME}} < backup.sql
+    - echo "Database imported from backup.sql"
+
+  db:query:
+    desc: 'Run a SQL query (usage: task db:query -- "SELECT * FROM users LIMIT 5")'
+    cmds:
+    - docker compose exec mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} -e "{{.CLI_ARGS}}" {{.DB_NAME}} 2>&1 | grep -v "Using a password"
+
+  # === Code Quality (delegates to Composer scripts) ===
+  # These tasks call Composer scripts directly on the host (no Docker needed).
+  # You can also run `composer phpcs`, `composer phpstan`, etc. directly.
+
+  check:
+    desc: Run all code quality checks (calls pre-commit run -a)
+    cmds:
+    - pre-commit run -a
+
+  check:phpcs:
+    desc: Run PHP CodeSniffer (calls composer phpcs)
+    cmds:
+    - composer phpcs
+
+  check:phpstan:
+    desc: Run PHPStan (calls composer phpstan)
+    cmds:
+    - composer phpstan
+
+  check:fix:
+    desc: Auto-fix code style (calls composer phpcbf)
+    cmds:
+    - composer phpcbf
+
+  # === Testing ===
+
+  test:
+    desc: Run PHPUnit tests
+    cmds:
+    - composer test
+
+  test:coverage:
+    desc: Run PHPUnit with coverage report
+    cmds:
+    - docker compose run --rm phpunit-coverage
+
+  test:docker:
+    desc: Run PHPUnit tests in Docker
+    cmds:
+    - docker compose run --rm phpunit
+
+  # === Development Helpers ===
+  # Composer dependency management tasks (infrastructure, not code quality)
+
+  composer:install:
+    desc: Install composer dependencies
+    cmds:
+    - composer install
+    - echo "Composer dependencies installed"
+
+  composer:update:
+    desc: Update composer dependencies
+    cmds:
+    - composer update
+    - echo "Composer dependencies updated"
+
+  docs:sinch:
+    desc: Fetch latest Sinch API documentation for AI agents
+    cmds:
+    - mkdir -p .local
+    - curl -fsSL https://developers.sinch.com/llms.txt -o .local/llms.txt
+    - echo "Sinch API docs updated in .local/llms.txt"
+
+  openemr:prebuild:
+    desc: Pre-build OpenEMR dependencies (speeds up first Docker start)
+    cmds:
+    - echo "Building OpenEMR dependencies..."
+    - cd vendor/openemr/openemr && composer install --no-dev
+    - cd vendor/openemr/openemr && npm install --legacy-peer-deps
+    - cd vendor/openemr/openemr && npm run build
+    - echo "OpenEMR dependencies built"
+
+  git:clean:
+    desc: Run git clean (remove untracked files, preserves .local/)
+    prompt: This will delete untracked files (except .local/). Continue?
+    cmds:
+    - git clean -fd -e .local
+    - echo "Untracked files removed (preserved .local/)"
+
+  vendor:clean:
+    desc: Remove vendor directory (forces complete reinstall of dependencies)
+    prompt: This will DELETE the entire vendor directory. Continue?
+    preconditions:
+    - sh: test -z "$(docker volume ls -q --filter name=oce-module-sinch-fax 2>/dev/null)"
+      msg: |
+        Docker volumes still exist. You must run 'task dev:purge' first.
+
+        Reason: OpenEMR stores crypto keys in both the database (volume) and filesystem (vendor).
+        Removing vendor without removing volumes will break encryption and make the database unusable.
+
+        Run: task workflow:nuke (to remove both) or task dev:purge (then task vendor:clean)
+    cmds:
+    - git clean -ffdx vendor/
+    - echo "Vendor directory removed"
+
+  # === Webhook Development ===
+  # Tasks for testing webhooks locally using Tailscale Funnel
+
+  webhook:url:
+    desc: Show the local webhook URL (for manual testing)
+    cmds:
+    - |
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      echo "Local webhook URL:"
+      echo "  http://localhost:$HTTP_PORT/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php"
+
+  webhook:tunnel:
+    desc: Start Tailscale Funnel to expose webhook endpoint
+    cmds:
+    - |
+      HTTPS_PORT=$(docker compose port openemr 443 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTPS_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      echo "Starting Tailscale Funnel on port $HTTPS_PORT..."
+      echo ""
+      echo "Once running, your webhook URL will be:"
+      echo "  https://$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php"
+      echo ""
+      echo "Press Ctrl+C to stop the tunnel"
+      echo ""
+      tailscale funnel $HTTPS_PORT
+
+  webhook:tunnel:status:
+    desc: Show Tailscale Funnel status
+    cmds:
+    - tailscale funnel status
+
+  webhook:tunnel:off:
+    desc: Turn off Tailscale Funnel
+    cmds:
+    - tailscale funnel off
+    - echo "Tailscale Funnel stopped"
+
+  webhook:test:
+    desc: 'Send a test webhook payload (usage: task webhook:test -- [event] [options])'
+    cmds:
+    - |
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      php tools/test-webhook.php "http://localhost:$HTTP_PORT/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php" {{.CLI_ARGS}}
+
+  webhook:test:incoming:
+    desc: Send a test INCOMING_FAX webhook
+    cmds:
+    - task: webhook:test
+      vars:
+        CLI_ARGS: incoming
+
+  webhook:test:completed:
+    desc: Send a test FAX_COMPLETED webhook (success)
+    cmds:
+    - task: webhook:test
+      vars:
+        CLI_ARGS: completed
+
+  webhook:test:failed:
+    desc: Send a test FAX_COMPLETED webhook (failure)
+    cmds:
+    - task: webhook:test
+      vars:
+        CLI_ARGS: failed
+
+  # === Quick Workflows ===
+
+  setup:
+    desc: Complete setup (install deps, prebuild OpenEMR, start Docker)
+    cmds:
+    - task: composer:install
+    - task: openemr:prebuild
+    - task: dev:start
+    - task: dev:port
+
+  workflow:reinstall:
+    desc: Complete reinstall workflow (cleanup tables, instructions)
+    cmds:
+    - task: module:cleanup
+    - task: module:install
+
+  workflow:reset:
+    desc: Complete reset (stop, clean data, restart)
+    cmds:
+    - task: dev:reset
+    - task: dev:start
+    - echo ""
+    - echo "Environment reset complete"
+    - task: dev:port
+
+  workflow:nuke:
+    desc: Nuclear reset (removes vendor + database volumes, forces complete reinstall)
+    cmds:
+    - task: dev:purge
+    - task: vendor:clean
+    - echo "Complete reset done. Vendor removed, Docker volumes deleted."
+    - echo "   Run 'task setup' to rebuild from scratch."
