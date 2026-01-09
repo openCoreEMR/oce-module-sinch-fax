@@ -49,7 +49,10 @@ class GlobalsAccessor
     public function getString(string $key, string $default = ''): string
     {
         $value = $this->get($key, $default);
-        return is_string($value) ? $value : (string)$value;
+        if (is_string($value)) {
+            return $value;
+        }
+        return is_scalar($value) || $value === null ? (string)$value : $default;
     }
 
     /**
@@ -71,7 +74,10 @@ class GlobalsAccessor
     public function getInt(string $key, int $default = 0): int
     {
         $value = $this->get($key, $default);
-        return is_int($value) ? $value : (int)$value;
+        if (is_int($value)) {
+            return $value;
+        }
+        return is_numeric($value) ? (int)$value : $default;
     }
 
     /**

@@ -89,12 +89,17 @@ class SinchFaxClient
                 $multipart[] = ['name' => 'from', 'contents' => $params['from']];
             }
 
-            if (isset($params['files'])) {
-                foreach ($params['files'] as $file) {
+            if (is_array($params['files'] ?? null)) {
+                /** @var array<int, array{path: string, filename?: string}> $files */
+                $files = $params['files'];
+                foreach ($files as $file) {
+                    $filePath = $file['path'];
+
                     // Read file contents into memory to ensure it's not encrypted/modified
-                    $fileContents = file_get_contents($file['path']);
+                    // Suppress warning - we check return value and throw exception
+                    $fileContents = @file_get_contents($filePath);
                     if ($fileContents === false) {
-                        throw new \Exception('Failed to read file: ' . $file['path']);
+                        throw new \Exception('Failed to read file: ' . $filePath);
                     }
 
                     // Debug: Check file header to verify it's not encrypted
@@ -112,7 +117,7 @@ class SinchFaxClient
                     }
 
                     // Determine MIME type based on file extension
-                    $filename = $file['filename'] ?? basename((string) $file['path']);
+                    $filename = $file['filename'] ?? basename($filePath);
                     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                     $mimeType = match ($extension) {
                         'pdf' => 'application/pdf',
@@ -150,7 +155,9 @@ class SinchFaxClient
             }
 
             if (isset($params['maxRetries'])) {
-                $multipart[] = ['name' => 'maxRetries', 'contents' => (string)$params['maxRetries']];
+                $maxRetries = $params['maxRetries'];
+                $maxRetriesValue = is_scalar($maxRetries) ? (string)$maxRetries : '0';
+                $multipart[] = ['name' => 'maxRetries', 'contents' => $maxRetriesValue];
             }
 
             // Log request details for debugging
@@ -169,7 +176,9 @@ class SinchFaxClient
             $maskedCombined = substr($combined, 0, 10) . '...' . substr($combined, -10);
             $this->logger->debug("Combined credentials: {$maskedCombined}");
 
-            $this->logger->debug("Request params: to={$params['to']}, files=" . count($params['files'] ?? []));
+            $toParam = is_string($params['to'] ?? null) ? $params['to'] : '';
+            $filesParam = is_array($params['files'] ?? null) ? $params['files'] : [];
+            $this->logger->debug("Request params: to={$toParam}, files=" . count($filesParam));
 
             $response = $this->httpClient->post(
                 "/v3/projects/{$this->projectId}/faxes",
@@ -180,7 +189,12 @@ class SinchFaxClient
 
             $body = $response->getBody()->getContents();
             $this->logger->debug("Sinch Fax API Response: " . $body);
-            return json_decode($body, true);
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new \Exception('Invalid JSON response from Sinch API');
+            }
+            /** @var array<string, mixed> $decoded */
+            return $decoded;
         } catch (GuzzleException $e) {
             // Log detailed error information
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
@@ -207,7 +221,12 @@ class SinchFaxClient
             );
 
             $body = $response->getBody()->getContents();
-            return json_decode($body, true);
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new \Exception('Invalid JSON response from Sinch API');
+            }
+            /** @var array<string, mixed> $decoded */
+            return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
             throw new \Exception('Failed to get fax: ' . $e->getMessage());
@@ -257,7 +276,12 @@ class SinchFaxClient
             );
 
             $body = $response->getBody()->getContents();
-            return json_decode($body, true);
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new \Exception('Invalid JSON response from Sinch API');
+            }
+            /** @var array<string, mixed> $decoded */
+            return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
             throw new \Exception('Failed to list faxes: ' . $e->getMessage());

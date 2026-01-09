@@ -61,7 +61,8 @@ class DocumentFaxController
             throw new FaxAccessDeniedException("Sinch Fax module is not enabled");
         }
 
-        $isDocuments = (int)($params['isDocuments'] ?? 0);
+        $isDocumentsRaw = $params['isDocuments'] ?? 0;
+        $isDocuments = is_numeric($isDocumentsRaw) ? (int)$isDocumentsRaw : 0;
         $filePath = $params['file'] ?? '';
         $mimeType = $params['mime'] ?? '';
         $docId = $params['docid'] ?? '';

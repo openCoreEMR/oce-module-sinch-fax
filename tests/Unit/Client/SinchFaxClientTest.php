@@ -88,7 +88,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to verify baseUrl
         $reflection = new \ReflectionClass($client);
         $baseUrlProperty = $reflection->getProperty('baseUrl');
-        $baseUrlProperty->setAccessible(true);
 
         $this->assertEquals('https://fax.api.sinch.com', $baseUrlProperty->getValue($client));
     }
@@ -100,7 +99,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to verify baseUrl
         $reflection = new \ReflectionClass($client);
         $baseUrlProperty = $reflection->getProperty('baseUrl');
-        $baseUrlProperty->setAccessible(true);
 
         $this->assertEquals('https://use1.fax.api.sinch.com', $baseUrlProperty->getValue($client));
     }
@@ -112,7 +110,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($client);
         $method = $reflection->getMethod('getAuthHeaders');
-        $method->setAccessible(true);
 
         $headers = $method->invoke($client);
 
@@ -141,7 +138,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($client);
         $method = $reflection->getMethod('getAuthHeaders');
-        $method->setAccessible(true);
 
         $headers = $method->invoke($client);
 
@@ -158,7 +154,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to verify projectId
         $reflection = new \ReflectionClass($client);
         $projectIdProperty = $reflection->getProperty('projectId');
-        $projectIdProperty->setAccessible(true);
 
         $this->assertEquals('test-project-id', $projectIdProperty->getValue($client));
     }
@@ -170,7 +165,6 @@ class SinchFaxClientTest extends TestCase
         // Use reflection to verify authMethod
         $reflection = new \ReflectionClass($client);
         $authMethodProperty = $reflection->getProperty('authMethod');
-        $authMethodProperty->setAccessible(true);
 
         $this->assertEquals('basic', $authMethodProperty->getValue($client));
     }
@@ -199,7 +193,6 @@ class SinchFaxClientTest extends TestCase
 
             $reflection = new \ReflectionClass($client);
             $baseUrlProperty = $reflection->getProperty('baseUrl');
-            $baseUrlProperty->setAccessible(true);
 
             $this->assertEquals(
                 $expectedUrls[$region],
