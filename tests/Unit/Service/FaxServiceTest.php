@@ -86,7 +86,6 @@ class FaxServiceTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($this->faxService);
         $method = $reflection->getMethod('getReceivedFaxesCategoryId');
-        $method->setAccessible(true);
 
         $categoryId = $method->invoke($this->faxService);
 
@@ -111,7 +110,6 @@ class FaxServiceTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($this->faxService);
         $method = $reflection->getMethod('getReceivedFaxesCategoryId');
-        $method->setAccessible(true);
 
         $categoryId = $method->invoke($this->faxService);
 
@@ -141,7 +139,6 @@ class FaxServiceTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($this->faxService);
         $method = $reflection->getMethod('getReceivedFaxesCategoryId');
-        $method->setAccessible(true);
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage("Failed to create 'Received Faxes' category");
@@ -239,7 +236,6 @@ class FaxServiceTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($this->faxService);
         $method = $reflection->getMethod('saveFaxToDatabase');
-        $method->setAccessible(true);
 
         $method->invoke($this->faxService, $faxData, 'OUTBOUND', $options);
 
@@ -260,7 +256,6 @@ class FaxServiceTest extends TestCase
         // Use reflection to call private method
         $reflection = new \ReflectionClass($this->faxService);
         $method = $reflection->getMethod('saveFaxToDatabase');
-        $method->setAccessible(true);
 
         $method->invoke($this->faxService, $faxData, 'INBOUND', $options);
 

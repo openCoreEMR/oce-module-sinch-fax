@@ -81,8 +81,10 @@ class FaxDownloadController
             throw new FaxNotFoundException("File not found");
         }
 
-        // Log the download
-        $this->logger->info("User {$_SESSION['authUserID']} downloading fax {$faxId}");
+        // Log the download - authUserID exists per check at line 40
+        $authUserId = $_SESSION['authUserID'];
+        $authUserIdStr = is_scalar($authUserId) ? (string)$authUserId : 'unknown';
+        $this->logger->info("User {$authUserIdStr} downloading fax {$faxId}");
 
         // Create binary file response
         $response = new BinaryFileResponse($realFilePath);
