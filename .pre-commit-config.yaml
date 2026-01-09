@@ -8,6 +8,8 @@ repos:
   - id: trailing-whitespace
   - id: end-of-file-fixer
   - id: check-yaml
+    args:
+    - --unsafe  # Allow custom tags like !override in compose.yml
   - id: check-added-large-files
   - id: check-merge-conflict
   - id: check-json
@@ -28,6 +30,7 @@ repos:
     args:
     - --autofix
     - --indent=2
+    exclude: ^compose\.yml$  # Uses Docker Compose !override tags
 
 - repo: local
   hooks:
