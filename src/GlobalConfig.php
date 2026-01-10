@@ -32,7 +32,6 @@ class GlobalConfig
     public const CONFIG_OPTION_OAUTH_TOKEN = 'oce_sinch_fax_oauth_token';
     public const CONFIG_OPTION_REGION = 'oce_sinch_fax_region';
     public const CONFIG_OPTION_FILE_STORAGE_PATH = 'oce_sinch_fax_file_storage_path';
-    public const CONFIG_OPTION_AUTO_RECEIVE = 'oce_sinch_fax_auto_receive';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
     public const CONFIG_OPTION_WEBHOOK_USERNAME = 'oce_sinch_fax_webhook_username';
     public const CONFIG_OPTION_WEBHOOK_PASSWORD = 'oce_sinch_fax_webhook_password';
@@ -97,11 +96,6 @@ class GlobalConfig
             $path = $this->globals->getString('OE_SITE_DIR', '') . '/documents/sinch_faxes';
         }
         return $path;
-    }
-
-    public function getAutoReceive(): bool
-    {
-        return $this->globals->getBoolean(self::CONFIG_OPTION_AUTO_RECEIVE, true);
     }
 
     public function getDefaultRetryCount(): int
@@ -278,12 +272,6 @@ class GlobalConfig
                 'description' => 'Path where fax files will be stored (leave empty for default)',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
-            ],
-            self::CONFIG_OPTION_AUTO_RECEIVE => [
-                'title' => 'Auto-Receive Faxes',
-                'description' => 'Automatically receive and store incoming faxes',
-                'type' => GlobalSetting::DATA_TYPE_BOOL,
-                'default' => true
             ],
             self::CONFIG_OPTION_DEFAULT_RETRY_COUNT => [
                 'title' => 'Default Retry Count',

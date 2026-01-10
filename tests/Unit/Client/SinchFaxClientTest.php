@@ -16,6 +16,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use OpenCoreEMR\Modules\SinchFax\Client\SinchFaxClient;
@@ -395,6 +396,55 @@ class SinchFaxClientTest extends TestCase
         ]);
 
         $this->assertCount(1, $result['faxes']);
+    }
+
+    /**
+     * Test that createTime comparison operators are placed in parameter names
+     *
+     * Sinch API expects: ?createTime>=2021-10-01 (operator in param name)
+     * Not: ?createTime=>=2021-10-01 (operator in value)
+     *
+     * @dataProvider createTimeOperatorProvider
+     */
+    public function testListFaxesCreateTimeOperatorInParamName(string $filterValue, string $expectedParam): void
+    {
+        $container = [];
+        $history = Middleware::history($container);
+
+        $mockHandler = new MockHandler([
+            new Response(200, [], json_encode([
+                'faxes' => [],
+                'totalCount' => 0,
+            ])),
+        ]);
+
+        $handlerStack = HandlerStack::create($mockHandler);
+        $handlerStack->push($history);
+        $httpClient = new Client(['handler' => $handlerStack]);
+
+        $client = new SinchFaxClient($this->config, $httpClient);
+        $client->listFaxes(['createTime' => $filterValue]);
+
+        $this->assertCount(1, $container);
+        $request = $container[0]['request'];
+        $query = $request->getUri()->getQuery();
+
+        // The operator should be in the parameter name, URL-encoded
+        $this->assertStringContainsString($expectedParam, $query);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function createTimeOperatorProvider(): array
+    {
+        return [
+            'greater than or equal' => ['>=2025-01-01T00:00:00Z', 'createTime%3E%3D=2025-01-01T00%3A00%3A00Z'],
+            'less than or equal' => ['<=2025-12-31T23:59:59Z', 'createTime%3C%3D=2025-12-31T23%3A59%3A59Z'],
+            'greater than' => ['>2025-01-01', 'createTime%3E=2025-01-01'],
+            'less than' => ['<2025-12-31', 'createTime%3C=2025-12-31'],
+            'no operator' => ['2025-01-01', 'createTime=2025-01-01'],
+        ];
     }
 
     public function testListFaxesThrowsOnError(): void

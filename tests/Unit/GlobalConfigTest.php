@@ -33,7 +33,6 @@ class GlobalConfigTest extends TestCase
             GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('test-oauth-token'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',
             GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => '/tmp/faxes',
-            GlobalConfig::CONFIG_OPTION_AUTO_RECEIVE => true,
             GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 5,
             'site_addr_oath' => 'https://example.com',
             'webroot' => '/var/www',
@@ -125,11 +124,6 @@ class GlobalConfigTest extends TestCase
         $config = new GlobalConfig($mockGlobals);
 
         $this->assertEquals('/var/www/sites/default/documents/sinch_faxes', $config->getFileStoragePath());
-    }
-
-    public function testGetAutoReceive(): void
-    {
-        $this->assertTrue($this->config->getAutoReceive());
     }
 
     public function testGetDefaultRetryCount(): void

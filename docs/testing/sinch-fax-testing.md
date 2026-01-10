@@ -37,7 +37,6 @@ This document describes end-to-end testing workflows for the Sinch Fax module.
 |---------|-------------|
 | Sinch Service ID | Not required for fax functionality |
 | File Storage Path | Custom storage location (uses default if empty) |
-| Auto-Receive Faxes | Enable webhook processing for inbound faxes |
 | Default Retry Count | Number of retry attempts (default: 3) |
 
 ### Webhook Settings (Required for Inbound Faxes)
