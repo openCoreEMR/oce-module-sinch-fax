@@ -44,26 +44,65 @@
             {# Fax list tab #}
             <div id="list" class="tab-pane fade show active">
                 <h4>{{ 'Recent Faxes'|xlt }}</h4>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{{ 'Direction'|xlt }}</th>
-                            <th>{{ 'Fax ID'|xlt }}</th>
-                            <th>{{ 'From'|xlt }}</th>
-                            <th>{{ 'To'|xlt }}</th>
-                            <th>{{ 'Status'|xlt }}</th>
-                            <th>{{ 'Pages'|xlt }}</th>
-                            <th>{{ 'Error'|xlt }}</th>
-                            <th>{{ 'Date'|xlt }}</th>
-                            <th>{{ 'Actions'|xlt }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fax in faxes %}
-                            {% include 'fax/partials/_fax-table-row.html.twig' with {'fax': fax} %}
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+                {# Filters #}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center">
+                        <label class="mr-2 mb-0">{{ 'Direction'|xlt }}:</label>
+                        <select id="directionFilter" class="form-control form-control-sm mr-3" style="width: auto;">
+                            <option value="">{{ 'All'|xlt }}</option>
+                            <option value="INBOUND"{{ current_direction == 'INBOUND' ? ' selected' : '' }}>{{ 'Inbound'|xlt }}</option>
+                            <option value="OUTBOUND"{{ current_direction == 'OUTBOUND' ? ' selected' : '' }}>{{ 'Outbound'|xlt }}</option>
+                        </select>
+                        <label class="mb-0">
+                            <input type="checkbox" id="showArchivedFilter"{{ show_archived ? ' checked' : '' }}> {{ 'Show Archived'|xlt }}
+                        </label>
+                    </div>
+                </div>
+
+                {# Bulk actions form #}
+                <form id="bulkActionsForm" method="post" action="index.php?action=update_read_status">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token|attr }}">
+                    <input type="hidden" name="read_status" id="bulkReadStatus" value="">
+
+                    {# Bulk action buttons #}
+                    <div class="btn-toolbar mb-2" id="bulkActionsToolbar" style="display: none;">
+                        <span class="mr-2 text-muted" id="selectedCount">0 selected</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mr-1" onclick="bulkAction('read')">
+                            {{ 'Mark Read'|xlt }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mr-1" onclick="bulkAction('unread')">
+                            {{ 'Mark Unread'|xlt }}
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="bulkAction('archived')">
+                            {{ 'Archive'|xlt }}
+                        </button>
+                    </div>
+
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;">
+                                    <input type="checkbox" id="selectAllFaxes" title="{{ 'Select All'|xlt }}">
+                                </th>
+                                <th>{{ 'Direction'|xlt }}</th>
+                                <th>{{ 'Fax ID'|xlt }}</th>
+                                <th>{{ 'From'|xlt }}</th>
+                                <th>{{ 'To'|xlt }}</th>
+                                <th>{{ 'Status'|xlt }}</th>
+                                <th>{{ 'Pages'|xlt }}</th>
+                                <th>{{ 'Error'|xlt }}</th>
+                                <th>{{ 'Date'|xlt }}</th>
+                                <th>{{ 'Actions'|xlt }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fax in faxes %}
+                                {% include 'fax/partials/_fax-table-row.html.twig' with {'fax': fax, 'csrf_token': csrf_token} %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </form>
             </div>
 
             {# Send fax tab #}
@@ -118,6 +157,78 @@
             }
             $('#moveToPatientModal').modal('show');
         }
+
+        // Apply filters
+        function applyFilters() {
+            var url = new URL(window.location.href);
+            var direction = $('#directionFilter').val();
+            var showArchived = $('#showArchivedFilter').is(':checked');
+
+            if (direction) {
+                url.searchParams.set('direction', direction);
+            } else {
+                url.searchParams.delete('direction');
+            }
+
+            if (showArchived) {
+                url.searchParams.set('show_archived', '1');
+            } else {
+                url.searchParams.delete('show_archived');
+            }
+
+            window.location.href = url.toString();
+        }
+
+        // Bulk action
+        function bulkAction(status) {
+            $('#bulkReadStatus').val(status);
+            $('#bulkActionsForm').submit();
+        }
+
+        // Archive single fax
+        function archiveFax(faxId) {
+            // Create a temporary form to submit single archive action
+            var form = $('<form>', {
+                method: 'POST',
+                action: 'index.php?action=update_read_status'
+            });
+            form.append($('<input>', { type: 'hidden', name: 'csrf_token', value: '{{ csrf_token|attr }}' }));
+            form.append($('<input>', { type: 'hidden', name: 'read_status', value: 'archived' }));
+            form.append($('<input>', { type: 'hidden', name: 'fax_id', value: faxId }));
+            $('body').append(form);
+            form.submit();
+        }
+
+        // Update selected count and toolbar visibility
+        function updateBulkToolbar() {
+            var count = $('.fax-checkbox:checked').length;
+            $('#selectedCount').text(count + ' selected');
+            if (count > 0) {
+                $('#bulkActionsToolbar').show();
+            } else {
+                $('#bulkActionsToolbar').hide();
+            }
+        }
+
+        $(document).ready(function() {
+            // Filter change handlers
+            $('#directionFilter').on('change', applyFilters);
+            $('#showArchivedFilter').on('change', applyFilters);
+
+            // Select all checkbox
+            $('#selectAllFaxes').on('change', function() {
+                $('.fax-checkbox').prop('checked', $(this).is(':checked'));
+                updateBulkToolbar();
+            });
+
+            // Individual checkbox
+            $(document).on('change', '.fax-checkbox', function() {
+                updateBulkToolbar();
+                // Update select all state
+                var allChecked = $('.fax-checkbox').length === $('.fax-checkbox:checked').length;
+                $('#selectAllFaxes').prop('checked', allChecked);
+            });
+        });
     </script>
 </body>
 </html>

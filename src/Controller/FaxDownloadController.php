@@ -86,6 +86,14 @@ class FaxDownloadController
         $authUserIdStr = is_scalar($authUserId) ? (string)$authUserId : 'unknown';
         $this->logger->info("User {$authUserIdStr} downloading fax {$faxId}");
 
+        // Mark fax as read when viewed
+        $updateSql = <<<'SQL'
+            UPDATE oce_sinch_faxes
+            SET read_status = 'read', updated_at = NOW()
+            WHERE id = ? AND read_status = 'unread'
+            SQL;
+        QueryUtils::sqlStatementThrowException($updateSql, [$faxId]);
+
         // Create binary file response
         $response = new BinaryFileResponse($realFilePath);
 

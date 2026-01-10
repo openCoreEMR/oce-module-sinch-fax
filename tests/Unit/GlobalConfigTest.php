@@ -33,9 +33,7 @@ class GlobalConfigTest extends TestCase
             GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('test-oauth-token'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',
             GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => '/tmp/faxes',
-            GlobalConfig::CONFIG_OPTION_AUTO_RECEIVE => true,
             GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 5,
-            GlobalConfig::CONFIG_OPTION_ENABLE_STATUS_POLLING => true,
             'site_addr_oath' => 'https://example.com',
             'webroot' => '/var/www',
             'assets_static_relative' => '/assets',
@@ -128,11 +126,6 @@ class GlobalConfigTest extends TestCase
         $this->assertEquals('/var/www/sites/default/documents/sinch_faxes', $config->getFileStoragePath());
     }
 
-    public function testGetAutoReceive(): void
-    {
-        $this->assertTrue($this->config->getAutoReceive());
-    }
-
     public function testGetDefaultRetryCount(): void
     {
         $this->assertEquals(5, $this->config->getDefaultRetryCount());
@@ -144,11 +137,6 @@ class GlobalConfigTest extends TestCase
         $config = new GlobalConfig($mockGlobals);
 
         $this->assertEquals(3, $config->getDefaultRetryCount());
-    }
-
-    public function testIsStatusPollingEnabled(): void
-    {
-        $this->assertTrue($this->config->isStatusPollingEnabled());
     }
 
     public function testGetSiteAddrOath(): void
@@ -230,5 +218,165 @@ class GlobalConfigTest extends TestCase
         $this->assertArrayHasKey('description', $configuration[GlobalConfig::CONFIG_OPTION_ENABLED]);
         $this->assertArrayHasKey('type', $configuration[GlobalConfig::CONFIG_OPTION_ENABLED]);
         $this->assertArrayHasKey('default', $configuration[GlobalConfig::CONFIG_OPTION_ENABLED]);
+    }
+
+    public function testGetWebhookUsername(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'webhook_user',
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertEquals('webhook_user', $config->getWebhookUsername());
+    }
+
+    public function testGetWebhookPassword(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('webhook_secret'),
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertEquals('webhook_secret', $config->getWebhookPassword());
+    }
+
+    public function testGetWebhookPasswordEmpty(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => '',
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertEquals('', $config->getWebhookPassword());
+    }
+
+    public function testGetWebhookIpWhitelistParsesNewlines(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1\n192.168.1.0/24\n  172.16.0.0/12  ",
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $whitelist = $config->getWebhookIpWhitelist();
+        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $whitelist);
+    }
+
+    public function testGetWebhookIpWhitelistEmptyReturnsEmptyArray(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => '',
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertEquals([], $config->getWebhookIpWhitelist());
+    }
+
+    public function testIsWebhookAuthConfiguredTrue(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->isWebhookAuthConfigured());
+    }
+
+    public function testIsWebhookAuthConfiguredFalseMissingUsername(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertFalse($config->isWebhookAuthConfigured());
+    }
+
+    public function testIsWebhookAuthConfiguredFalseMissingPassword(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertFalse($config->isWebhookAuthConfigured());
+    }
+
+    public function testVerifyWebhookAuthSuccess(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->verifyWebhookAuth('user', 'pass'));
+    }
+
+    public function testVerifyWebhookAuthFailsWrongCredentials(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertFalse($config->verifyWebhookAuth('user', 'wrong'));
+        $this->assertFalse($config->verifyWebhookAuth('wrong', 'pass'));
+    }
+
+    public function testVerifyWebhookAuthFailsNotConfigured(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertFalse($config->verifyWebhookAuth('user', 'pass'));
+    }
+
+    public function testIsIpWhitelistedEmptyAllowsAll(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => '',
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->isIpWhitelisted('192.168.1.1'));
+        $this->assertTrue($config->isIpWhitelisted('10.0.0.1'));
+    }
+
+    public function testIsIpWhitelistedExactMatch(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1\n192.168.1.100",
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->isIpWhitelisted('10.0.0.1'));
+        $this->assertTrue($config->isIpWhitelisted('192.168.1.100'));
+        $this->assertFalse($config->isIpWhitelisted('10.0.0.2'));
+    }
+
+    public function testIsIpWhitelistedCidrMatch(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "192.168.1.0/24",
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->isIpWhitelisted('192.168.1.1'));
+        $this->assertTrue($config->isIpWhitelisted('192.168.1.254'));
+        $this->assertFalse($config->isIpWhitelisted('192.168.2.1'));
+    }
+
+    public function testIsIpWhitelistedIpv6(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "2001:db8::/32",
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $this->assertTrue($config->isIpWhitelisted('2001:db8::1'));
+        $this->assertTrue($config->isIpWhitelisted('2001:db8:ffff::1'));
+        $this->assertFalse($config->isIpWhitelisted('2001:db9::1'));
     }
 }

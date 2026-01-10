@@ -15,6 +15,7 @@ namespace OpenCoreEMR\Modules\SinchFax;
 use OpenCoreEMR\Modules\SinchFax\Controller\FaxListController;
 use OpenCoreEMR\Modules\SinchFax\Controller\DocumentFaxController;
 use OpenCoreEMR\Modules\SinchFax\Controller\FaxDownloadController;
+use OpenCoreEMR\Modules\SinchFax\Controller\WebhookController;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Logging\SystemLogger;
 use OpenEMR\Common\Twig\TwigContainer;
@@ -207,5 +208,16 @@ class Bootstrap
     public function getFaxDownloadController(): FaxDownloadController
     {
         return new FaxDownloadController($this->globalsConfig);
+    }
+
+    /**
+     * Get WebhookController instance
+     */
+    public function getWebhookController(): WebhookController
+    {
+        return new WebhookController(
+            $this->globalsConfig,
+            new FaxService($this->globalsConfig)
+        );
     }
 }

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
     `from_number` VARCHAR(20) NOT NULL COMMENT 'Sender phone number',
     `to_number` VARCHAR(20) NOT NULL COMMENT 'Recipient phone number',
     `status` VARCHAR(50) NOT NULL COMMENT 'Status of the fax (QUEUED, IN_PROGRESS, COMPLETED, FAILED, etc)',
+    `read_status` ENUM('unread', 'read', 'archived') NOT NULL DEFAULT 'unread' COMMENT 'Read state for fax list UI',
     `num_pages` INT(11) DEFAULT 0 COMMENT 'Number of pages in the fax',
     `file_path` VARCHAR(255) DEFAULT NULL COMMENT 'Path to stored fax file',
     `mime_type` VARCHAR(100) DEFAULT NULL COMMENT 'MIME type of the fax file',
@@ -23,12 +24,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When this record was created',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
     INDEX `idx_sinch_fax_id` (`sinch_fax_id`),
-    INDEX `idx_direction` (`direction`),
-    INDEX `idx_status` (`status`),
-    INDEX `idx_patient_id` (`patient_id`),
-    INDEX `idx_document_id` (`document_id`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_created_at` (`created_at`)
+    INDEX `idx_read_status` (`read_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table to store Sinch service configuration
@@ -47,9 +43,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_services` (
     `is_default` BOOLEAN DEFAULT FALSE COMMENT 'Whether this is the default service',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When this record was created',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
-    UNIQUE INDEX `idx_service_name` (`service_name`),
-    INDEX `idx_is_active` (`is_active`),
-    INDEX `idx_is_default` (`is_default`)
+    UNIQUE INDEX `idx_service_name` (`service_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Table to store cover pages
@@ -61,8 +55,14 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_cover_pages` (
     `is_active` BOOLEAN DEFAULT TRUE COMMENT 'Whether this cover page is active',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When this record was created',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
-    UNIQUE INDEX `idx_name` (`name`),
-    INDEX `idx_is_active` (`is_active`)
+    UNIQUE INDEX `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Table to track last reconciliation time with Sinch
+CREATE TABLE IF NOT EXISTS `oce_sinch_reconciliation` (
+    `id` INT(11) PRIMARY KEY DEFAULT 1 COMMENT 'Singleton row',
+    `last_sync_time` DATETIME NOT NULL COMMENT 'Last time we synced with Sinch API',
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Create "Received Faxes" document category

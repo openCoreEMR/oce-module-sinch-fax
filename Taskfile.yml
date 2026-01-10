@@ -295,22 +295,16 @@ tasks:
       echo "  http://localhost:$HTTP_PORT/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php"
 
   webhook:tunnel:
-    desc: Start Tailscale Funnel to expose webhook endpoint
+    desc: Start Tailscale Funnel to expose webhook endpoint (background, port 10000)
     cmds:
     - |
-      HTTPS_PORT=$(docker compose port openemr 443 2>/dev/null | cut -d: -f2)
-      if [ -z "$HTTPS_PORT" ]; then
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
         echo "Error: OpenEMR container not running. Start with 'task dev:start'"
         exit 1
       fi
-      echo "Starting Tailscale Funnel on port $HTTPS_PORT..."
-      echo ""
-      echo "Once running, your webhook URL will be:"
-      echo "  https://$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')/interface/modules/custom_modules/oce-module-sinch-fax/public/webhook.php"
-      echo ""
-      echo "Press Ctrl+C to stop the tunnel"
-      echo ""
-      tailscale funnel $HTTPS_PORT
+      echo "Starting Tailscale Funnel (HTTPS :10000 -> HTTP :$HTTP_PORT)..."
+      tailscale funnel --bg --https 10000 $HTTP_PORT
 
   webhook:tunnel:status:
     desc: Show Tailscale Funnel status
@@ -320,7 +314,7 @@ tasks:
   webhook:tunnel:off:
     desc: Turn off Tailscale Funnel
     cmds:
-    - tailscale funnel off
+    - tailscale funnel --https=10000 off
     - echo "Tailscale Funnel stopped"
 
   webhook:test:

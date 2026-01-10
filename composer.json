@@ -28,6 +28,7 @@
   "require": {
     "php": ">=8.2",
     "ext-curl": "*",
+    "ext-date": "*",
     "ext-filter": "*",
     "ext-json": "*",
     "guzzlehttp/guzzle": "^7.0",
@@ -116,7 +117,8 @@
       "ergebnis/composer-normalize": true,
       "openemr/oe-module-installer-plugin": true,
       "php-http/discovery": true
-    }
+    },
+    "sort-packages": true
   },
   "extra": {
     "oe-module-name": "oce-module-sinch-fax"

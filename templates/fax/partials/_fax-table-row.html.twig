@@ -1,11 +1,18 @@
-<tr>
+<tr class="{{ fax.read_status == 'unread' ? 'font-weight-bold table-warning' : '' }}{{ fax.read_status == 'archived' ? ' text-muted' : '' }}">
+    <td>
+        <input type="checkbox" class="fax-checkbox" name="fax_ids[]" value="{{ fax.id }}">
+    </td>
     <td>{{ fax.direction|text }}</td>
     <td><small>{{ fax.sinch_fax_id|default('')|text }}</small></td>
     <td>{{ fax.from_number|text }}</td>
     <td>{{ fax.to_number|text }}</td>
     <td>{{ fax.status|text }}</td>
     <td>{{ fax.num_pages|text }}</td>
-    <td><small>{{ fax.error_message|default('')|text }}</small></td>
+    <td>
+        {% if fax.error_message %}
+            <small class="text-danger">{{ fax.error_message|text }}</small>
+        {% endif %}
+    </td>
     <td>{{ fax.created_at|text }}</td>
     <td>
         {% if fax.document_id %}
@@ -14,13 +21,20 @@
             </span>
         {% elseif fax.file_path %}
             <a href="download.php?fax_id={{ fax.id }}" class="btn btn-sm btn-primary" target="_blank">
-                <i class="fa fa-download"></i> {{ 'View/Download'|xlt }}
+                <i class="fa fa-download"></i> {{ 'View'|xlt }}
             </a>
-            <button type="button" class="btn btn-sm btn-success" onclick="showMoveToPatientDialog({{ fax.id }}, {{ fax.patient_id|default(0) }})">
-                <i class="fa fa-folder-open"></i> {{ 'Move to Patient'|xlt }}
-            </button>
+            {% if fax.direction == 'INBOUND' %}
+                <button type="button" class="btn btn-sm btn-success" onclick="showMoveToPatientDialog({{ fax.id }}, {{ fax.patient_id|default(0) }})">
+                    <i class="fa fa-folder-open"></i> {{ 'Move to Patient'|xlt }}
+                </button>
+            {% endif %}
         {% else %}
             <span class="text-muted">{{ 'No file'|xlt }}</span>
+        {% endif %}
+        {% if fax.read_status != 'archived' %}
+            <button type="button" class="btn btn-sm btn-outline-secondary ml-1" onclick="archiveFax({{ fax.id }})" title="{{ 'Archive'|xlt }}">
+                <i class="fa fa-archive"></i>
+            </button>
         {% endif %}
     </td>
 </tr>

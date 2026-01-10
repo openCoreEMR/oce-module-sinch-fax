@@ -94,11 +94,32 @@ When viewing the module configuration (Admin > Config > OpenCoreEMR Sinch Fax Mo
 | OAuth Token | OAuth bearer token | Yes (for oauth auth) |
 | API Region | `global`, `us`, `eu` | Yes |
 | File Storage Path | Where to store fax files | Optional |
-| Auto-Receive Faxes | Enable inbound fax processing | Recommended |
 | Default Retry Count | Retry attempts for failed faxes | Yes |
-| Enable Status Polling | Poll for fax status updates | Recommended |
 
 **Note:** The Service ID field is optional and not required for fax functionality. Don't flag an empty Service ID as a configuration problem.
+
+## Critical Rules
+
+### NEVER Use Direct URL Navigation
+
+**CRITICAL:** Never use the browser's `navigate` tool to go directly to an OpenEMR URL. This will trigger a dialog box that blocks all further browser automation.
+
+**Wrong:**
+```
+navigate to http://localhost:53527/interface/modules/custom_modules/oce-module-sinch-fax/public/index.php
+```
+
+**Correct:**
+```
+1. Click "Modules" in the menu bar
+2. Click "OpenCoreEMR Sinch Fax" in the dropdown
+```
+
+Always use OpenEMR's menu system and tab navigation. The only exception is the initial login page.
+
+### Never Refresh the Page Directly
+
+Similarly, never use browser refresh. Use OpenEMR's built-in tab reload icons (the ↻ symbol next to each tab name in the OpenEMR tab bar).
 
 ## Common Navigation Issues
 

@@ -20,6 +20,9 @@ use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 // Get kernel and bootstrap module
 $globalsAccessor = new GlobalsAccessor();
 $kernel = $globalsAccessor->get('kernel');
+if (!$kernel instanceof \OpenEMR\Core\Kernel) {
+    throw new \RuntimeException('OpenEMR Kernel not available');
+}
 $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
 
 // Get controller

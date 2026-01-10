@@ -40,6 +40,37 @@ class FaxService
     {
         $this->logger->info("Sending fax to {$to}");
 
+        // Ensure storage directory exists
+        $storagePath = $this->config->getFileStoragePath();
+        if (!is_dir($storagePath)) {
+            mkdir($storagePath, 0770, true);
+        }
+
+        // Save a copy of the first file for our records (before sending)
+        $savedFilePath = null;
+        $firstFile = $files[0] ?? null;
+        if ($firstFile) {
+            $sourcePath = is_array($firstFile) ? $firstFile['path'] : $firstFile;
+            $originalFilename = is_array($firstFile)
+                ? ($firstFile['filename'] ?? basename($sourcePath))
+                : basename($sourcePath);
+
+            if (file_exists($sourcePath)) {
+                // Generate unique filename with timestamp
+                $extension = pathinfo($originalFilename, PATHINFO_EXTENSION) ?: 'pdf';
+                $uniqueFilename = 'outbound_' . date('Ymd_His') . '_' . uniqid() . '.' . $extension;
+                $savedFilePath = $storagePath . DIRECTORY_SEPARATOR . $uniqueFilename;
+
+                if (copy($sourcePath, $savedFilePath)) {
+                    chmod($savedFilePath, 0660);
+                    $this->logger->debug("Saved outbound fax file to {$savedFilePath}");
+                } else {
+                    $this->logger->warning("Failed to save copy of outbound fax file");
+                    $savedFilePath = null;
+                }
+            }
+        }
+
         $params = [
             'to' => $to,
             'files' => array_map(function ($file) {
@@ -62,6 +93,9 @@ class FaxService
         $params['maxRetries'] = $options['maxRetries'] ?? $this->config->getDefaultRetryCount();
 
         $response = $this->client->sendFax($params);
+
+        // Add the saved file path to options for database storage
+        $options['file_path'] = $savedFilePath;
 
         $this->saveFaxToDatabase($response, 'OUTBOUND', $options);
 
@@ -123,12 +157,16 @@ class FaxService
      */
     private function saveFaxToDatabase(array $faxData, string $direction, array $options = []): void
     {
-        $sql = "INSERT INTO oce_sinch_faxes (
-            sinch_fax_id, direction, from_number, to_number, status, num_pages,
-            file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
-            error_code, error_message,
-            sinch_create_time, sinch_completed_time
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Outbound faxes default to 'read', inbound to 'unread'
+        $readStatus = $direction === 'OUTBOUND' ? 'read' : 'unread';
+
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_faxes (
+                sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                file_path, mime_type, patient_id, user_id, callback_url, cover_page_id,
+                error_code, error_message, sinch_create_time, sinch_completed_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            SQL;
 
         $bind = [
             $faxData['id'] ?? '',
@@ -136,6 +174,7 @@ class FaxService
             $faxData['from'] ?? '',
             $faxData['to'] ?? '',
             $faxData['status'] ?? 'UNKNOWN',
+            $readStatus,
             $faxData['numberOfPages'] ?? 0,
             $options['file_path'] ?? null,
             $options['mime_type'] ?? 'application/pdf',
@@ -145,6 +184,218 @@ class FaxService
             $faxData['coverPageId'] ?? null,
             $faxData['errorCode'] ?? null,
             $faxData['errorMessage'] ?? null,
+            $faxData['createTime'] ?? null,
+            $faxData['completedTime'] ?? null,
+        ];
+
+        QueryUtils::sqlStatementThrowException($sql, $bind);
+    }
+
+    /**
+     * Poll for new incoming faxes from Sinch API
+     *
+     * @return int Number of new faxes found
+     */
+    public function pollIncomingFaxes(): int
+    {
+        $filters = [
+            'direction' => 'INBOUND',
+            'pageSize' => 100,
+        ];
+
+        $response = $this->client->listFaxes($filters);
+        /** @var array<int, array<string, mixed>> $faxes */
+        $faxes = is_array($response['faxes'] ?? null) ? $response['faxes'] : [];
+        $newFaxCount = 0;
+
+        $this->logger->debug("Polling for incoming faxes, found " . count($faxes) . " from API");
+
+        foreach ($faxes as $faxItem) {
+            $faxIdRaw = $faxItem['id'] ?? null;
+            if (!is_scalar($faxIdRaw)) {
+                continue;
+            }
+            $faxId = (string)$faxIdRaw;
+
+            $statusRaw = $faxItem['status'] ?? '';
+            $status = is_string($statusRaw) ? $statusRaw : '';
+            // hasFile indicates if file content is available on Sinch servers
+            $hasFile = $faxItem['hasFile'] ?? false;
+            $fileAvailable = ($hasFile === true || $hasFile === 'true');
+
+            $this->logger->debug(
+                "Processing fax {$faxId}: status={$status}, hasFile=" . var_export($hasFile, true)
+            );
+
+            // Check if we already have this fax
+            $existingSql = "SELECT id, file_path, status FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+            $existingFax = QueryUtils::querySingleRow($existingSql, [$faxId]);
+
+            if ($existingFax) {
+                // If fax exists but has no file, try to download it (only if Sinch has the file)
+                if (empty($existingFax['file_path']) && $fileAvailable) {
+                    $this->logger->debug("Existing fax {$faxId} has no file, attempting download");
+                    try {
+                        $filePath = $this->downloadAndSaveFax($faxId);
+                        $updateSql = "UPDATE oce_sinch_faxes " .
+                                     "SET file_path = ?, updated_at = NOW() WHERE sinch_fax_id = ?";
+                        QueryUtils::sqlStatementThrowException($updateSql, [$filePath, $faxId]);
+                        $this->logger->info("Downloaded missing file for fax {$faxId} to {$filePath}");
+                    } catch (\Throwable $e) {
+                        $this->logger->error("Failed to download fax {$faxId}: " . $e->getMessage());
+                    }
+                } elseif (empty($existingFax['file_path']) && !$fileAvailable) {
+                    $this->logger->debug("Fax {$faxId} has no file available on Sinch (hasFile=false)");
+                }
+                continue;
+            }
+
+            // New fax - try to download the content if available
+            $filePath = null;
+            if ($fileAvailable) {
+                $this->logger->debug("New fax {$faxId}, attempting download");
+                try {
+                    $filePath = $this->downloadAndSaveFax($faxId);
+                    $this->logger->info("Downloaded incoming fax {$faxId} to {$filePath}");
+                } catch (\Throwable $e) {
+                    $this->logger->error("Failed to download incoming fax {$faxId}: " . $e->getMessage());
+                    // Continue to save the fax record even without the file
+                }
+            } else {
+                $this->logger->info(
+                    "Fax {$faxId} has no file available on Sinch (hasFile=false) - file may have been deleted"
+                );
+            }
+
+            // Save to database
+            /** @var array<string, mixed> $faxItem */
+            $this->saveIncomingFaxToDatabase($faxItem, $filePath);
+            $newFaxCount++;
+        }
+
+        return $newFaxCount;
+    }
+
+    /**
+     * Reconcile local fax records with Sinch API
+     *
+     * Queries Sinch for inbound faxes since last sync and creates records
+     * for any faxes we don't have locally (missed webhooks).
+     *
+     * @return array<string> List of missed fax IDs that were reconciled
+     */
+    public function reconcileInboundFaxes(): array
+    {
+        $lastSyncTime = $this->getLastSyncTime();
+
+        $filters = [
+            'direction' => 'INBOUND',
+            'pageSize' => 100,
+        ];
+
+        if ($lastSyncTime !== null) {
+            $filters['createTime'] = '>=' . $lastSyncTime->format('c');
+        }
+
+        $response = $this->client->listFaxes($filters);
+        /** @var array<int, array<string, mixed>> $faxes */
+        $faxes = is_array($response['faxes'] ?? null) ? $response['faxes'] : [];
+
+        $missedFaxIds = [];
+
+        foreach ($faxes as $faxItem) {
+            $faxIdRaw = $faxItem['id'] ?? null;
+            if (!is_scalar($faxIdRaw)) {
+                continue;
+            }
+            $faxId = (string)$faxIdRaw;
+
+            if (!$this->faxExistsLocally($faxId)) {
+                // Create record for missed fax - no file available
+                $errorMessage = 'Fax acknowledged, but document was not received by OpenEMR. '
+                    . 'Contact sender to re-send.';
+                $this->saveIncomingFaxToDatabase($faxItem, null, $errorMessage);
+                $missedFaxIds[] = $faxId;
+                $this->logger->warning("Reconciled missed fax: {$faxId}");
+            }
+        }
+
+        $this->updateLastSyncTime();
+
+        return $missedFaxIds;
+    }
+
+    /**
+     * Get the last sync time from the reconciliation table
+     */
+    private function getLastSyncTime(): ?\DateTimeImmutable
+    {
+        $sql = 'SELECT last_sync_time FROM oce_sinch_reconciliation WHERE id = 1';
+        $row = QueryUtils::querySingleRow($sql, []);
+
+        if ($row && !empty($row['last_sync_time'])) {
+            try {
+                return new \DateTimeImmutable($row['last_sync_time']);
+            } catch (\Throwable $e) {
+                $this->logger->error("Invalid last_sync_time in database: " . $e->getMessage());
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Update the last sync time to now
+     */
+    private function updateLastSyncTime(): void
+    {
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_reconciliation (id, last_sync_time)
+            VALUES (1, NOW())
+            ON DUPLICATE KEY UPDATE last_sync_time = NOW()
+            SQL;
+        QueryUtils::sqlStatementThrowException($sql, []);
+    }
+
+    /**
+     * Check if a fax exists locally by Sinch fax ID
+     */
+    private function faxExistsLocally(string $sinchFaxId): bool
+    {
+        $sql = 'SELECT 1 FROM oce_sinch_faxes WHERE sinch_fax_id = ? LIMIT 1';
+        $row = QueryUtils::querySingleRow($sql, [$sinchFaxId]);
+        return $row !== null;
+    }
+
+    /**
+     * @param array<string, mixed> $faxData
+     * @param string|null $filePath
+     * @param string|null $errorMessage Optional error message override
+     */
+    private function saveIncomingFaxToDatabase(
+        array $faxData,
+        ?string $filePath,
+        ?string $errorMessage = null
+    ): void {
+        $sql = <<<'SQL'
+            INSERT INTO oce_sinch_faxes (
+                sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                file_path, mime_type, error_code, error_message,
+                sinch_create_time, sinch_completed_time, created_at
+            ) VALUES (?, ?, ?, ?, ?, 'unread', ?, ?, ?, ?, ?, ?, ?, NOW())
+            SQL;
+
+        $bind = [
+            $faxData['id'] ?? '',
+            'INBOUND',
+            $faxData['from'] ?? '',
+            $faxData['to'] ?? '',
+            $faxData['status'] ?? 'UNKNOWN',
+            $faxData['numberOfPages'] ?? 0,
+            $filePath,
+            'application/pdf',
+            $faxData['errorCode'] ?? null,
+            $errorMessage ?? $faxData['errorMessage'] ?? null,
             $faxData['createTime'] ?? null,
             $faxData['completedTime'] ?? null,
         ];
@@ -182,6 +433,167 @@ class FaxService
         $this->logger->info("Created 'Received Faxes' document category");
 
         return (int)$category['id'];
+    }
+
+    /**
+     * Process an incoming fax webhook event
+     *
+     * @param array<string, mixed> $faxData Fax data from webhook
+     * @param string|null $fileContent Binary content of fax file (if included in webhook)
+     */
+    public function processIncomingFax(array $faxData, ?string $fileContent = null): void
+    {
+        $faxIdRaw = $faxData['id'] ?? null;
+        if (!is_scalar($faxIdRaw)) {
+            throw new \InvalidArgumentException("Missing fax ID in webhook data");
+        }
+        $faxId = (string)$faxIdRaw;
+
+        $this->logger->info("Processing incoming fax webhook: {$faxId}");
+
+        // Check if we already have this fax
+        $existingSql = "SELECT id, file_path FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+        $existingFax = QueryUtils::querySingleRow($existingSql, [$faxId]);
+
+        // Save file if content was provided
+        $filePath = null;
+        if ($fileContent) {
+            $filePath = $this->saveFileContent($faxId, $fileContent);
+        }
+
+        if ($existingFax) {
+            // Update existing record if we now have a file (handles reconciled faxes)
+            if ($filePath && empty($existingFax['file_path'])) {
+                $updateSql = <<<'SQL'
+                    UPDATE oce_sinch_faxes
+                    SET file_path = ?, error_message = NULL, updated_at = NOW()
+                    WHERE id = ?
+                    SQL;
+                QueryUtils::sqlStatementThrowException($updateSql, [$filePath, $existingFax['id']]);
+                $this->logger->info("Updated fax {$faxId} with file: {$filePath}");
+            }
+            return;
+        }
+
+        // If no file content in webhook, try to download from Sinch API
+        if (!$filePath) {
+            try {
+                $filePath = $this->downloadAndSaveFax($faxId);
+                $this->logger->info("Downloaded incoming fax {$faxId} to {$filePath}");
+            } catch (\Throwable $e) {
+                $this->logger->warning("Could not download fax {$faxId}: " . $e->getMessage());
+                // Continue to save the record even without file
+            }
+        }
+
+        // Save to database
+        $this->saveIncomingFaxToDatabase($faxData, $filePath);
+        $this->logger->info("Saved incoming fax {$faxId} to database");
+    }
+
+    /**
+     * Process a fax completed webhook event
+     *
+     * @param array<string, mixed> $faxData Fax data from webhook
+     */
+    public function processFaxCompleted(array $faxData): void
+    {
+        $faxIdRaw = $faxData['id'] ?? null;
+        if (!is_scalar($faxIdRaw)) {
+            throw new \InvalidArgumentException("Missing fax ID in webhook data");
+        }
+        $faxId = (string)$faxIdRaw;
+
+        $this->logger->info("Processing fax completed webhook: {$faxId}");
+
+        // Find existing fax record
+        $sql = "SELECT id FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
+        $existingFax = QueryUtils::querySingleRow($sql, [$faxId]);
+
+        $statusRaw = $faxData['status'] ?? 'UNKNOWN';
+        $status = is_string($statusRaw) ? $statusRaw : 'UNKNOWN';
+        $errorCode = $faxData['errorCode'] ?? null;
+        $errorMessage = $faxData['errorMessage'] ?? null;
+        $numPages = $faxData['numberOfPages'] ?? 0;
+        $completedTime = $faxData['completedTime'] ?? null;
+
+        if ($existingFax) {
+            // Update existing record with completion status
+            $updateSql = <<<'SQL'
+                UPDATE oce_sinch_faxes SET
+                    status = ?,
+                    num_pages = ?,
+                    error_code = ?,
+                    error_message = ?,
+                    sinch_completed_time = ?,
+                    updated_at = NOW()
+                WHERE id = ?
+                SQL;
+
+            QueryUtils::sqlStatementThrowException($updateSql, [
+                $status,
+                $numPages,
+                $errorCode,
+                $errorMessage,
+                $completedTime,
+                $existingFax['id'],
+            ]);
+
+            $this->logger->info("Updated fax {$faxId} status to {$status}");
+        } else {
+            // Create new record for this fax (outbound defaults to 'read')
+            $this->logger->info("Fax {$faxId} not found, creating new record");
+
+            $directionRaw = $faxData['direction'] ?? 'OUTBOUND';
+            $direction = is_string($directionRaw) ? $directionRaw : 'OUTBOUND';
+            $readStatus = $direction === 'OUTBOUND' ? 'read' : 'unread';
+
+            $insertSql = <<<'SQL'
+                INSERT INTO oce_sinch_faxes (
+                    sinch_fax_id, direction, from_number, to_number, status, read_status, num_pages,
+                    error_code, error_message, sinch_create_time, sinch_completed_time, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                SQL;
+
+            QueryUtils::sqlStatementThrowException($insertSql, [
+                $faxId,
+                $direction,
+                $faxData['from'] ?? '',
+                $faxData['to'] ?? '',
+                $status,
+                $readStatus,
+                $numPages,
+                $errorCode,
+                $errorMessage,
+                $faxData['createTime'] ?? null,
+                $completedTime,
+            ]);
+        }
+    }
+
+    /**
+     * Save file content to storage
+     *
+     * @param string $faxId Sinch fax ID
+     * @param string $content Binary file content
+     * @return string Path to saved file
+     */
+    private function saveFileContent(string $faxId, string $content): string
+    {
+        $storagePath = $this->config->getFileStoragePath();
+        if (!is_dir($storagePath)) {
+            mkdir($storagePath, 0770, true);
+        }
+
+        $filename = 'inbound_' . date('Ymd_His') . '_' . $faxId . '.pdf';
+        $filePath = $storagePath . DIRECTORY_SEPARATOR . $filename;
+
+        file_put_contents($filePath, $content);
+        chmod($filePath, 0660);
+
+        $this->logger->debug("Saved fax file to {$filePath}");
+
+        return $filePath;
     }
 
     /**

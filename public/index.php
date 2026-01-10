@@ -19,13 +19,17 @@ use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 // Get kernel and bootstrap module
 $globalsAccessor = new GlobalsAccessor();
 $kernel = $globalsAccessor->get('kernel');
+if (!$kernel instanceof \OpenEMR\Core\Kernel) {
+    throw new \RuntimeException('OpenEMR Kernel not available');
+}
 $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
 
 // Get controller
 $controller = $bootstrap->getFaxListController();
 
 // Determine action
-$action = $_GET['action'] ?? $_POST['action'] ?? 'list';
+$actionParam = $_GET['action'] ?? $_POST['action'] ?? 'list';
+$action = is_string($actionParam) ? $actionParam : 'list';
 
 // Dispatch to controller and send response
 $response = $controller->dispatch($action);

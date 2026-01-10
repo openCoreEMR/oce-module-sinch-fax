@@ -261,7 +261,14 @@ class SinchFaxClient
                 $queryParams['from'] = $filters['from'];
             }
             if (isset($filters['createTime'])) {
-                $queryParams['createTime'] = $filters['createTime'];
+                $value = $filters['createTime'];
+                // Sinch API expects comparison operators in the parameter name, not value
+                // e.g., ?createTime>=2021-10-01 not ?createTime=>=2021-10-01
+                if (is_string($value) && preg_match('/^(>=|<=|>|<)(.+)$/', $value, $matches)) {
+                    $queryParams['createTime' . $matches[1]] = $matches[2];
+                } else {
+                    $queryParams['createTime'] = $value;
+                }
             }
             if (isset($filters['page'])) {
                 $queryParams['page'] = $filters['page'];
