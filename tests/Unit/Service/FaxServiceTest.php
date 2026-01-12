@@ -412,4 +412,47 @@ class FaxServiceTest extends TestCase
             $this->assertTrue(true);
         }
     }
+
+    public function testGetConfiguredFaxNumbersReturnsCorrectStructure(): void
+    {
+        // Even if API call fails, the method should return a well-structured result
+        $result = $this->faxService->getConfiguredFaxNumbers();
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('numbers', $result);
+        $this->assertArrayHasKey('error', $result);
+        $this->assertIsArray($result['numbers']);
+    }
+
+    public function testGetConfiguredFaxNumbersHandlesApiFailureGracefully(): void
+    {
+        // The method catches exceptions and returns an error message
+        // Since we don't have a mock client, the API call will fail
+        $result = $this->faxService->getConfiguredFaxNumbers();
+
+        // Either we have numbers, or we have an error - but we should always have the structure
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('numbers', $result);
+        $this->assertArrayHasKey('error', $result);
+
+        // Since API isn't available in tests, expect an error
+        if (empty($result['numbers'])) {
+            $this->assertNotNull($result['error']);
+        }
+    }
+
+    public function testGetConfiguredFaxNumbersNeverThrows(): void
+    {
+        // The method should NEVER throw an exception - it should catch and return error
+        $exceptionThrown = false;
+
+        try {
+            $result = $this->faxService->getConfiguredFaxNumbers();
+            $this->assertIsArray($result);
+        } catch (\Throwable $e) {
+            $exceptionThrown = true;
+        }
+
+        $this->assertFalse($exceptionThrown, 'getConfiguredFaxNumbers should never throw exceptions');
+    }
 }

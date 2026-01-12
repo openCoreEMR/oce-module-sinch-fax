@@ -658,4 +658,79 @@ class FaxService
 
         return $documentId;
     }
+
+    /**
+     * Get configured fax phone numbers from Sinch
+     *
+     * If Service ID is configured, returns numbers for that service only.
+     * Otherwise, discovers all services and returns all associated numbers.
+     *
+     * @return array{
+     *     numbers: array<int, array{phoneNumber: string, serviceName?: string}>,
+     *     error: string|null
+     * }
+     */
+    public function getConfiguredFaxNumbers(): array
+    {
+        $result = ['numbers' => [], 'error' => null];
+
+        try {
+            $serviceId = $this->config->getServiceId();
+
+            if (!empty($serviceId)) {
+                // Service ID is configured - get numbers for this service only
+                $response = $this->client->listServiceNumbers($serviceId);
+                $numbers = is_array($response['numbers'] ?? null) ? $response['numbers'] : [];
+                foreach ($numbers as $number) {
+                    if (!is_array($number)) {
+                        continue;
+                    }
+                    $phoneNumber = $number['phoneNumber'] ?? null;
+                    if (is_string($phoneNumber)) {
+                        $result['numbers'][] = ['phoneNumber' => $phoneNumber];
+                    }
+                }
+            } else {
+                // No Service ID - discover all services and their numbers
+                $servicesResponse = $this->client->listServices();
+                $services = is_array($servicesResponse['services'] ?? null) ? $servicesResponse['services'] : [];
+
+                foreach ($services as $service) {
+                    if (!is_array($service)) {
+                        continue;
+                    }
+                    $svcId = $service['id'] ?? null;
+                    $svcName = $service['name'] ?? 'Unnamed Service';
+                    if (!is_string($svcId)) {
+                        continue;
+                    }
+
+                    try {
+                        $numbersResponse = $this->client->listServiceNumbers($svcId);
+                        $numbers = is_array($numbersResponse['numbers'] ?? null) ? $numbersResponse['numbers'] : [];
+                        foreach ($numbers as $number) {
+                            if (!is_array($number)) {
+                                continue;
+                            }
+                            $phoneNumber = $number['phoneNumber'] ?? null;
+                            if (is_string($phoneNumber)) {
+                                $result['numbers'][] = [
+                                    'phoneNumber' => $phoneNumber,
+                                    'serviceName' => is_string($svcName) ? $svcName : 'Unnamed Service',
+                                ];
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        $this->logger->warning("Failed to get numbers for service {$svcId}: " . $e->getMessage());
+                        // Continue with other services
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to get fax numbers: ' . $e->getMessage());
+            $result['error'] = 'Unable to retrieve fax numbers';
+        }
+
+        return $result;
+    }
 }

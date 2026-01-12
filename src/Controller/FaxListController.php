@@ -123,6 +123,24 @@ class FaxListController
             $this->logger->error("Reconciliation failed: " . $e->getMessage());
         }
 
+        // Fetch configured fax numbers (informational only, failure doesn't block page)
+        $faxNumbers = [];
+        $faxNumbersError = null;
+        if ($this->config->isConfigured()) {
+            try {
+                $result = $this->faxService->getConfiguredFaxNumbers();
+                // Defensive: handle unexpected return types from mocks or errors
+                // @phpstan-ignore function.alreadyNarrowedType
+                if (is_array($result)) {
+                    $faxNumbers = $result['numbers'] ?? []; // @phpstan-ignore nullCoalesce.offset
+                    $faxNumbersError = $result['error'] ?? null;
+                }
+            } catch (\Throwable $e) {
+                $this->logger->error("Error fetching fax numbers: " . $e->getMessage());
+                $faxNumbersError = 'Unable to retrieve fax numbers';
+            }
+        }
+
         // Build filter conditions
         $whereClauses = [];
         $binds = [];
@@ -168,6 +186,9 @@ class FaxListController
             'assets_path' => $this->config->getAssetsStaticRelative(),
             'current_direction' => $direction,
             'show_archived' => $showArchived,
+            'fax_numbers' => $faxNumbers,
+            'fax_numbers_error' => $faxNumbersError,
+            'is_configured' => $this->config->isConfigured(),
         ]);
 
         return new Response($content);

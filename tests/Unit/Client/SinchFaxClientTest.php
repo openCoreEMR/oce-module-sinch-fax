@@ -571,4 +571,132 @@ class SinchFaxClientTest extends TestCase
             @unlink($docxFile);
         }
     }
+
+    public function testListServicesSuccess(): void
+    {
+        $mockHandler = new MockHandler([
+            new Response(200, [], json_encode([
+                'services' => [
+                    ['id' => 'svc-1', 'name' => 'Main Fax Service'],
+                    ['id' => 'svc-2', 'name' => 'Backup Service'],
+                ],
+                'totalItems' => 2,
+            ])),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+        $result = $client->listServices();
+
+        $this->assertArrayHasKey('services', $result);
+        $this->assertCount(2, $result['services']);
+        $this->assertEquals('svc-1', $result['services'][0]['id']);
+        $this->assertEquals('Main Fax Service', $result['services'][0]['name']);
+    }
+
+    public function testListServicesEmptyResult(): void
+    {
+        $mockHandler = new MockHandler([
+            new Response(200, [], json_encode([
+                'services' => [],
+                'totalItems' => 0,
+            ])),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+        $result = $client->listServices();
+
+        $this->assertArrayHasKey('services', $result);
+        $this->assertCount(0, $result['services']);
+    }
+
+    public function testListServicesThrowsOnError(): void
+    {
+        $mockHandler = new MockHandler([
+            new RequestException(
+                'Server Error',
+                new Request('GET', '/v3/projects/test-project-id/services'),
+                new Response(500, [], json_encode(['error' => 'Internal error']))
+            ),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to list services');
+
+        $client->listServices();
+    }
+
+    public function testListServiceNumbersSuccess(): void
+    {
+        $mockHandler = new MockHandler([
+            new Response(200, [], json_encode([
+                'numbers' => [
+                    ['phoneNumber' => '+15551234567'],
+                    ['phoneNumber' => '+15559876543'],
+                ],
+                'totalItems' => 2,
+            ])),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+        $result = $client->listServiceNumbers('svc-123');
+
+        $this->assertArrayHasKey('numbers', $result);
+        $this->assertCount(2, $result['numbers']);
+        $this->assertEquals('+15551234567', $result['numbers'][0]['phoneNumber']);
+        $this->assertEquals('+15559876543', $result['numbers'][1]['phoneNumber']);
+    }
+
+    public function testListServiceNumbersEmptyResult(): void
+    {
+        $mockHandler = new MockHandler([
+            new Response(200, [], json_encode([
+                'numbers' => [],
+                'totalItems' => 0,
+            ])),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+        $result = $client->listServiceNumbers('svc-123');
+
+        $this->assertArrayHasKey('numbers', $result);
+        $this->assertCount(0, $result['numbers']);
+    }
+
+    public function testListServiceNumbersThrowsOnNotFound(): void
+    {
+        $mockHandler = new MockHandler([
+            new RequestException(
+                'Not Found',
+                new Request('GET', '/v3/projects/test-project-id/services/invalid-svc/numbers'),
+                new Response(404, [], json_encode(['error' => 'Service not found']))
+            ),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to list service numbers');
+
+        $client->listServiceNumbers('invalid-svc');
+    }
+
+    public function testListServiceNumbersThrowsOnServerError(): void
+    {
+        $mockHandler = new MockHandler([
+            new RequestException(
+                'Server Error',
+                new Request('GET', '/v3/projects/test-project-id/services/svc-123/numbers'),
+                new Response(500, [], json_encode(['error' => 'Internal error']))
+            ),
+        ]);
+
+        $client = $this->createClientWithMockHandler($mockHandler);
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failed to list service numbers');
+
+        $client->listServiceNumbers('svc-123');
+    }
 }
