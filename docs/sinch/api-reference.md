@@ -34,3 +34,19 @@ The Fax API works alongside other Sinch APIs for complete functionality.
 - Implementing fax send/receive features → Fax API docs
 - Managing fax numbers → Numbers API (llms.txt or web docs)
 - Multi-tenant provisioning → Subproject/Access Keys APIs (web docs)
+
+## Webhook Callback IP Addresses
+
+For webhook IP allowlist configuration, Sinch uses the following callback IP addresses:
+
+```
+54.76.19.159
+54.78.194.39
+54.155.83.128
+```
+
+**Source:** https://developers.sinch.com/docs/numbers/api-reference/imported-numbers-overview#ip-addresses-for-callbacks
+
+**Note:** These IP addresses are documented for the Numbers API, but are likely shared across Sinch's infrastructure. If you experience webhook delivery issues, verify with Sinch support or test empirically to confirm these IPs are also used for Fax API callbacks.
+
+**Configuration:** Add these IPs to the "Webhook IP Allowlist" setting in Administration > Globals > OpenCoreEMR Sinch Fax Module (one per line).

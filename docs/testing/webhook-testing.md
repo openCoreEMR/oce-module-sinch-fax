@@ -38,6 +38,15 @@ These settings need to be configured in Admin > Config > OpenCoreEMR Sinch Fax M
 | Webhook Password | Password for HTTP Basic Auth |
 | Webhook IP Allowlist | Comma-separated list of allowed IPs (optional) |
 
+**Recommended Sinch Callback IPs for Allowlist:**
+```
+54.76.19.159
+54.78.194.39
+54.155.83.128
+```
+
+These are documented Sinch callback IPs. See [docs/sinch/api-reference.md](../sinch/api-reference.md#webhook-callback-ip-addresses) for more details.
+
 **Note:** If these settings don't exist yet, they need to be implemented in the module.
 
 ## Local Testing Methods
