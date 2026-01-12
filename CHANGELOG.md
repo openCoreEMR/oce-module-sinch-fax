@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.5.2](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.1...0.5.2) (2026-01-12)
+
+
+### Features
+
+* add CLI tool for module installation using Symfony Console ([#66](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/66)) ([c13a879](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c13a8794945cef34e69951577bcbb7310d63bc12))
+* add environment-based configuration mode ([#61](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/61)) ([20483ee](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/20483ee448098d6d4ffbb7298a9c8ececbd5975e)), closes [#48](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/48)
+* add webhook support for inbound fax events ([#56](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/56)) ([12a3587](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/12a3587a90fa7c7a6543fc14cb9833e2e4b52124))
+
+
+### Documentation
+
+* **@link:** use opencoreemr.com url ([#46](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/46)) ([bae482b](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/bae482bef0233b088ffbf5cda7b0cda567bb19df))
+* **README:** receive fax and move to patient ([#35](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/35)) ([0f747b6](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/0f747b6cf82a318b4ecefcbdd7f80eee406db8cc))
+* reorganize CLAUDE.md into modular documentation ([#54](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/54)) ([e8f5718](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/e8f5718bcb6389bc697e82eda3762fafef29ffe5))
+
+
+### Code Refactoring
+
+* improve type safety for PHPStan level 8 compliance ([#57](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/57)) ([c987a35](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c987a350b8239b7e24403ed5145ff01ef97e61d4))
+* **php:** apply rector updates ([#43](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/43)) ([020d68b](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/020d68b140ed09ae8dac52c75570f14983807854))
+
+
+### Dependencies
+
+* bump actions/cache from 4 to 5 ([#41](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/41)) ([0696278](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/069627832f3a91fb366506f87db1286a321c1f04))
+* bump actions/cache from 4 to 5 ([#53](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/53)) ([40b9564](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/40b95649ef55850a9f56f033cce1f10bb2fdfe37))
+* bump actions/checkout from 4 to 6 ([#51](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/51)) ([5011603](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/5011603949995688792b005823364c95e13c5195))
+* bump actions/upload-artifact from 4 to 6 ([#52](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/52)) ([0992b49](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/0992b4916d0fb9c4968f055eda6c55bfec19e5f1))
+
 ## [0.5.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.0...0.5.1) (2025-12-04)
 
 
