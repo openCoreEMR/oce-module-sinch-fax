@@ -250,36 +250,36 @@ class GlobalConfigTest extends TestCase
         $this->assertEquals('', $config->getWebhookPassword());
     }
 
-    public function testGetWebhookIpWhitelistParsesNewlines(): void
+    public function testGetWebhookIpAllowlistParsesNewlines(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1\n192.168.1.0/24\n  172.16.0.0/12  ",
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => "10.0.0.1\n192.168.1.0/24\n  172.16.0.0/12  ",
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $whitelist = $config->getWebhookIpWhitelist();
-        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $whitelist);
+        $allowlist = $config->getWebhookIpAllowlist();
+        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $allowlist);
     }
 
-    public function testGetWebhookIpWhitelistParsesCommas(): void
+    public function testGetWebhookIpAllowlistParsesCommas(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1, 192.168.1.0/24,172.16.0.0/12",
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => "10.0.0.1, 192.168.1.0/24,172.16.0.0/12",
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $whitelist = $config->getWebhookIpWhitelist();
-        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $whitelist);
+        $allowlist = $config->getWebhookIpAllowlist();
+        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $allowlist);
     }
 
-    public function testGetWebhookIpWhitelistEmptyReturnsEmptyArray(): void
+    public function testGetWebhookIpAllowlistEmptyReturnsEmptyArray(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => '',
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => '',
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $this->assertEquals([], $config->getWebhookIpWhitelist());
+        $this->assertEquals([], $config->getWebhookIpAllowlist());
     }
 
     public function testIsWebhookAuthConfiguredTrue(): void
@@ -344,50 +344,50 @@ class GlobalConfigTest extends TestCase
         $this->assertFalse($config->verifyWebhookAuth('user', 'pass'));
     }
 
-    public function testIsIpWhitelistedEmptyAllowsAll(): void
+    public function testIsIpInAllowlistEmptyAllowsAll(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => '',
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => '',
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $this->assertTrue($config->isIpWhitelisted('192.168.1.1'));
-        $this->assertTrue($config->isIpWhitelisted('10.0.0.1'));
+        $this->assertTrue($config->isIpInAllowlist('192.168.1.1'));
+        $this->assertTrue($config->isIpInAllowlist('10.0.0.1'));
     }
 
-    public function testIsIpWhitelistedExactMatch(): void
+    public function testIsIpInAllowlistExactMatch(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1\n192.168.1.100",
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => "10.0.0.1\n192.168.1.100",
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $this->assertTrue($config->isIpWhitelisted('10.0.0.1'));
-        $this->assertTrue($config->isIpWhitelisted('192.168.1.100'));
-        $this->assertFalse($config->isIpWhitelisted('10.0.0.2'));
+        $this->assertTrue($config->isIpInAllowlist('10.0.0.1'));
+        $this->assertTrue($config->isIpInAllowlist('192.168.1.100'));
+        $this->assertFalse($config->isIpInAllowlist('10.0.0.2'));
     }
 
-    public function testIsIpWhitelistedCidrMatch(): void
+    public function testIsIpInAllowlistCidrMatch(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "192.168.1.0/24",
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => "192.168.1.0/24",
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $this->assertTrue($config->isIpWhitelisted('192.168.1.1'));
-        $this->assertTrue($config->isIpWhitelisted('192.168.1.254'));
-        $this->assertFalse($config->isIpWhitelisted('192.168.2.1'));
+        $this->assertTrue($config->isIpInAllowlist('192.168.1.1'));
+        $this->assertTrue($config->isIpInAllowlist('192.168.1.254'));
+        $this->assertFalse($config->isIpInAllowlist('192.168.2.1'));
     }
 
-    public function testIsIpWhitelistedIpv6(): void
+    public function testIsIpInAllowlistIpv6(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "2001:db8::/32",
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => "2001:db8::/32",
         ]);
         $config = new GlobalConfig($mockGlobals);
 
-        $this->assertTrue($config->isIpWhitelisted('2001:db8::1'));
-        $this->assertTrue($config->isIpWhitelisted('2001:db8:ffff::1'));
-        $this->assertFalse($config->isIpWhitelisted('2001:db9::1'));
+        $this->assertTrue($config->isIpInAllowlist('2001:db8::1'));
+        $this->assertTrue($config->isIpInAllowlist('2001:db8:ffff::1'));
+        $this->assertFalse($config->isIpInAllowlist('2001:db9::1'));
     }
 }

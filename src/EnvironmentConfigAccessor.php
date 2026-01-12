@@ -40,7 +40,14 @@ class EnvironmentConfigAccessor implements ConfigAccessorInterface
         GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT',
         GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'OCE_SINCH_FAX_WEBHOOK_USERNAME',
         GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => 'OCE_SINCH_FAX_WEBHOOK_PASSWORD',
-        GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => 'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST',
+        GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => 'OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST',
+    ];
+
+    /**
+     * Backward compatibility mapping for deprecated environment variables
+     */
+    private const DEPRECATED_KEY_MAP = [
+        GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => 'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST',
     ];
 
     private readonly ParameterBag $envBag;
@@ -64,6 +71,15 @@ class EnvironmentConfigAccessor implements ConfigAccessorInterface
             $value = getenv($envVar);
             if ($value !== false) {
                 $params[$configKey] = $value;
+            } else {
+                // Check deprecated mapping for backward compatibility
+                if (isset(self::DEPRECATED_KEY_MAP[$configKey])) {
+                    $deprecatedEnvVar = self::DEPRECATED_KEY_MAP[$configKey];
+                    $value = getenv($deprecatedEnvVar);
+                    if ($value !== false) {
+                        $params[$configKey] = $value;
+                    }
+                }
             }
         }
         return new ParameterBag($params);
