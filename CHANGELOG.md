@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.2...0.5.3) (2026-01-12)
+
+
+### Code Refactoring
+
+* rename IP whitelist to allowlist ([#68](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/68)) ([c85749c](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c85749c707ab3b52fba7dc0285186a8f5a4d6b9f))
+
 ## [0.5.2](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.1...0.5.2) (2026-01-12)
 
 
