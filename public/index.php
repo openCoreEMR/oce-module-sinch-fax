@@ -11,11 +11,23 @@
  */
 
 $sessionAllowWrite = true;
+
+// Load module autoloader before globals.php so our classes are available
+// even when OpenEMR hasn't bootstrapped the module (e.g., module not registered)
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Bootstrap;
 use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
+use OpenCoreEMR\Modules\SinchFax\ModuleAccessGuard;
+
+// Check if module is installed and enabled - return 404 if not
+$guardResponse = ModuleAccessGuard::check(Bootstrap::MODULE_NAME);
+if ($guardResponse !== null) {
+    $guardResponse->send();
+    exit;
+}
 
 // Get kernel and bootstrap module
 $globalsAccessor = new GlobalsAccessor();

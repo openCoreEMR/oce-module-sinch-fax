@@ -16,6 +16,8 @@ namespace OpenCoreEMR\Modules\SinchFax;
  * Provides centralized access to OpenEMR globals.
  * This class serves as a single point of abstraction for globals access,
  * making it easier to update or refactor in the future.
+ *
+ * @internal Use ConfigFactory::createConfigAccessor() instead of instantiating directly
  */
 class GlobalsAccessor implements ConfigAccessorInterface
 {

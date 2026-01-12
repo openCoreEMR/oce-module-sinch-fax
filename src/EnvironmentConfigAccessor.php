@@ -21,6 +21,8 @@ use Symfony\Component\HttpFoundation\ParameterBag;
  * bypassing the database-backed globals system entirely for module config.
  * OpenEMR system values (OE_SITE_DIR, webroot, etc.) are still delegated
  * to GlobalsAccessor since they are not module configuration.
+ *
+ * @internal Use ConfigFactory::createConfigAccessor() instead of instantiating directly
  */
 class EnvironmentConfigAccessor implements ConfigAccessorInterface
 {

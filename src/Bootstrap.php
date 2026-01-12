@@ -142,6 +142,10 @@ class Bootstrap
 
     public function addSinchFaxMenuItem(MenuEvent $event): void
     {
+        if (!$this->globalsConfig->isEnabled()) {
+            return;
+        }
+
         $menu = $event->getMenu();
 
         $menuItem = new \stdClass();
@@ -153,11 +157,6 @@ class Bootstrap
         $menuItem->icon = 'fa-fax';
         $menuItem->children = [];
         $menuItem->acl_req = ["patients", "demo"];
-
-        // In env config mode, skip global_req check (menu always visible when module is enabled)
-        if (!$this->globalsConfig->isEnvConfigMode()) {
-            $menuItem->global_req = ["oce_sinch_fax_enabled"];
-        }
 
         foreach ($menu as $item) {
             if ($item->menu_id == 'modimg') {
