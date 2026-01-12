@@ -32,6 +32,7 @@
             <div class="alert alert-success" role="alert">
                 {{ success_message|raw }}
             </div>
+            <script>setTimeout(function() { dlgclose(); }, 2000);</script>
         {% endif %}
 
         <form method="post" id="fax-form">

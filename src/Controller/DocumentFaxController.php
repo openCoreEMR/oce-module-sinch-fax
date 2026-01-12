@@ -168,9 +168,6 @@ class DocumentFaxController
                             unlink($tempFileWithExt);
 
                             $success = xlt("Fax sent successfully");
-
-                            // Close dialog after success
-                            echo "<script>setTimeout(function() { dlgclose(); }, 2000);</script>";
                         }
                     } catch (\Throwable $e) {
                         $error = xlt("Error retrieving document") . ": " . text($e->getMessage());
