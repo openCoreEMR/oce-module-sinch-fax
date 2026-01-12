@@ -34,7 +34,7 @@ class EnvironmentConfigAccessorTest extends TestCase
         'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT',
         'OCE_SINCH_FAX_WEBHOOK_USERNAME',
         'OCE_SINCH_FAX_WEBHOOK_PASSWORD',
-        'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST',
+        'OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST',
     ];
 
     protected function setUp(): void
@@ -175,7 +175,7 @@ class EnvironmentConfigAccessorTest extends TestCase
             'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT' => '5',
             'OCE_SINCH_FAX_WEBHOOK_USERNAME' => 'webhook_user',
             'OCE_SINCH_FAX_WEBHOOK_PASSWORD' => 'webhook_pass',
-            'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST' => '10.0.0.1',
+            'OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST' => '10.0.0.1',
         ];
 
         foreach ($envVars as $key => $value) {
@@ -196,6 +196,6 @@ class EnvironmentConfigAccessorTest extends TestCase
         $this->assertEquals(5, $accessor->getInt(GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT));
         $this->assertEquals('webhook_user', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME));
         $this->assertEquals('webhook_pass', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD));
-        $this->assertEquals('10.0.0.1', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST));
+        $this->assertEquals('10.0.0.1', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST));
     }
 }

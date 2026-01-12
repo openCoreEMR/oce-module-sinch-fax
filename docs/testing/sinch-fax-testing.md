@@ -45,7 +45,7 @@ This document describes end-to-end testing workflows for the Sinch Fax module.
 |---------|-------------|
 | Webhook Username | HTTP Basic Auth username |
 | Webhook Password | HTTP Basic Auth password |
-| Webhook IP Whitelist | Allowed source IPs (optional) |
+| Webhook IP Allowlist | Allowed source IPs (optional) |
 
 ## Testing Workflows
 
@@ -178,7 +178,7 @@ task db:query -- "SELECT * FROM oce_sinch_faxes ORDER BY created_at DESC LIMIT 1
 2. [ ] Verify 401 response returned
 3. [ ] No database record created
 
-### Scenario 5: IP Whitelist (if configured)
+### Scenario 5: IP Allowlist (if configured)
 
 1. [ ] Send webhook from allowed IP
 2. [ ] Verify processing succeeds

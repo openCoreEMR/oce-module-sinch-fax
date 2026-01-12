@@ -31,7 +31,7 @@ OpenCoreEMR is building HIPAA-compliant fax and SMS/RCS integration for healthca
    - If not, what alternatives exist for HIPAA-compliant webhook verification?
 
 4. **What are Sinch's IP ranges for webhook callbacks?**
-   - If signature validation isn't available, IP whitelisting may be needed as a fallback
+   - If signature validation isn't available, IP allowlisting may be needed as a fallback
    - Need documented, stable IP ranges
 
 ### Subproject Management at Scale

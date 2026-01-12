@@ -26,7 +26,7 @@ If webhooks fail to deliver (network issues, server downtime, etc.), the module 
 The Sinch Fax webhook endpoint requires:
 
 1. **HTTP Basic Authentication** - Username and password configured in module settings
-2. **IP Whitelist** - Optional list of allowed Sinch IP addresses
+2. **IP Allowlist** - Optional list of allowed Sinch IP addresses
 
 ### Configuration Required
 
@@ -36,7 +36,16 @@ These settings need to be configured in Admin > Config > OpenCoreEMR Sinch Fax M
 |---------|-------------|
 | Webhook Username | Username for HTTP Basic Auth |
 | Webhook Password | Password for HTTP Basic Auth |
-| Webhook IP Whitelist | Comma-separated list of allowed IPs (optional) |
+| Webhook IP Allowlist | Comma-separated list of allowed IPs (optional) |
+
+**Recommended Sinch Callback IPs for Allowlist:**
+```
+54.76.19.159
+54.78.194.39
+54.155.83.128
+```
+
+These are documented Sinch callback IPs. See [docs/sinch/api-reference.md](../sinch/api-reference.md#webhook-callback-ip-addresses) for more details.
 
 **Note:** If these settings don't exist yet, they need to be implemented in the module.
 
@@ -163,7 +172,7 @@ For failed faxes:
 - POST method only
 - Content-Type: `multipart/form-data` (default) or `application/json`
 - HTTP Basic Authentication header
-- Source IP must be in whitelist (if configured)
+- Source IP must be in allowlist (if configured)
 
 **Does NOT require OpenEMR session authentication** - the endpoint is accessed directly by Sinch servers.
 
@@ -197,7 +206,7 @@ For failed faxes:
 ### Authentication Failed
 
 1. Verify Basic Auth credentials match Sinch configuration
-2. Check IP whitelist if configured
+2. Check IP allowlist if configured
 3. Look for 401/403 responses in logs
 
 ### Fax Document Not Saved

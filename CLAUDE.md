@@ -93,5 +93,5 @@ task webhook:test:incoming
 
 **Webhook Authentication:**
 - Username/password required for HTTP Basic Auth
-- IP whitelist is optional (one per line, supports CIDR like `10.0.0.0/8`)
-- Empty whitelist = allow all IPs
+- IP allowlist is optional (one per line, supports CIDR like `10.0.0.0/8`)
+- Empty allowlist = allow all IPs

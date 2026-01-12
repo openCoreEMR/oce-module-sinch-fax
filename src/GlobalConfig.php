@@ -46,7 +46,7 @@ class GlobalConfig
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
     public const CONFIG_OPTION_WEBHOOK_USERNAME = 'oce_sinch_fax_webhook_username';
     public const CONFIG_OPTION_WEBHOOK_PASSWORD = 'oce_sinch_fax_webhook_password';
-    public const CONFIG_OPTION_WEBHOOK_IP_WHITELIST = 'oce_sinch_fax_webhook_ip_whitelist';
+    public const CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST = 'oce_sinch_fax_webhook_ip_allowlist';
 
     public function isEnabled(): bool
     {
@@ -143,14 +143,14 @@ class GlobalConfig
     }
 
     /**
-     * Get the webhook IP whitelist as an array of IP addresses or CIDR ranges
+     * Get the webhook IP allowlist as an array of IP addresses or CIDR ranges
      * Supports both newline-delimited (from UI textarea) and comma-delimited (from env vars)
      *
      * @return array<int, string>
      */
-    public function getWebhookIpWhitelist(): array
+    public function getWebhookIpAllowlist(): array
     {
-        $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST, '');
+        $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST, '');
         if (empty($value)) {
             return [];
         }
@@ -190,18 +190,18 @@ class GlobalConfig
     }
 
     /**
-     * Check if an IP address is in the whitelist
+     * Check if an IP address is in the allowlist
      * Supports both raw IPs and CIDR notation (e.g., 192.168.1.0/24)
-     * Returns true if whitelist is empty (no restriction) or IP matches
+     * Returns true if allowlist is empty (no restriction) or IP matches
      */
-    public function isIpWhitelisted(string $ip): bool
+    public function isIpInAllowlist(string $ip): bool
     {
-        $whitelist = $this->getWebhookIpWhitelist();
-        if (empty($whitelist)) {
-            return true; // No whitelist = allow all
+        $allowlist = $this->getWebhookIpAllowlist();
+        if (empty($allowlist)) {
+            return true; // No allowlist = allow all
         }
 
-        return IpUtils::checkIp($ip, $whitelist);
+        return IpUtils::checkIp($ip, $allowlist);
     }
 
     public function getSiteAddrOath(): string
@@ -318,8 +318,8 @@ class GlobalConfig
                 'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
                 'default' => ''
             ],
-            self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => [
-                'title' => 'Webhook IP Whitelist',
+            self::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => [
+                'title' => 'Webhook IP Allowlist',
                 'description' => 'Allowed IPs for webhooks (one per line, supports CIDR). Empty = allow all.',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''

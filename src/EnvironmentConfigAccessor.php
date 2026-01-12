@@ -40,7 +40,7 @@ class EnvironmentConfigAccessor implements ConfigAccessorInterface
         GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT',
         GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'OCE_SINCH_FAX_WEBHOOK_USERNAME',
         GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => 'OCE_SINCH_FAX_WEBHOOK_PASSWORD',
-        GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => 'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST',
+        GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => 'OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST',
     ];
 
     private readonly ParameterBag $envBag;
