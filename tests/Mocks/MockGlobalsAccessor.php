@@ -12,9 +12,10 @@
 
 namespace OpenCoreEMR\Modules\SinchFax\Tests\Mocks;
 
+use OpenCoreEMR\Modules\SinchFax\ConfigAccessorInterface;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 
-class MockGlobalsAccessor extends GlobalsAccessor
+class MockGlobalsAccessor extends GlobalsAccessor implements ConfigAccessorInterface
 {
     /**
      * @var array<string, mixed>
@@ -73,5 +74,10 @@ class MockGlobalsAccessor extends GlobalsAccessor
     public function set(string $key, mixed $value): void
     {
         $this->mockData[$key] = $value;
+    }
+
+    public function has(string $key): bool
+    {
+        return isset($this->mockData[$key]);
     }
 }

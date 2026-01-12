@@ -37,9 +37,10 @@ class Bootstrap
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly Kernel $kernel = new Kernel(),
-        private readonly GlobalsAccessor $globals = new GlobalsAccessor()
+        ?ConfigAccessorInterface $configAccessor = null
     ) {
-        $this->globalsConfig = new GlobalConfig($this->globals);
+        $configAccessor ??= ConfigFactory::createConfigAccessor();
+        $this->globalsConfig = new GlobalConfig($configAccessor);
 
         $templatePath = \dirname(__DIR__) . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR;
         $twig = new TwigContainer($templatePath, $this->kernel);
@@ -95,17 +96,35 @@ class Bootstrap
         $section = xlt("OpenCoreEMR Sinch Fax Module");
         $service->createSection($section, 'Fax');
 
+        // In env config mode, show informational message instead of editable fields
+        if ($this->globalsConfig->isEnvConfigMode()) {
+            $setting = new GlobalSetting(
+                xlt('Configuration Managed Externally'),
+                GlobalSetting::DATA_TYPE_HTML_DISPLAY_SECTION,
+                '',
+                '',
+                false
+            );
+            $setting->addFieldOption(
+                GlobalSetting::DATA_TYPE_OPTION_RENDER_CALLBACK,
+                static fn() => xlt(
+                    'This module is managed by deployment administrators.'
+                )
+            );
+            $service->appendToSection($section, 'oce_sinch_fax_env_config_notice', $setting);
+            return;
+        }
+
         $settings = $this->globalsConfig->getGlobalSettingSectionConfiguration();
 
         foreach ($settings as $key => $config) {
-            $value = $this->globals->get($key, $config['default']);
             $service->appendToSection(
                 $section,
                 $key,
                 new GlobalSetting(
                     xlt($config['title']),
                     $config['type'],
-                    $value,
+                    $config['default'],
                     xlt($config['description']),
                     true
                 )
@@ -134,7 +153,11 @@ class Bootstrap
         $menuItem->icon = 'fa-fax';
         $menuItem->children = [];
         $menuItem->acl_req = ["patients", "demo"];
-        $menuItem->global_req = ["oce_sinch_fax_enabled"];
+
+        // In env config mode, skip global_req check (menu always visible when module is enabled)
+        if (!$this->globalsConfig->isEnvConfigMode()) {
+            $menuItem->global_req = ["oce_sinch_fax_enabled"];
+        }
 
         foreach ($menu as $item) {
             if ($item->menu_id == 'modimg') {

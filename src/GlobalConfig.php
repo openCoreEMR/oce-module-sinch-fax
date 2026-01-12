@@ -18,12 +18,23 @@ use Symfony\Component\HttpFoundation\IpUtils;
 
 class GlobalConfig
 {
+    private readonly bool $isEnvConfigMode;
+
     public function __construct(
-        private readonly GlobalsAccessor $globals = new GlobalsAccessor()
+        private readonly ConfigAccessorInterface $configAccessor = new GlobalsAccessor()
     ) {
+        $this->isEnvConfigMode = ConfigFactory::isEnvConfigMode();
     }
 
     public const CONFIG_OPTION_ENABLED = 'oce_sinch_fax_enabled';
+
+    /**
+     * Check if configuration is managed via environment variables
+     */
+    public function isEnvConfigMode(): bool
+    {
+        return $this->isEnvConfigMode;
+    }
     public const CONFIG_OPTION_PROJECT_ID = 'oce_sinch_fax_project_id';
     public const CONFIG_OPTION_SERVICE_ID = 'oce_sinch_fax_service_id';
     public const CONFIG_OPTION_AUTH_METHOD = 'oce_sinch_fax_auth_method';
@@ -39,33 +50,37 @@ class GlobalConfig
 
     public function isEnabled(): bool
     {
-        return $this->globals->getBoolean(self::CONFIG_OPTION_ENABLED, false);
+        return $this->configAccessor->getBoolean(self::CONFIG_OPTION_ENABLED, false);
     }
 
     public function getProjectId(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_PROJECT_ID, '');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_PROJECT_ID, '');
     }
 
     public function getServiceId(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_SERVICE_ID, '');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_SERVICE_ID, '');
     }
 
     public function getAuthMethod(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
     }
 
     public function getApiKey(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_API_KEY, '');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_API_KEY, '');
     }
 
     public function getApiSecret(): string
     {
-        $value = $this->globals->getString(self::CONFIG_OPTION_API_SECRET, '');
+        $value = $this->configAccessor->getString(self::CONFIG_OPTION_API_SECRET, '');
         if (!empty($value)) {
+            // In env config mode, secrets are stored as plaintext (no encryption)
+            if ($this->isEnvConfigMode) {
+                return $value;
+            }
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
             return $decrypted !== false ? $decrypted : '';
@@ -75,8 +90,12 @@ class GlobalConfig
 
     public function getOAuthToken(): string
     {
-        $value = $this->globals->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
+        $value = $this->configAccessor->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
         if (!empty($value)) {
+            // In env config mode, secrets are stored as plaintext (no encryption)
+            if ($this->isEnvConfigMode) {
+                return $value;
+            }
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
             return $decrypted !== false ? $decrypted : '';
@@ -86,32 +105,36 @@ class GlobalConfig
 
     public function getRegion(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_REGION, 'global');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_REGION, 'global');
     }
 
     public function getFileStoragePath(): string
     {
-        $path = $this->globals->getString(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
+        $path = $this->configAccessor->getString(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
         if (empty($path)) {
-            $path = $this->globals->getString('OE_SITE_DIR', '') . '/documents/sinch_faxes';
+            $path = $this->configAccessor->getString('OE_SITE_DIR', '') . '/documents/sinch_faxes';
         }
         return $path;
     }
 
     public function getDefaultRetryCount(): int
     {
-        return $this->globals->getInt(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
+        return $this->configAccessor->getInt(self::CONFIG_OPTION_DEFAULT_RETRY_COUNT, 3);
     }
 
     public function getWebhookUsername(): string
     {
-        return $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_USERNAME, '');
+        return $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_USERNAME, '');
     }
 
     public function getWebhookPassword(): string
     {
-        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
+        $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
         if (!empty($value)) {
+            // In env config mode, secrets are stored as plaintext (no encryption)
+            if ($this->isEnvConfigMode) {
+                return $value;
+            }
             $cryptoGen = new CryptoGen();
             $decrypted = $cryptoGen->decryptStandard($value);
             return $decrypted !== false ? $decrypted : '';
@@ -121,20 +144,24 @@ class GlobalConfig
 
     /**
      * Get the webhook IP whitelist as an array of IP addresses or CIDR ranges
+     * Supports both newline-delimited (from UI textarea) and comma-delimited (from env vars)
      *
      * @return array<int, string>
      */
     public function getWebhookIpWhitelist(): array
     {
-        $value = $this->globals->getString(self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST, '');
+        $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_IP_WHITELIST, '');
         if (empty($value)) {
             return [];
         }
-        // Split by newlines and filter empty values
-        $lines = explode("\n", $value);
+        // Split by newlines or commas and filter empty values
+        $parts = preg_split('/[\n,]+/', $value);
+        if ($parts === false) {
+            return [];
+        }
         $entries = [];
-        foreach ($lines as $line) {
-            $trimmed = trim($line);
+        foreach ($parts as $part) {
+            $trimmed = trim($part);
             if ($trimmed !== '') {
                 $entries[] = $trimmed;
             }
@@ -179,17 +206,17 @@ class GlobalConfig
 
     public function getSiteAddrOath(): string
     {
-        return $this->globals->getString('site_addr_oath', '');
+        return $this->configAccessor->getString('site_addr_oath', '');
     }
 
     public function getWebroot(): string
     {
-        return $this->globals->getString('webroot', '');
+        return $this->configAccessor->getString('webroot', '');
     }
 
     public function getAssetsStaticRelative(): string
     {
-        return $this->globals->getString('assets_static_relative', '');
+        return $this->configAccessor->getString('assets_static_relative', '');
     }
 
     public function isConfigured(): bool

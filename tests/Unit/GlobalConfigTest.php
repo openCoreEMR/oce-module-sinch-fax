@@ -261,6 +261,17 @@ class GlobalConfigTest extends TestCase
         $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $whitelist);
     }
 
+    public function testGetWebhookIpWhitelistParsesCommas(): void
+    {
+        $mockGlobals = new MockGlobalsAccessor([
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_WHITELIST => "10.0.0.1, 192.168.1.0/24,172.16.0.0/12",
+        ]);
+        $config = new GlobalConfig($mockGlobals);
+
+        $whitelist = $config->getWebhookIpWhitelist();
+        $this->assertEquals(['10.0.0.1', '192.168.1.0/24', '172.16.0.0/12'], $whitelist);
+    }
+
     public function testGetWebhookIpWhitelistEmptyReturnsEmptyArray(): void
     {
         $mockGlobals = new MockGlobalsAccessor([

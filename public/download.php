@@ -13,6 +13,7 @@
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Bootstrap;
+use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxExceptionInterface;
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxValidationException;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
@@ -24,7 +25,8 @@ $kernel = $globalsAccessor->get('kernel');
 if (!$kernel instanceof \OpenEMR\Core\Kernel) {
     throw new \RuntimeException('OpenEMR Kernel not available');
 }
-$bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
+$configAccessor = ConfigFactory::createConfigAccessor();
+$bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $configAccessor);
 
 // Get controller
 $controller = $bootstrap->getFaxDownloadController();

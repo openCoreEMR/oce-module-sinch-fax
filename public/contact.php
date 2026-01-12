@@ -15,6 +15,7 @@ require_once(__DIR__ . "/../../../../globals.php");
 require_once(__DIR__ . "/../../../../../library/classes/Document.class.php");
 
 use OpenCoreEMR\Modules\SinchFax\Bootstrap;
+use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 
 // Get kernel and bootstrap module
@@ -23,7 +24,8 @@ $kernel = $globalsAccessor->get('kernel');
 if (!$kernel instanceof \OpenEMR\Core\Kernel) {
     throw new \RuntimeException('OpenEMR Kernel not available');
 }
-$bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
+$configAccessor = ConfigFactory::createConfigAccessor();
+$bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $configAccessor);
 
 // Get controller
 $controller = $bootstrap->getDocumentFaxController();

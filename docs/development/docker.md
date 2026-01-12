@@ -220,6 +220,46 @@ docker compose exec -T mysql mariadb -uroot -proot openemr < module_backup.sql
 - MySQL: Random port (use `docker compose port mysql 3306`)
 - phpMyAdmin: Random port (use `docker compose port phpmyadmin 80`)
 
+## Local Configuration Overrides
+
+For local testing with custom configuration (e.g., testing environment-based config mode), use these gitignored files:
+
+**`.env.testing`** - Environment variables loaded into the OpenEMR container:
+```bash
+# Enable environment-based configuration
+OCE_SINCH_FAX_ENV_CONFIG=1
+OCE_SINCH_FAX_ENABLED=1
+OCE_SINCH_FAX_PROJECT_ID=your-project-id
+OCE_SINCH_FAX_API_KEY=your-api-key
+OCE_SINCH_FAX_API_SECRET=your-secret
+# ... other OCE_SINCH_FAX_* variables
+```
+
+**`compose.override.yml`** - Docker Compose overrides (automatically loaded):
+```yaml
+services:
+  openemr:
+    env_file:
+      - .env.testing
+```
+
+**Usage:**
+```bash
+# Create your local config files (gitignored)
+cp .env.testing.example .env.testing  # if example exists, or create from scratch
+# Edit .env.testing with your values
+
+# Start containers - compose.override.yml is auto-loaded
+docker compose up -d --wait
+
+# The module now uses environment variables instead of database config
+```
+
+This pattern is useful for:
+- Testing environment-based configuration mode (`OCE_SINCH_FAX_ENV_CONFIG=1`)
+- Using real Sinch API credentials without committing them
+- Simulating production deployment configurations locally
+
 ## Best Practices
 
 1. Use `docker compose` (not `docker-compose`) - newer syntax
@@ -231,3 +271,4 @@ docker compose exec -T mysql mariadb -uroot -proot openemr < module_backup.sql
 7. Check logs first when debugging issues
 8. Verify container health with `docker compose ps`
 9. Remember that local file changes are instant
+10. Use `.env.testing` and `compose.override.yml` for local config overrides (both gitignored)
