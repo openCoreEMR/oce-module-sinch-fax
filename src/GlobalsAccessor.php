@@ -17,7 +17,7 @@ namespace OpenCoreEMR\Modules\SinchFax;
  * This class serves as a single point of abstraction for globals access,
  * making it easier to update or refactor in the future.
  */
-class GlobalsAccessor
+class GlobalsAccessor implements ConfigAccessorInterface
 {
     /**
      * Get a value from globals

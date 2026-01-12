@@ -18,6 +18,7 @@ $ignoreAuth = true;
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Bootstrap;
+use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxExceptionInterface;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 use OpenEMR\Common\Logging\SystemLogger;
@@ -32,7 +33,8 @@ try {
     if (!$kernel instanceof \OpenEMR\Core\Kernel) {
         throw new \RuntimeException('OpenEMR Kernel not available');
     }
-    $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $globalsAccessor);
+    $configAccessor = ConfigFactory::createConfigAccessor();
+    $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $configAccessor);
 
     // Get webhook controller and dispatch
     $controller = $bootstrap->getWebhookController();
