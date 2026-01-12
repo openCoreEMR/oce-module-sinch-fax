@@ -335,4 +335,57 @@ class SinchFaxClient
             throw new \Exception('Failed to delete fax: ' . $e->getMessage());
         }
     }
+
+    /**
+     * List all fax services for the project
+     *
+     * @return array<string, mixed> Response containing services array
+     * @throws \Exception
+     */
+    public function listServices(): array
+    {
+        try {
+            $response = $this->httpClient->get(
+                "/v3/projects/{$this->projectId}/services"
+            );
+
+            $body = $response->getBody()->getContents();
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new \Exception('Invalid JSON response from Sinch API');
+            }
+            /** @var array<string, mixed> $decoded */
+            return $decoded;
+        } catch (GuzzleException $e) {
+            $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
+            throw new \Exception('Failed to list services: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * List phone numbers for a specific fax service
+     *
+     * @param string $serviceId The service ID
+     * @return array<string, mixed> Response containing numbers array
+     * @throws \Exception
+     */
+    public function listServiceNumbers(string $serviceId): array
+    {
+        try {
+            $response = $this->httpClient->get(
+                "/v3/projects/{$this->projectId}/services/{$serviceId}/numbers"
+            );
+
+            $body = $response->getBody()->getContents();
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new \Exception('Invalid JSON response from Sinch API');
+            }
+            /** @var array<string, mixed> $decoded */
+            return $decoded;
+        } catch (GuzzleException $e) {
+            $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
+            throw new \Exception('Failed to list service numbers: ' . $e->getMessage());
+        }
+    }
 }
