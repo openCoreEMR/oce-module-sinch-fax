@@ -33,6 +33,3 @@ parameters:
 
         # Class Document from OpenEMR not typed properly
         - '#class Document#'
-
-        # Never-read properties are intentional (event handlers, etc.)
-        - '#Property .+ is never read, only written#'

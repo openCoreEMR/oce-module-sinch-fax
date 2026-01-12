@@ -73,7 +73,7 @@ class FaxService
 
         $params = [
             'to' => $to,
-            'files' => array_map(function ($file) {
+            'files' => array_map(function (array|string $file): array {
                 // Handle both old format (string path) and new format (array with path and filename)
                 if (is_array($file)) {
                     return $file;
@@ -105,7 +105,6 @@ class FaxService
     /**
      * Retrieve a fax by ID
      *
-     * @param string $faxId
      * @return array<string, mixed>
      */
     public function getFax(string $faxId): array
@@ -127,7 +126,6 @@ class FaxService
     /**
      * Download fax content and save to file system
      *
-     * @param string $faxId
      * @return string Path to saved file
      */
     public function downloadAndSaveFax(string $faxId): string
@@ -152,7 +150,6 @@ class FaxService
 
     /**
      * @param array<string, mixed> $faxData
-     * @param string $direction
      * @param array<string, mixed> $options
      */
     private function saveFaxToDatabase(array $faxData, string $direction, array $options = []): void
@@ -293,7 +290,7 @@ class FaxService
             'pageSize' => 100,
         ];
 
-        if ($lastSyncTime !== null) {
+        if ($lastSyncTime instanceof \DateTimeImmutable) {
             $filters['createTime'] = '>=' . $lastSyncTime->format('c');
         }
 
@@ -369,7 +366,6 @@ class FaxService
 
     /**
      * @param array<string, mixed> $faxData
-     * @param string|null $filePath
      * @param string|null $errorMessage Optional error message override
      */
     private function saveIncomingFaxToDatabase(
@@ -677,7 +673,7 @@ class FaxService
         try {
             $serviceId = $this->config->getServiceId();
 
-            if (!empty($serviceId)) {
+            if ($serviceId !== '' && $serviceId !== '0') {
                 // Service ID is configured - get numbers for this service only
                 $response = $this->client->listServiceNumbers($serviceId);
                 $numbers = is_array($response['numbers'] ?? null) ? $response['numbers'] : [];
