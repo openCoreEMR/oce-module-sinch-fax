@@ -13,7 +13,6 @@
 namespace OpenCoreEMR\Modules\SinchFax\Controller;
 
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxValidationException;
-use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Logging\SystemLogger;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +24,6 @@ class WebhookController
     private readonly SystemLogger $logger;
 
     public function __construct(
-        private readonly GlobalConfig $config,
         private readonly FaxService $faxService
     ) {
         $this->logger = new SystemLogger();
@@ -53,7 +51,7 @@ class WebhookController
         // Parse the webhook payload
         $payload = $this->parsePayload($request);
 
-        if (empty($payload)) {
+        if ($payload === []) {
             $this->logger->error("Webhook received empty or invalid payload");
             return new JsonResponse(
                 ['error' => 'Invalid payload'],

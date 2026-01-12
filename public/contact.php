@@ -25,7 +25,7 @@ use OpenCoreEMR\Modules\SinchFax\ModuleAccessGuard;
 
 // Check if module is installed and enabled - return 404 if not
 $guardResponse = ModuleAccessGuard::check(Bootstrap::MODULE_NAME);
-if ($guardResponse !== null) {
+if ($guardResponse instanceof \Symfony\Component\HttpFoundation\Response) {
     $guardResponse->send();
     exit;
 }

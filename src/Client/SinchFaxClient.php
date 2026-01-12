@@ -202,14 +202,13 @@ class SinchFaxClient
                 $responseBody = $e->getResponse()->getBody()->getContents();
                 $this->logger->error('Sinch API Response Body: ' . $responseBody);
             }
-            throw new \Exception('Failed to send fax: ' . $e->getMessage());
+            throw new \Exception('Failed to send fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
     /**
      * Get fax details
      *
-     * @param string $faxId
      * @return array<string, mixed>
      * @throws \Exception
      */
@@ -229,7 +228,7 @@ class SinchFaxClient
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to get fax: ' . $e->getMessage());
+            throw new \Exception('Failed to get fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -291,14 +290,13 @@ class SinchFaxClient
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list faxes: ' . $e->getMessage());
+            throw new \Exception('Failed to list faxes: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
     /**
      * Download fax content
      *
-     * @param string $faxId
      * @return string Binary content of the fax
      * @throws \Exception
      */
@@ -312,15 +310,13 @@ class SinchFaxClient
             return $response->getBody()->getContents();
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to download fax: ' . $e->getMessage());
+            throw new \Exception('Failed to download fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
     /**
      * Delete a fax
      *
-     * @param string $faxId
-     * @return bool
      * @throws \Exception
      */
     public function deleteFax(string $faxId): bool
@@ -332,7 +328,7 @@ class SinchFaxClient
             return true;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to delete fax: ' . $e->getMessage());
+            throw new \Exception('Failed to delete fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -358,7 +354,7 @@ class SinchFaxClient
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list services: ' . $e->getMessage());
+            throw new \Exception('Failed to list services: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -385,7 +381,7 @@ class SinchFaxClient
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list service numbers: ' . $e->getMessage());
+            throw new \Exception('Failed to list service numbers: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 }

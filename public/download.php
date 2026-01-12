@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 // Check if module is installed and enabled - return 404 if not
 $guardResponse = ModuleAccessGuard::check(Bootstrap::MODULE_NAME);
-if ($guardResponse !== null) {
+if ($guardResponse instanceof \Symfony\Component\HttpFoundation\Response) {
     $guardResponse->send();
     exit;
 }
@@ -46,7 +46,7 @@ $controller = $bootstrap->getFaxDownloadController();
 $faxIdParam = $_GET['fax_id'] ?? 0;
 $faxId = is_numeric($faxIdParam) ? (int)$faxIdParam : 0;
 
-if (empty($faxId)) {
+if ($faxId === 0) {
     throw new FaxValidationException("Missing fax ID");
 }
 

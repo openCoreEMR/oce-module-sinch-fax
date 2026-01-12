@@ -88,7 +88,7 @@ abstract class AbstractModuleCommand extends Command
      */
     protected function getInstaller(): ModuleInstaller
     {
-        if ($this->installer === null) {
+        if (!$this->installer instanceof \OpenCoreEMR\Modules\SinchFax\Console\ModuleInstaller) {
             throw new \RuntimeException('Installer not initialized. Call bootstrapOpenEmr() first.');
         }
         return $this->installer;

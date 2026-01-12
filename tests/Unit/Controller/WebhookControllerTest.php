@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class WebhookControllerTest extends TestCase
 {
-    private GlobalConfig $config;
     private WebhookController $controller;
     private string $storagePath;
 
@@ -53,9 +52,9 @@ class WebhookControllerTest extends TestCase
             GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => $this->storagePath,
         ]);
 
-        $this->config = new GlobalConfig($mockGlobals);
-        $faxService = new FaxService($this->config);
-        $this->controller = new WebhookController($this->config, $faxService);
+        $config = new GlobalConfig($mockGlobals);
+        $faxService = new FaxService($config);
+        $this->controller = new WebhookController($faxService);
     }
 
     protected function tearDown(): void

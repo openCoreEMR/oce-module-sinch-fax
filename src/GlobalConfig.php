@@ -76,7 +76,7 @@ class GlobalConfig
     public function getApiSecret(): string
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_API_SECRET, '');
-        if (!empty($value)) {
+        if ($value !== '' && $value !== '0') {
             // In env config mode, secrets are stored as plaintext (no encryption)
             if ($this->isEnvConfigMode) {
                 return $value;
@@ -91,7 +91,7 @@ class GlobalConfig
     public function getOAuthToken(): string
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
-        if (!empty($value)) {
+        if ($value !== '' && $value !== '0') {
             // In env config mode, secrets are stored as plaintext (no encryption)
             if ($this->isEnvConfigMode) {
                 return $value;
@@ -111,7 +111,7 @@ class GlobalConfig
     public function getFileStoragePath(): string
     {
         $path = $this->configAccessor->getString(self::CONFIG_OPTION_FILE_STORAGE_PATH, '');
-        if (empty($path)) {
+        if ($path === '' || $path === '0') {
             $path = $this->configAccessor->getString('OE_SITE_DIR', '') . '/documents/sinch_faxes';
         }
         return $path;
@@ -130,7 +130,7 @@ class GlobalConfig
     public function getWebhookPassword(): string
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
-        if (!empty($value)) {
+        if ($value !== '' && $value !== '0') {
             // In env config mode, secrets are stored as plaintext (no encryption)
             if ($this->isEnvConfigMode) {
                 return $value;
@@ -151,7 +151,7 @@ class GlobalConfig
     public function getWebhookIpAllowlist(): array
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST, '');
-        if (empty($value)) {
+        if ($value === '' || $value === '0') {
             return [];
         }
         // Split by newlines or commas and filter empty values
@@ -174,7 +174,8 @@ class GlobalConfig
      */
     public function isWebhookAuthConfigured(): bool
     {
-        return !empty($this->getWebhookUsername()) && !empty($this->getWebhookPassword());
+        return !in_array($this->getWebhookUsername(), ['', '0'], true)
+            && !in_array($this->getWebhookPassword(), ['', '0'], true);
     }
 
     /**
@@ -197,7 +198,7 @@ class GlobalConfig
     public function isIpInAllowlist(string $ip): bool
     {
         $allowlist = $this->getWebhookIpAllowlist();
-        if (empty($allowlist)) {
+        if ($allowlist === []) {
             return true; // No allowlist = allow all
         }
 
@@ -221,11 +222,14 @@ class GlobalConfig
 
     public function isConfigured(): bool
     {
-        return !empty($this->getProjectId())
-            && (
-                ($this->getAuthMethod() === 'basic' && !empty($this->getApiKey()) && !empty($this->getApiSecret()))
-                || ($this->getAuthMethod() === 'oauth' && !empty($this->getOAuthToken()))
-            );
+        $hasProjectId = !in_array($this->getProjectId(), ['', '0'], true);
+        $hasBasicAuth = $this->getAuthMethod() === 'basic'
+            && !in_array($this->getApiKey(), ['', '0'], true)
+            && !in_array($this->getApiSecret(), ['', '0'], true);
+        $hasOAuth = $this->getAuthMethod() === 'oauth'
+            && !in_array($this->getOAuthToken(), ['', '0'], true);
+
+        return $hasProjectId && ($hasBasicAuth || $hasOAuth);
     }
 
     /**

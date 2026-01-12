@@ -69,13 +69,13 @@ class FaxListController
         $patientId = $request->request->get('patient_id');
         $coverPageId = $request->request->get('cover_page_id');
 
-        if (empty($to)) {
+        if ($to === '' || $to === '0') {
             $_SESSION['fax_error'] = "Recipient number is required";
             return $this->redirect($request);
         }
 
         $uploadedFiles = $request->files->get('files');
-        if (!is_array($uploadedFiles) || empty($uploadedFiles)) {
+        if (!is_array($uploadedFiles) || $uploadedFiles === []) {
             $_SESSION['fax_error'] = "At least one file is required";
             return $this->redirect($request);
         }
@@ -116,7 +116,7 @@ class FaxListController
         // Reconcile with Sinch API to detect missed webhooks
         try {
             $missedFaxes = $this->faxService->reconcileInboundFaxes();
-            if (!empty($missedFaxes)) {
+            if ($missedFaxes !== []) {
                 $this->logger->info("Reconciled " . count($missedFaxes) . " missed faxes");
             }
         } catch (\Throwable $e) {
@@ -162,7 +162,7 @@ class FaxListController
         $faxes = [];
         try {
             $sql = 'SELECT * FROM oce_sinch_faxes';
-            if (!empty($whereClauses)) {
+            if ($whereClauses !== []) {
                 $sql .= ' WHERE ' . implode(' AND ', $whereClauses);
             }
             $sql .= ' ORDER BY created_at DESC LIMIT 50';
@@ -229,9 +229,9 @@ class FaxListController
 
         // Sanitize IDs to integers
         $faxIds = array_map(intval(...), $faxIds);
-        $faxIds = array_filter($faxIds, fn($id) => $id > 0);
+        $faxIds = array_filter($faxIds, fn($id): bool => $id > 0);
 
-        if (empty($faxIds)) {
+        if ($faxIds === []) {
             $_SESSION['fax_error'] = 'Invalid fax IDs';
             return $this->redirect($request);
         }
@@ -272,7 +272,7 @@ class FaxListController
         $faxId = (int)$request->request->get('fax_id', 0);
         $patientId = (int)$request->request->get('patient_id', 0);
 
-        if (empty($faxId) || empty($patientId)) {
+        if ($faxId === 0 || $patientId === 0) {
             $_SESSION['fax_error'] = "Missing required parameters";
             return $this->redirect($request);
         }

@@ -23,14 +23,11 @@ use Twig\Environment;
 
 class DocumentFaxController
 {
-    private readonly SystemLogger $logger;
-
     public function __construct(
         private readonly GlobalConfig $config,
         private readonly FaxService $faxService,
         private readonly Environment $twig
     ) {
-        $this->logger = new SystemLogger();
     }
 
     /**
@@ -63,8 +60,6 @@ class DocumentFaxController
 
         $isDocumentsRaw = $params['isDocuments'] ?? 0;
         $isDocuments = is_numeric($isDocumentsRaw) ? (int)$isDocumentsRaw : 0;
-        $filePath = $params['file'] ?? '';
-        $mimeType = $params['mime'] ?? '';
         $docId = $params['docid'] ?? '';
         $pid = $params['pid'] ?? '';
 
@@ -116,7 +111,7 @@ class DocumentFaxController
         $error = null;
         $success = null;
 
-        if (empty($recipient)) {
+        if ($recipient === '' || $recipient === '0') {
             $error = xlt("Recipient fax number is required");
         } else {
             try {
