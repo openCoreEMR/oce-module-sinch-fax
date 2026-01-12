@@ -40,11 +40,20 @@ task dev:status         # Health check
 
 **Module Management:**
 ```bash
+task module:list        # List all modules and their status
+task module:install     # Register, install SQL, and enable module
+task module:register    # Register only (no SQL install)
+task module:enable      # Enable an installed module
+task module:disable     # Disable the module (keeps data)
+task module:unregister  # Remove from database (must disable first)
+task module:reinstall   # Full cleanup and reinstall
 task module:cleanup     # Drop all tables (prompts)
 task module:tables      # List module tables
 task module:data        # Show data counts
-task module:install     # Installation instructions
 ```
+
+The module management tasks use `bin/install-module.php`, a CLI tool that replicates
+OpenEMR's web-based module installer. This enables automated/scripted installations.
 
 **Database:**
 ```bash
@@ -86,6 +95,23 @@ task workflow:reinstall # Clean reinstall
 task workflow:reset     # Full reset
 ```
 
+## Global Tool Requirements
+
+**composer-require-checker** is NOT included as a dev dependency because it requires
+Symfony Console ^7.x, which conflicts with OpenEMR 7.0.3's requirement for Symfony ^6.4.
+
+To run `composer require-checker` or use pre-commit hooks that check dependencies:
+
+```bash
+# Install globally
+composer global require maglnet/composer-require-checker
+
+# Ensure global bin is in PATH
+export PATH="$HOME/.composer/vendor/bin:$PATH"
+```
+
+The `composer require-checker` script will display a helpful error if the tool is missing.
+
 ## Best Practices
 
 1. **Prefer Taskfile over raw commands** - It's more user-friendly and self-documenting
@@ -106,4 +132,51 @@ After cleanup, reinstall via OpenEMR's module manager.
 **Bad Example:**
 ```
 Run: docker compose exec -T mysql mariadb -uroot -proot openemr < cleanup.sql
+```
+
+## CLI Tools
+
+When creating CLI tools for this module, **always use Symfony Console** instead of
+writing command-line parsing by hand.
+
+**Why Symfony Console:**
+- Provides consistent, professional CLI interface
+- Handles argument/option parsing, validation, and help generation
+- Supports colored output, progress bars, tables
+- Well-documented and familiar to PHP developers
+
+**Structure:**
+- Place commands in `src/Console/Command/`
+- Use `bin/` for entrypoint scripts
+- Share logic via service classes in `src/Console/`
+
+**Example command:**
+```php
+namespace OpenCoreEMR\Modules\SinchFax\Console\Command;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class ExampleCommand extends Command
+{
+    protected function configure(): void
+    {
+        $this->setName('example:task')
+             ->setDescription('Does something useful');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $output->writeln('Hello!');
+        return Command::SUCCESS;
+    }
+}
+```
+
+**Never do this:**
+```php
+// Don't write CLI parsing by hand
+$options = getopt('', ['module:', 'action:']);
+if (isset($options['help'])) { ... }
 ```

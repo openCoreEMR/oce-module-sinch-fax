@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * Command to disable an OpenEMR module
+ *
+ * @package   OpenEMR
+ * @link      https://opencoreemr.com
+ * @author    Michael A. Smith <michael@opencoreemr.com>
+ * @copyright 2026 OpenCoreEMR Inc.
+ * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
+ */
+
+namespace OpenCoreEMR\Modules\SinchFax\Console\Command;
+
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+#[AsCommand(
+    name: 'module:disable',
+    description: 'Disable a module (keeps data)'
+)]
+class ModuleDisableCommand extends AbstractModuleCommand
+{
+    protected function configure(): void
+    {
+        parent::configure();
+
+        $this->addArgument(
+            'module',
+            InputArgument::REQUIRED,
+            'Module directory name (e.g., oce-module-sinch-fax)'
+        );
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        if (!$this->bootstrapOpenEmr($input, $output)) {
+            return Command::FAILURE;
+        }
+
+        $moduleName = $this->getModuleName($input);
+
+        try {
+            $this->getInstaller()->disable($moduleName);
+            return Command::SUCCESS;
+        } catch (\Throwable $e) {
+            $output->writeln('<error>Error: ' . $e->getMessage() . '</error>');
+            return Command::FAILURE;
+        }
+    }
+}

@@ -34,13 +34,13 @@
     "guzzlehttp/guzzle": "^7.0",
     "openemr/oe-module-installer-plugin": "^0.1.5",
     "psr/log": "^1.0 || ^2.0 || ^3.0",
+    "symfony/console": "^6.4",
     "symfony/event-dispatcher": "^6.4",
     "symfony/http-foundation": "^6.4",
     "twig/twig": "^3.0"
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.44",
-    "maglnet/composer-require-checker": "^4.0",
     "openemr/openemr": ">=7.0.3.4 || 7.0.4.x-dev || dev-master",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^11.0",
@@ -136,8 +136,7 @@
       "@php-lint",
       "@phpcs",
       "@phpstan",
-      "@rector",
-      "@require-checker"
+      "@rector"
     ],
     "fix": [
       "@phpcbf",
@@ -151,7 +150,7 @@
     "phpunit-coverage": "phpunit --coverage-html htmlcov --coverage-text",
     "rector": "rector process --dry-run",
     "rector-fix": "rector process",
-    "require-checker": "composer-require-checker check --config-file=.composer-require-checker.json",
+    "require-checker": "@php -r \"if(!shell_exec('which composer-require-checker')){echo \\\"composer-require-checker not found. Install globally: composer global require maglnet/composer-require-checker\\n\\\";exit(1);}\" && composer-require-checker check --config-file=.composer-require-checker.json",
     "test": "@phpunit"
   }
 }

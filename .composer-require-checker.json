@@ -22,6 +22,8 @@
     "OpenEMR\\Common\\Logging\\SystemLogger",
     "OpenEMR\\Common\\Twig\\TwigContainer",
     "OpenEMR\\Core\\Kernel",
+    "OpenEMR\\Core\\ModulesClassLoader",
+    "OpenEMR\\Services\\Utils\\SQLUpgradeService",
     "OpenEMR\\Core\\OEGlobalsBag",
     "OpenEMR\\Events\\Globals\\GlobalsInitializedEvent",
     "OpenEMR\\Events\\PatientDocuments\\PatientDocumentEvent",
@@ -40,7 +42,8 @@
     "xlj",
     "attr",
     "text",
-    "date"
+    "date",
+    "ModuleManagerListener"
   ],
   "php-core-extensions": [
     "Core",

@@ -70,6 +70,12 @@ This document describes the architectural patterns and conventions for OpenEMR m
 # Start development environment
 task dev:start
 
+# Install module (register, SQL, enable)
+task module:install
+
+# List all modules
+task module:list
+
 # Run all code quality checks
 task check
 

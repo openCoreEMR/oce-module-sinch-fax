@@ -127,10 +127,47 @@ tasks:
 
   # === Module Management ===
 
-  module:install:
-    desc: Manually install module in OpenEMR (after registration)
+  module:list:
+    desc: List all registered modules and their status
     cmds:
-    - echo "Module installation must be done via OpenEMR web interface:"
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:list
+
+  module:install:
+    desc: Install and enable this module in OpenEMR
+    cmds:
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:install-enable oce-module-sinch-fax
+
+  module:register:
+    desc: Register module in OpenEMR (without installing SQL)
+    cmds:
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:register oce-module-sinch-fax
+
+  module:enable:
+    desc: Enable an already-installed module
+    cmds:
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:enable oce-module-sinch-fax
+
+  module:disable:
+    desc: Disable the module (keeps data)
+    cmds:
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:disable oce-module-sinch-fax
+
+  module:unregister:
+    desc: Unregister module from OpenEMR (disables first)
+    cmds:
+    - task: module:disable
+    - docker compose exec openemr php {{.MODULE_PATH}}/bin/install-module.php module:unregister oce-module-sinch-fax
+
+  module:reinstall:
+    desc: Unregister, cleanup tables, and reinstall module
+    cmds:
+    - task: module:cleanup
+    - task: module:install
+
+  module:install:manual:
+    desc: Show manual installation instructions (web UI)
+    cmds:
+    - echo "Module installation via OpenEMR web interface:"
     - echo "   1. Go to Administration > Modules > Manage Modules"
     - echo "   2. Find 'oce-module-sinch-fax'"
     - echo "   3. Click Register (if not registered)"
@@ -141,6 +178,8 @@ tasks:
     desc: Drop all module database tables (for clean reinstall)
     prompt: This will delete all module data. Continue?
     cmds:
+    - task: module:disable
+    - task: module:unregister
     - docker compose exec -T mysql mariadb -u{{.DB_USER}} -p{{.DB_PASS}} {{.DB_NAME}} < cleanup.sql
     - echo "Module tables dropped. You can now reinstall the module."
 
