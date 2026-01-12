@@ -15,14 +15,26 @@
 
 // Don't require session for webhooks - Sinch calls this endpoint directly
 $ignoreAuth = true;
+
+// Load module autoloader before globals.php so our classes are available
+// even when OpenEMR hasn't bootstrapped the module (e.g., module not registered)
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../../../../globals.php';
 
 use OpenCoreEMR\Modules\SinchFax\Bootstrap;
+use OpenCoreEMR\Modules\SinchFax\ModuleAccessGuard;
 use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxExceptionInterface;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 use OpenEMR\Common\Logging\SystemLogger;
 use Symfony\Component\HttpFoundation\Response;
+
+// Check if module is installed and enabled - return 404 if not
+$guardResponse = ModuleAccessGuard::check(Bootstrap::MODULE_NAME);
+if ($guardResponse !== null) {
+    $guardResponse->send();
+    exit;
+}
 
 $logger = new SystemLogger();
 
