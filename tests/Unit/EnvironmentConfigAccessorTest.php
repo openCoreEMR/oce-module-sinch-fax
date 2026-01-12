@@ -35,7 +35,6 @@ class EnvironmentConfigAccessorTest extends TestCase
         'OCE_SINCH_FAX_WEBHOOK_USERNAME',
         'OCE_SINCH_FAX_WEBHOOK_PASSWORD',
         'OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST',
-        'OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST', // Deprecated
     ];
 
     protected function setUp(): void
@@ -198,34 +197,5 @@ class EnvironmentConfigAccessorTest extends TestCase
         $this->assertEquals('webhook_user', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME));
         $this->assertEquals('webhook_pass', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD));
         $this->assertEquals('10.0.0.1', $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST));
-    }
-
-    public function testBackwardCompatibilityWithDeprecatedWhitelistEnvVar(): void
-    {
-        // Set the deprecated environment variable
-        putenv('OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST=192.168.1.0/24');
-
-        $accessor = new EnvironmentConfigAccessor();
-
-        // Should read from the deprecated env var
-        $this->assertEquals(
-            '192.168.1.0/24',
-            $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST)
-        );
-    }
-
-    public function testAllowlistEnvVarTakesPrecedenceOverDeprecated(): void
-    {
-        // Set both old and new environment variables
-        putenv('OCE_SINCH_FAX_WEBHOOK_IP_WHITELIST=192.168.1.0/24');
-        putenv('OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST=10.0.0.0/8');
-
-        $accessor = new EnvironmentConfigAccessor();
-
-        // New env var should take precedence
-        $this->assertEquals(
-            '10.0.0.0/8',
-            $accessor->getString(GlobalConfig::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST)
-        );
     }
 }
