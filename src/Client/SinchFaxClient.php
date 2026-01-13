@@ -14,6 +14,8 @@ namespace OpenCoreEMR\Modules\SinchFax\Client;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxApiException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxValidationException;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Logging\SystemLogger;
 
@@ -74,7 +76,7 @@ class SinchFaxClient
      *
      * @param array<string, mixed> $params Fax parameters
      * @return array<string, mixed> Response from API
-     * @throws \Exception
+     * @throws FaxValidationException|FaxApiException
      */
     public function sendFax(array $params): array
     {
@@ -99,7 +101,7 @@ class SinchFaxClient
                     // Suppress warning - we check return value and throw exception
                     $fileContents = @file_get_contents($filePath);
                     if ($fileContents === false) {
-                        throw new \Exception('Failed to read file: ' . $filePath);
+                        throw new FaxValidationException('Failed to read file: ' . $filePath);
                     }
 
                     // Debug: Check file header to verify it's not encrypted
@@ -191,7 +193,7 @@ class SinchFaxClient
             $this->logger->debug("Sinch Fax API Response: " . $body);
             $decoded = json_decode($body, true);
             if (!is_array($decoded)) {
-                throw new \Exception('Invalid JSON response from Sinch API');
+                throw new FaxApiException('Invalid JSON response from Sinch API');
             }
             /** @var array<string, mixed> $decoded */
             return $decoded;
@@ -202,7 +204,7 @@ class SinchFaxClient
                 $responseBody = $e->getResponse()->getBody()->getContents();
                 $this->logger->error('Sinch API Response Body: ' . $responseBody);
             }
-            throw new \Exception('Failed to send fax: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to send fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -210,7 +212,7 @@ class SinchFaxClient
      * Get fax details
      *
      * @return array<string, mixed>
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function getFax(string $faxId): array
     {
@@ -222,13 +224,13 @@ class SinchFaxClient
             $body = $response->getBody()->getContents();
             $decoded = json_decode($body, true);
             if (!is_array($decoded)) {
-                throw new \Exception('Invalid JSON response from Sinch API');
+                throw new FaxApiException('Invalid JSON response from Sinch API');
             }
             /** @var array<string, mixed> $decoded */
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to get fax: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to get fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -237,7 +239,7 @@ class SinchFaxClient
      *
      * @param array<string, mixed> $filters Optional filters
      * @return array<string, mixed>
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function listFaxes(array $filters = []): array
     {
@@ -284,13 +286,13 @@ class SinchFaxClient
             $body = $response->getBody()->getContents();
             $decoded = json_decode($body, true);
             if (!is_array($decoded)) {
-                throw new \Exception('Invalid JSON response from Sinch API');
+                throw new FaxApiException('Invalid JSON response from Sinch API');
             }
             /** @var array<string, mixed> $decoded */
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list faxes: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to list faxes: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -298,7 +300,7 @@ class SinchFaxClient
      * Download fax content
      *
      * @return string Binary content of the fax
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function downloadFax(string $faxId): string
     {
@@ -310,14 +312,14 @@ class SinchFaxClient
             return $response->getBody()->getContents();
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to download fax: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to download fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
     /**
      * Delete a fax
      *
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function deleteFax(string $faxId): bool
     {
@@ -328,7 +330,7 @@ class SinchFaxClient
             return true;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to delete fax: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to delete fax: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -336,7 +338,7 @@ class SinchFaxClient
      * List all fax services for the project
      *
      * @return array<string, mixed> Response containing services array
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function listServices(): array
     {
@@ -348,13 +350,13 @@ class SinchFaxClient
             $body = $response->getBody()->getContents();
             $decoded = json_decode($body, true);
             if (!is_array($decoded)) {
-                throw new \Exception('Invalid JSON response from Sinch API');
+                throw new FaxApiException('Invalid JSON response from Sinch API');
             }
             /** @var array<string, mixed> $decoded */
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list services: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to list services: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -363,7 +365,7 @@ class SinchFaxClient
      *
      * @param string $serviceId The service ID
      * @return array<string, mixed> Response containing numbers array
-     * @throws \Exception
+     * @throws FaxApiException
      */
     public function listServiceNumbers(string $serviceId): array
     {
@@ -375,13 +377,13 @@ class SinchFaxClient
             $body = $response->getBody()->getContents();
             $decoded = json_decode($body, true);
             if (!is_array($decoded)) {
-                throw new \Exception('Invalid JSON response from Sinch API');
+                throw new FaxApiException('Invalid JSON response from Sinch API');
             }
             /** @var array<string, mixed> $decoded */
             return $decoded;
         } catch (GuzzleException $e) {
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            throw new \Exception('Failed to list service numbers: ' . $e->getMessage(), $e->getCode(), $e);
+            throw new FaxApiException('Failed to list service numbers: ' . $e->getMessage(), $e->getCode(), $e);
         }
     }
 }

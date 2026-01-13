@@ -13,6 +13,9 @@
 namespace OpenCoreEMR\Modules\SinchFax\Service;
 
 use OpenCoreEMR\Modules\SinchFax\Client\SinchFaxClient;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxConfigurationException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxNotFoundException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxValidationException;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenEMR\Common\Database\QueryUtils;
 use OpenEMR\Common\Logging\SystemLogger;
@@ -403,7 +406,7 @@ class FaxService
      * Get or create "Received Faxes" category
      *
      * @return int Category ID
-     * @throws \Exception
+     * @throws FaxConfigurationException
      */
     private function getReceivedFaxesCategoryId(): int
     {
@@ -423,7 +426,7 @@ class FaxService
         $category = QueryUtils::querySingleRow($sql, ['Received Faxes']);
 
         if (!$category) {
-            throw new \Exception("Failed to create 'Received Faxes' category");
+            throw new FaxConfigurationException("Failed to create 'Received Faxes' category");
         }
 
         $this->logger->info("Created 'Received Faxes' document category");
@@ -598,7 +601,7 @@ class FaxService
      * @param int $faxId Internal fax database ID
      * @param int $patientId Patient ID
      * @return int Created document ID
-     * @throws \Exception
+     * @throws FaxNotFoundException|FaxValidationException|FaxConfigurationException
      */
     public function moveToPatientDocuments(int $faxId, int $patientId): int
     {
@@ -606,20 +609,22 @@ class FaxService
         $fax = QueryUtils::querySingleRow($faxSql, [$faxId]);
 
         if (!$fax) {
-            throw new \Exception("Fax not found");
+            throw new FaxNotFoundException("Fax not found");
         }
 
         if ($fax['document_id']) {
-            throw new \Exception("Fax has already been moved to patient chart (Document ID: {$fax['document_id']})");
+            throw new FaxValidationException(
+                "Fax has already been moved to patient chart (Document ID: {$fax['document_id']})"
+            );
         }
 
         if (empty($fax['file_path']) || !file_exists($fax['file_path'])) {
-            throw new \Exception("Fax file not found");
+            throw new FaxNotFoundException("Fax file not found");
         }
 
         $fileContents = file_get_contents($fax['file_path']);
         if ($fileContents === false) {
-            throw new \Exception("Unable to read fax file");
+            throw new FaxValidationException("Unable to read fax file");
         }
 
         $filename = basename((string) $fax['file_path']);
@@ -642,7 +647,7 @@ class FaxService
         );
 
         if (!empty($result)) {
-            throw new \Exception("Failed to create document: " . $result);
+            throw new FaxConfigurationException("Failed to create document: " . $result);
         }
 
         $documentId = $document->get_id();
