@@ -16,6 +16,8 @@
     "void",
     "object",
     "Document",
+    "OpenEMR\\Common\\Auth\\AuthGlobal",
+    "OpenEMR\\Common\\Auth\\AuthHash",
     "OpenEMR\\Common\\Csrf\\CsrfUtils",
     "OpenEMR\\Common\\Crypto\\CryptoGen",
     "OpenEMR\\Common\\Database\\QueryUtils",

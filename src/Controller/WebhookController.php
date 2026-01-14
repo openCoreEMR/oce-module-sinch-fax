@@ -12,7 +12,9 @@
 
 namespace OpenCoreEMR\Modules\SinchFax\Controller;
 
-use OpenCoreEMR\Modules\SinchFax\Exception\FaxValidationException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxAccessDeniedException;
+use OpenCoreEMR\Modules\SinchFax\Exception\FaxUnauthorizedException;
+use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenEMR\Common\Logging\SystemLogger;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,7 +26,8 @@ class WebhookController
     private readonly SystemLogger $logger;
 
     public function __construct(
-        private readonly FaxService $faxService
+        private readonly FaxService $faxService,
+        private readonly GlobalConfig $globalConfig
     ) {
         $this->logger = new SystemLogger();
     }
@@ -46,7 +49,24 @@ class WebhookController
         }
 
         // Log incoming webhook for HIPAA audit trail
-        $this->logger->info("Webhook received from: " . $request->getClientIp());
+        $clientIp = $request->getClientIp() ?? 'unknown';
+        $this->logger->info("Webhook received from: " . $clientIp);
+
+        // Authenticate the request
+        try {
+            $this->authenticate($request, $clientIp);
+        } catch (FaxAccessDeniedException) {
+            // Return 404 to hide endpoint existence from unauthorized IPs
+            return new JsonResponse(
+                ['error' => 'Not found'],
+                Response::HTTP_NOT_FOUND
+            );
+        } catch (FaxUnauthorizedException $e) {
+            return new JsonResponse(
+                ['error' => $e->getMessage()],
+                Response::HTTP_UNAUTHORIZED
+            );
+        }
 
         // Parse the webhook payload
         $payload = $this->parsePayload($request);
@@ -78,6 +98,38 @@ class WebhookController
             'FAX_COMPLETED' => $this->handleFaxCompleted($payload),
             default => $this->handleUnknownEvent($eventType),
         };
+    }
+
+    /**
+     * Authenticate the webhook request
+     *
+     * Checks IP allowlist first (if configured), then HTTP Basic Auth (always required).
+     * If Basic Auth is not configured, returns 404 to hide the endpoint.
+     *
+     * @throws FaxAccessDeniedException If IP is not in allowlist or Basic Auth not configured
+     * @throws FaxUnauthorizedException If Basic Auth credentials are invalid
+     */
+    private function authenticate(Request $request, string $clientIp): void
+    {
+        // Check IP allowlist first (if configured)
+        if (!$this->globalConfig->isIpInAllowlist($clientIp)) {
+            $this->logger->warning("Webhook request from unauthorized IP: {$clientIp}");
+            throw new FaxAccessDeniedException("IP address not in allowlist");
+        }
+
+        // Basic Auth is always required - return 404 if not configured to hide endpoint
+        if (!$this->globalConfig->isWebhookAuthConfigured()) {
+            $this->logger->warning("Webhook request but Basic Auth not configured");
+            throw new FaxAccessDeniedException("Webhook authentication not configured");
+        }
+
+        $username = $request->getUser() ?? '';
+        $password = $request->getPassword() ?? '';
+
+        if (!$this->globalConfig->verifyWebhookAuth($username, $password)) {
+            $this->logger->warning("Webhook request with invalid credentials from: {$clientIp}");
+            throw new FaxUnauthorizedException("Invalid webhook credentials");
+        }
     }
 
     /**

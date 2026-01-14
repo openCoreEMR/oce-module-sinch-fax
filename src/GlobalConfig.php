@@ -13,6 +13,8 @@
 namespace OpenCoreEMR\Modules\SinchFax;
 
 use OpenEMR\Services\Globals\GlobalSetting;
+use OpenEMR\Common\Auth\AuthGlobal;
+use OpenEMR\Common\Auth\AuthHash;
 use OpenEMR\Common\Crypto\CryptoGen;
 use Symfony\Component\HttpFoundation\IpUtils;
 
@@ -127,19 +129,40 @@ class GlobalConfig
         return $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_USERNAME, '');
     }
 
-    public function getWebhookPassword(): string
+    /**
+     * Get the raw stored webhook password value (hash in env mode, encrypted hash in DB mode)
+     */
+    private function getStoredWebhookPassword(): string
     {
-        $value = $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
-        if ($value !== '' && $value !== '0') {
-            // In env config mode, secrets are stored as plaintext (no encryption)
-            if ($this->isEnvConfigMode) {
-                return $value;
-            }
-            $cryptoGen = new CryptoGen();
-            $decrypted = $cryptoGen->decryptStandard($value);
-            return $decrypted !== false ? $decrypted : '';
+        return $this->configAccessor->getString(self::CONFIG_OPTION_WEBHOOK_PASSWORD, '');
+    }
+
+    /**
+     * Verify the webhook password
+     *
+     * In env config mode, supports both bcrypt hash and plaintext password in env var.
+     * In DB mode, uses AuthGlobal::globalVerify() which handles decryption and verification.
+     */
+    public function verifyWebhookPassword(string $password): bool
+    {
+        $stored = $this->getStoredWebhookPassword();
+        if ($stored === '' || $stored === '0') {
+            return false;
         }
-        return '';
+
+        // Env mode: check if stored value is a bcrypt hash or plaintext
+        if ($this->isEnvConfigMode) {
+            if (AuthHash::hashValid($stored)) {
+                // Stored value is a hash - verify against it
+                return AuthHash::passwordVerify($password, $stored);
+            }
+            // Stored value is plaintext - direct comparison
+            return hash_equals($stored, $password);
+        }
+
+        // DB mode: use AuthGlobal which decrypts and verifies the global setting
+        $authGlobal = new AuthGlobal(self::CONFIG_OPTION_WEBHOOK_PASSWORD);
+        return $authGlobal->globalVerify($password);
     }
 
     /**
@@ -175,19 +198,24 @@ class GlobalConfig
     public function isWebhookAuthConfigured(): bool
     {
         return !in_array($this->getWebhookUsername(), ['', '0'], true)
-            && !in_array($this->getWebhookPassword(), ['', '0'], true);
+            && !in_array($this->getStoredWebhookPassword(), ['', '0'], true);
     }
 
     /**
      * Verify webhook Basic Auth credentials
+     *
+     * Username uses timing-safe comparison.
+     * Password verification depends on config mode:
+     * - Env mode: timing-safe direct comparison
+     * - DB mode: password_verify() against bcrypt hash
      */
     public function verifyWebhookAuth(string $username, string $password): bool
     {
         if (!$this->isWebhookAuthConfigured()) {
             return false;
         }
-        return $username === $this->getWebhookUsername()
-            && $password === $this->getWebhookPassword();
+        return hash_equals($this->getWebhookUsername(), $username)
+            && $this->verifyWebhookPassword($password);
     }
 
     /**
@@ -312,14 +340,14 @@ class GlobalConfig
             ],
             self::CONFIG_OPTION_WEBHOOK_USERNAME => [
                 'title' => 'Webhook Username',
-                'description' => 'Username for HTTP Basic Auth on webhook endpoint (required for Sinch callbacks)',
+                'description' => 'Username for webhook HTTP Basic Auth',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
             self::CONFIG_OPTION_WEBHOOK_PASSWORD => [
                 'title' => 'Webhook Password',
-                'description' => 'Password for HTTP Basic Auth on webhook endpoint (required for Sinch callbacks)',
-                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
+                'description' => 'Password for webhook HTTP Basic Auth (stored as hash)',
+                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED_HASH,
                 'default' => ''
             ],
             self::CONFIG_OPTION_WEBHOOK_IP_ALLOWLIST => [

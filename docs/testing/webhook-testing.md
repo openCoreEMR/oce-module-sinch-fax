@@ -28,17 +28,50 @@ The Sinch Fax webhook endpoint requires:
 1. **HTTP Basic Authentication** - Username and password configured in module settings
 2. **IP Allowlist** - Optional list of allowed Sinch IP addresses
 
-### Configuration Required
+If authentication is not configured, the webhook endpoint returns 404 (to hide its existence).
 
-These settings need to be configured in Admin > Config > OpenCoreEMR Sinch Fax Module:
+### Configuration via Global Settings (DB Mode)
+
+Configure in Admin > Config > OpenCoreEMR Sinch Fax Module:
 
 | Setting | Description |
 |---------|-------------|
 | Webhook Username | Username for HTTP Basic Auth |
-| Webhook Password | Password for HTTP Basic Auth |
-| Webhook IP Allowlist | Comma-separated list of allowed IPs (optional) |
+| Webhook Password | Password for HTTP Basic Auth (automatically hashed before storage) |
+| Webhook IP Allowlist | One IP/CIDR per line (optional) |
 
-**Recommended Sinch Callback IPs for Allowlist:**
+The password is automatically hashed using bcrypt when saved via the Global Settings UI.
+
+### Configuration via Environment Variables (Env Mode)
+
+When `OCE_SINCH_FAX_ENV_CONFIG=1` is set, use environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `OCE_SINCH_FAX_WEBHOOK_USERNAME` | Username for HTTP Basic Auth |
+| `OCE_SINCH_FAX_WEBHOOK_PASSWORD` | Password (bcrypt hash recommended, plaintext accepted) |
+| `OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST` | Comma-separated IPs/CIDRs (optional) |
+
+**Generating a bcrypt hash for the password:**
+
+```bash
+# Using PHP CLI
+php -r "echo password_hash('your-secure-password', PASSWORD_BCRYPT) . PHP_EOL;"
+
+# Using htpasswd (if available)
+htpasswd -nbBC 10 "" 'your-secure-password' | tr -d ':'
+```
+
+**Example:**
+```bash
+export OCE_SINCH_FAX_WEBHOOK_USERNAME="sinch_webhook"
+export OCE_SINCH_FAX_WEBHOOK_PASSWORD='$2y$10$abcdef...'  # bcrypt hash
+```
+
+If a plaintext password is provided instead of a bcrypt hash, it will work but is less secure (the plaintext is stored in the environment).
+
+### Recommended Sinch Callback IPs for Allowlist
+
 ```
 54.76.19.159
 54.78.194.39
@@ -46,8 +79,6 @@ These settings need to be configured in Admin > Config > OpenCoreEMR Sinch Fax M
 ```
 
 These are documented Sinch callback IPs. See [docs/sinch/api-reference.md](../sinch/api-reference.md#webhook-callback-ip-addresses) for more details.
-
-**Note:** If these settings don't exist yet, they need to be implemented in the module.
 
 ## Local Testing Methods
 

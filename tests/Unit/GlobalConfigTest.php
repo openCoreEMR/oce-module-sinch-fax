@@ -230,26 +230,6 @@ class GlobalConfigTest extends TestCase
         $this->assertEquals('webhook_user', $config->getWebhookUsername());
     }
 
-    public function testGetWebhookPassword(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('webhook_secret'),
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertEquals('webhook_secret', $config->getWebhookPassword());
-    }
-
-    public function testGetWebhookPasswordEmpty(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => '',
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertEquals('', $config->getWebhookPassword());
-    }
-
     public function testGetWebhookIpAllowlistParsesNewlines(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
@@ -286,7 +266,7 @@ class GlobalConfigTest extends TestCase
     {
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => 'pass',
         ]);
         $config = new GlobalConfig($mockGlobals);
 
@@ -296,7 +276,7 @@ class GlobalConfigTest extends TestCase
     public function testIsWebhookAuthConfiguredFalseMissingUsername(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
+            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => 'pass',
         ]);
         $config = new GlobalConfig($mockGlobals);
 
@@ -313,28 +293,9 @@ class GlobalConfigTest extends TestCase
         $this->assertFalse($config->isWebhookAuthConfigured());
     }
 
-    public function testVerifyWebhookAuthSuccess(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertTrue($config->verifyWebhookAuth('user', 'pass'));
-    }
-
-    public function testVerifyWebhookAuthFailsWrongCredentials(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_USERNAME => 'user',
-            GlobalConfig::CONFIG_OPTION_WEBHOOK_PASSWORD => base64_encode('pass'),
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertFalse($config->verifyWebhookAuth('user', 'wrong'));
-        $this->assertFalse($config->verifyWebhookAuth('wrong', 'pass'));
-    }
+    // Note: verifyWebhookAuth() in DB mode requires CryptoGen decryption which
+    // cannot be properly tested with mocks. Full verification tests are covered
+    // in integration tests. Unit tests cover isWebhookAuthConfigured() above.
 
     public function testVerifyWebhookAuthFailsNotConfigured(): void
     {
