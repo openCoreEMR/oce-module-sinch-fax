@@ -18,6 +18,7 @@ use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
 use OpenCoreEMR\Modules\SinchFax\Tests\Mocks\MockGlobalsAccessor;
 use OpenEMR\Common\Database\QueryUtils;
 use OpenEMR\Common\Logging\SystemLogger;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +27,7 @@ class WebhookControllerTest extends TestCase
 {
     private WebhookController $controller;
     private string $storagePath;
+    private GlobalConfig&MockObject $mockConfig;
 
     protected function setUp(): void
     {
@@ -44,17 +46,25 @@ class WebhookControllerTest extends TestCase
         $this->storagePath = sys_get_temp_dir() . '/fax_webhook_test_' . uniqid();
         mkdir($this->storagePath, 0770, true);
 
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-            GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
-            GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
-            GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => $this->storagePath,
-        ]);
+        // Create mock GlobalConfig for controller tests
+        // Auth verification requires CryptoGen which can't be mocked in unit tests
+        $this->mockConfig = $this->createMock(GlobalConfig::class);
+        $this->mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $this->mockConfig->method('getProjectId')->willReturn('test-project-id');
+        $this->mockConfig->method('getAuthMethod')->willReturn('basic');
+        $this->mockConfig->method('getApiKey')->willReturn('test-key');
+        $this->mockConfig->method('getApiSecret')->willReturn('test-secret');
+        $this->mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $this->mockConfig->method('isWebhookAuthConfigured')->willReturn(true);
+        $this->mockConfig->method('verifyWebhookAuth')->willReturn(true);
+        $this->mockConfig->method('isConfigured')->willReturn(true);
 
-        $config = new GlobalConfig($mockGlobals);
-        $faxService = new FaxService($config);
-        $this->controller = new WebhookController($faxService);
+        $faxService = new FaxService($this->mockConfig);
+        $this->controller = new WebhookController($faxService, $this->mockConfig);
+
+        // Set default valid Basic Auth credentials for all tests
+        $_SERVER['PHP_AUTH_USER'] = 'test_webhook_user';
+        $_SERVER['PHP_AUTH_PW'] = 'test_webhook_pass';
     }
 
     protected function tearDown(): void
@@ -374,5 +384,138 @@ class WebhookControllerTest extends TestCase
             Response::HTTP_BAD_REQUEST,
             Response::HTTP_INTERNAL_SERVER_ERROR
         ]);
+    }
+
+    public function testAuthenticationRejectsUnauthorizedIp(): void
+    {
+        // Create mock config that rejects IP
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(false);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.100'; // Not in allowlist
+        $_POST['event'] = 'FAX_COMPLETED';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        // Returns 404 to hide endpoint existence from unauthorized IPs
+        $this->assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
+    }
+
+    public function testAuthenticationAllowsAuthorizedIp(): void
+    {
+        // Create mock config that allows IP and valid auth
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $mockConfig->method('isWebhookAuthConfigured')->willReturn(true);
+        $mockConfig->method('verifyWebhookAuth')->willReturn(true);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['REMOTE_ADDR'] = '192.168.1.100'; // In allowlist
+        $_SERVER['PHP_AUTH_USER'] = 'webhook_user';
+        $_SERVER['PHP_AUTH_PW'] = 'webhook_pass';
+        $_POST['event'] = 'UNKNOWN_EVENT';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        // Should pass IP check and Basic Auth, then process (unknown event returns 200 OK)
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+
+    public function testAuthenticationRejectsInvalidBasicAuth(): void
+    {
+        // Create mock config that rejects auth
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $mockConfig->method('isWebhookAuthConfigured')->willReturn(true);
+        $mockConfig->method('verifyWebhookAuth')->willReturn(false);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['PHP_AUTH_USER'] = 'wrong_user';
+        $_SERVER['PHP_AUTH_PW'] = 'wrong_pass';
+        $_POST['event'] = 'FAX_COMPLETED';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+    }
+
+    public function testAuthenticationAcceptsValidBasicAuth(): void
+    {
+        // Create mock config that accepts auth
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $mockConfig->method('isWebhookAuthConfigured')->willReturn(true);
+        $mockConfig->method('verifyWebhookAuth')->willReturn(true);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['PHP_AUTH_USER'] = 'webhook_user';
+        $_SERVER['PHP_AUTH_PW'] = 'webhook_pass';
+        $_POST['event'] = 'UNKNOWN_EVENT';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        // Should pass auth and process (unknown event returns 200 OK)
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+
+    public function testAuthenticationRejectsMissingBasicAuthWhenConfigured(): void
+    {
+        // Create mock config where auth is configured but verifyWebhookAuth fails
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $mockConfig->method('isWebhookAuthConfigured')->willReturn(true);
+        $mockConfig->method('verifyWebhookAuth')->willReturn(false);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        // Clear any auth credentials from setUp
+        unset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']);
+        $_POST['event'] = 'FAX_COMPLETED';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+    }
+
+    public function testAuthenticationReturns404WhenBasicAuthNotConfigured(): void
+    {
+        // Create mock config where auth is NOT configured
+        $mockConfig = $this->createMock(GlobalConfig::class);
+        $mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
+        $mockConfig->method('isIpInAllowlist')->willReturn(true);
+        $mockConfig->method('isWebhookAuthConfigured')->willReturn(false);
+
+        $controller = new WebhookController(new FaxService($mockConfig), $mockConfig);
+
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['PHP_AUTH_USER'] = 'any_user';
+        $_SERVER['PHP_AUTH_PW'] = 'any_pass';
+        $_POST['event'] = 'FAX_COMPLETED';
+        $_POST['fax'] = json_encode(['id' => 'test']);
+
+        $response = $controller->dispatch();
+
+        // Returns 404 to hide endpoint when auth not configured
+        $this->assertEquals(Response::HTTP_NOT_FOUND, $response->getStatusCode());
     }
 }

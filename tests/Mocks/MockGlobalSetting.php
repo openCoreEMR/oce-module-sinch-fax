@@ -21,4 +21,5 @@ class GlobalSetting
     public const DATA_TYPE_TEXT = 11;
     public const DATA_TYPE_NUMBER = 2;
     public const DATA_TYPE_ENCRYPTED = 36;
+    public const DATA_TYPE_ENCRYPTED_HASH = 'encrypted_hash';
 }

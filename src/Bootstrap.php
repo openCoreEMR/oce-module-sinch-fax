@@ -238,7 +238,8 @@ class Bootstrap
     public function getWebhookController(): WebhookController
     {
         return new WebhookController(
-            new FaxService($this->globalsConfig)
+            new FaxService($this->globalsConfig),
+            $this->globalsConfig
         );
     }
 }

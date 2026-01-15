@@ -30,14 +30,6 @@ class GlobalsAccessor implements ConfigAccessorInterface
     }
 
     /**
-     * Set a value in globals
-     */
-    public function set(string $key, mixed $value): void
-    {
-        $GLOBALS[$key] = $value;
-    }
-
-    /**
      * Check if a key exists in globals
      */
     public function has(string $key): bool

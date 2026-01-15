@@ -30,6 +30,7 @@
     "ext-curl": "*",
     "ext-date": "*",
     "ext-filter": "*",
+    "ext-hash": "*",
     "ext-json": "*",
     "guzzlehttp/guzzle": "^7.0",
     "openemr/oe-module-installer-plugin": "^0.1.5",

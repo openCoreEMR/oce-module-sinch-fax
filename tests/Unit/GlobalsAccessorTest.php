@@ -62,22 +62,6 @@ class GlobalsAccessorTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function testSetStoresValue(): void
-    {
-        $this->accessor->set('test_key', 'new_value');
-
-        $this->assertEquals('new_value', $GLOBALS['test_key']);
-    }
-
-    public function testSetOverwritesExistingValue(): void
-    {
-        $GLOBALS['test_key'] = 'old_value';
-
-        $this->accessor->set('test_key', 'new_value');
-
-        $this->assertEquals('new_value', $GLOBALS['test_key']);
-    }
-
     public function testHasReturnsTrueWhenKeyExists(): void
     {
         $GLOBALS['test_key'] = 'value';
