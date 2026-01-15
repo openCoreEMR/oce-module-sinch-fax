@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.5.4](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.3...0.5.4) (2026-01-15)
+
+
+### Features
+
+* display configured fax phone numbers in module UI ([#74](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/74)) ([f99e087](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/f99e08780b62efeb88ab0c15f15139c5db54c3f3)), closes [#71](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/71)
+* return 404 for all web requests when module not installed/enabled ([#75](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/75)) ([f913a6b](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/f913a6bf7231535a52d78be7e83fed43fba2812d)), closes [#72](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/72)
+
+
+### Bug Fixes
+
+* **.env.testing.example:** s/whitelist/allowlist ([#73](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/73)) ([c5d28ca](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c5d28ca89744ca24887471c6c0750e60c2ad169d))
+* move dlgclose script from controller echo to template ([#76](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/76)) ([ecf8fc8](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/ecf8fc87ff2bcc9f954ae4580b3e081bb14b4f27))
+* remove auto-enabled coverage config from phpunit.xml ([#78](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/78)) ([11161c9](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/11161c9469b15c709bcbfb51cdd4fa1f9b5184d6))
+* **webhook:** enforce authentication on webhook endpoint ([#84](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/84)) ([20dc525](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/20dc5257ac51d38afa6133665d9286c5e08fd362)), closes [#83](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/83)
+
+
+### Code Refactoring
+
+* **exceptions:** replace generic \Exception with custom exception types ([#82](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/82)) ([dea5da1](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/dea5da11cf3bb63552aa4d06124118d67dad2002))
+* **rector:** use full prepared sets and apply fixes ([#81](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/81)) ([decb3f1](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/decb3f1a50f141b29a62e26738370324cd44f3c3))
+
 ## [0.5.3](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.2...0.5.3) (2026-01-12)
 
 
