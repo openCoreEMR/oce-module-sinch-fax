@@ -34,15 +34,16 @@
     "ext-json": "*",
     "guzzlehttp/guzzle": "^7.0",
     "openemr/oe-module-installer-plugin": "^0.1.5",
+    "psr/http-message": "^2.0",
     "psr/log": "^1.0 || ^2.0 || ^3.0",
-    "symfony/console": "^6.4",
-    "symfony/event-dispatcher": "^6.4",
-    "symfony/http-foundation": "^6.4",
+    "symfony/console": "^6.4 || ^7.0",
+    "symfony/event-dispatcher": "^6.4 || ^7.0",
+    "symfony/http-foundation": "^6.4 || ^7.0",
     "twig/twig": "^3.0"
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.44",
-    "openemr/openemr": ">=7.0.3.4 || 7.0.4.x-dev || dev-master",
+    "openemr/openemr": ">=8.0.0 || 8.0.x-dev || dev-master",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^11.0",
     "rector/rector": "^2.0",
@@ -53,7 +54,7 @@
       "type": "package",
       "package": {
         "name": "openemr/openemr",
-        "version": "7.0.3.4",
+        "version": "8.0.0",
         "autoload": {
           "psr-4": {
             "OpenEMR\\": "src/"
@@ -62,7 +63,7 @@
         "source": {
           "type": "git",
           "url": "https://github.com/openemr/openemr.git",
-          "reference": "v7_0_3_4"
+          "reference": "v8_0_0"
         }
       }
     },
@@ -70,7 +71,7 @@
       "type": "package",
       "package": {
         "name": "openemr/openemr",
-        "version": "7.0.4.x-dev",
+        "version": "8.0.x-dev",
         "autoload": {
           "psr-4": {
             "OpenEMR\\": "src/"
@@ -79,7 +80,7 @@
         "source": {
           "type": "git",
           "url": "https://github.com/openemr/openemr.git",
-          "reference": "rel-704"
+          "reference": "rel-800"
         }
       }
     },

@@ -94,6 +94,7 @@ class Bootstrap
     {
         $service = $event->getGlobalsService();
         $section = xlt("OpenCoreEMR Sinch Fax Module");
+        /** @phpstan-ignore argument.type (OpenEMR accepts string to position section) */
         $service->createSection($section, 'Fax');
 
         // In env config mode, show informational message instead of editable fields
@@ -123,8 +124,8 @@ class Bootstrap
                 $key,
                 new GlobalSetting(
                     xlt($config['title']),
-                    $config['type'],
-                    $config['default'],
+                    is_scalar($config['type']) ? (string) $config['type'] : '',
+                    is_scalar($config['default']) ? (string) $config['default'] : '',
                     xlt($config['description']),
                     true
                 )
@@ -159,7 +160,13 @@ class Bootstrap
         $menuItem->acl_req = ["patients", "demo"];
 
         foreach ($menu as $item) {
-            if ($item->menu_id == 'modimg') {
+            if (!$item instanceof \stdClass) {
+                continue;
+            }
+            if (($item->menu_id ?? '') == 'modimg') {
+                if (!isset($item->children) || !is_array($item->children)) {
+                    $item->children = [];
+                }
                 $item->children[] = $menuItem;
                 break;
             }
@@ -170,7 +177,7 @@ class Bootstrap
     {
         ?>
         <a class="btn btn-success btn-send-msg" href="" onclick="return doSinchFax(event, file, mime)">
-            <span><?php echo xlt('Send Fax'); ?></span>
+            <span><?php echo xlt('Send Fax'); // @phpstan-ignore echo.nonString ?></span>
         </a>
         <?php
     }
@@ -181,10 +188,16 @@ class Bootstrap
         ?>
         function doSinchFax(e, filePath, mime='') {
             e.preventDefault();
-            let btnClose = <?php echo xlj("Cancel"); ?>;
-            let title = <?php echo xlj("Send Fax via Sinch"); ?>;
+            let btnClose = <?php
+                echo xlj("Cancel"); // @phpstan-ignore echo.nonString
+            ?>;
+            let title = <?php
+                echo xlj("Send Fax via Sinch"); // @phpstan-ignore echo.nonString
+            ?>;
             let url = top.webroot_url +
-                '/interface/modules/custom_modules/<?php echo attr($moduleName); ?>/public/contact.php' +
+                '/interface/modules/custom_modules/<?php
+                    echo attr($moduleName); // @phpstan-ignore echo.nonString
+                ?>/public/contact.php' +
                 '?isDocuments=1&type=fax&file=' + encodeURIComponent(filePath) +
                 '&mime=' + encodeURIComponent(mime) +
                 '&docid=' + encodeURIComponent(docid);

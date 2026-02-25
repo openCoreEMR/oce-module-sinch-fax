@@ -45,13 +45,14 @@ class FaxDownloadController
         $sql = "SELECT * FROM oce_sinch_faxes WHERE id = ?";
         $fax = QueryUtils::querySingleRow($sql, [$faxId]);
 
-        if (!$fax) {
+        if (!is_array($fax)) {
             throw new FaxNotFoundException("Fax not found");
         }
 
-        $filePath = $fax['file_path'];
+        /** @var array<string, mixed> $fax */
+        $filePath = is_string($fax['file_path'] ?? null) ? $fax['file_path'] : null;
 
-        if (empty($filePath)) {
+        if (in_array($filePath, [null, '', '0'], true)) {
             throw new FaxNotFoundException("Fax file not available");
         }
 
@@ -98,13 +99,14 @@ class FaxDownloadController
         $response = new BinaryFileResponse($realFilePath);
 
         // Set content disposition to inline (view in browser)
+        $sinchFaxId = is_scalar($fax['sinch_fax_id'] ?? null) ? (string) $fax['sinch_fax_id'] : '';
         $response->setContentDisposition(
             ResponseHeaderBag::DISPOSITION_INLINE,
-            'fax_' . $fax['sinch_fax_id'] . '.pdf'
+            'fax_' . $sinchFaxId . '.pdf'
         );
 
         // Set MIME type
-        $mimeType = $fax['mime_type'] ?? 'application/pdf';
+        $mimeType = is_string($fax['mime_type'] ?? null) ? $fax['mime_type'] : 'application/pdf';
         $response->headers->set('Content-Type', $mimeType);
 
         return $response;
@@ -118,7 +120,7 @@ class FaxDownloadController
         $sql = "SELECT file_path FROM oce_sinch_faxes WHERE id = ?";
         $result = QueryUtils::querySingleRow($sql, [$faxId]);
 
-        if (!$result || empty($result['file_path'])) {
+        if (!is_array($result) || !is_string($result['file_path'] ?? null) || $result['file_path'] === '') {
             return false;
         }
 

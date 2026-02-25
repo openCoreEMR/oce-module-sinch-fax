@@ -12,8 +12,12 @@
 .DS_Store
 Thumbs.db
 
+# Dependencies (installed inside container for correct platform)
+vendor/
+
 # Testing
 coverage/
+htmlcov/
 .phpunit.cache/
 .phpunit.result.cache
 

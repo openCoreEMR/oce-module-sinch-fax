@@ -9,7 +9,7 @@ repos:
   - id: end-of-file-fixer
   - id: check-yaml
     args:
-    - --unsafe  # Allow custom tags like !override in compose.yml
+    - --unsafe # Allow custom tags like !override in compose.yml
   - id: check-added-large-files
   - id: check-merge-conflict
   - id: check-json
@@ -23,14 +23,25 @@ repos:
     args:
     - --fix=lf
 
-- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-  rev: v2.14.0
+- repo: https://github.com/google/yamlfmt
+  rev: v0.21.0
   hooks:
-  - id: pretty-format-yaml
-    args:
-    - --autofix
-    - --indent=2
-    exclude: ^compose\.yml$  # Uses Docker Compose !override tags
+  - id: yamlfmt
+
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.10
+  hooks:
+  - id: actionlint
+
+- repo: https://github.com/hadolint/hadolint
+  rev: v2.12.0
+  hooks:
+  - id: hadolint-docker
+
+- repo: https://github.com/docker-compose-linter/pre-commit-dclint
+  rev: v3.1.0
+  hooks:
+  - id: dclint
 
 - repo: local
   hooks:

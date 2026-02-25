@@ -46,5 +46,7 @@ $controller = $bootstrap->getDocumentFaxController();
 $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? 'send' : 'show';
 
 // Dispatch to controller and send response
-$response = $controller->dispatch($action, $_REQUEST);
+/** @var array<string, mixed> $requestParams */
+$requestParams = $_REQUEST;
+$response = $controller->dispatch($action, $requestParams);
 $response->send();

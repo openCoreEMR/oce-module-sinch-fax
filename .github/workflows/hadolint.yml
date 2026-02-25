@@ -1,0 +1,29 @@
+name: hadolint
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - '**/Dockerfile*'
+  pull_request:
+    branches:
+    - main
+    paths:
+    - '**/Dockerfile*'
+
+jobs:
+  hadolint:
+    name: Lint Dockerfiles
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Run hadolint
+      run: |
+        git ls-files -z 'Dockerfile*' \
+                        '**/Dockerfile*' |
+        xargs --null --no-run-if-empty --replace={} \
+          docker run --rm -v "$PWD:/workdir" -w /workdir hadolint/hadolint hadolint "{}"

@@ -81,6 +81,7 @@ class GlobalsAccessor implements ConfigAccessorInterface
      */
     public function all(): array
     {
+        /** @var array<string, mixed> $GLOBALS */
         return $GLOBALS;
     }
 }

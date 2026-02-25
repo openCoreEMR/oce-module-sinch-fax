@@ -165,12 +165,14 @@ class DocumentFaxController
                             $success = xlt("Fax sent successfully");
                         }
                     } catch (\Throwable $e) {
+                        // @phpstan-ignore binaryOp.invalid, binaryOp.invalid
                         $error = xlt("Error retrieving document") . ": " . text($e->getMessage());
                     }
                 } else {
                     $error = xlt("No document specified");
                 }
             } catch (\Throwable $e) {
+                // @phpstan-ignore binaryOp.invalid, binaryOp.invalid
                 $error = xlt("Error sending fax") . ": " . text($e->getMessage());
             }
         }

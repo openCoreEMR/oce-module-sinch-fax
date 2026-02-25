@@ -3,7 +3,7 @@
 
 version: 2
 updates:
-  # Monitor Composer dependencies
+# Monitor Composer dependencies
 - package-ecosystem: composer
   directory: /
   schedule:
@@ -13,6 +13,7 @@ updates:
   - composer
   commit-message:
     prefix: deps
+    include: scope
 
 # Monitor GitHub Actions
 - package-ecosystem: github-actions
@@ -24,3 +25,4 @@ updates:
   - github-actions
   commit-message:
     prefix: deps
+    include: scope
