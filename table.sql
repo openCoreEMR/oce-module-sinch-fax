@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
     INDEX `idx_sinch_fax_id` (`sinch_fax_id`),
     INDEX `idx_read_status` (`read_status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB;
 
 -- Table to store Sinch service configuration
 CREATE TABLE IF NOT EXISTS `oce_sinch_services` (
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_services` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When this record was created',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
     UNIQUE INDEX `idx_service_name` (`service_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB;
 
 -- Table to store cover pages
 CREATE TABLE IF NOT EXISTS `oce_sinch_cover_pages` (
@@ -56,14 +56,14 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_cover_pages` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When this record was created',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated',
     UNIQUE INDEX `idx_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB;
 
 -- Table to track last reconciliation time with Sinch
 CREATE TABLE IF NOT EXISTS `oce_sinch_reconciliation` (
     `id` INT(11) PRIMARY KEY DEFAULT 1 COMMENT 'Singleton row',
     `last_sync_time` DATETIME NOT NULL COMMENT 'Last time we synced with Sinch API',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB;
 
 -- Create "Received Faxes" document category
 -- For fresh installs only - no duplicate checking needed
