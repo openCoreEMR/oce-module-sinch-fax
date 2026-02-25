@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.5](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.4...0.5.5) (2026-02-25)
+
+
+### Bug Fixes
+
+* **sql:** remove hard-coded charset and collation from table definitions ([#91](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/91)) ([07e09b9](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/07e09b98b126702a046c62d6dbe54a3f18aa8ff5))
+
+
+### Documentation
+
+* add info.txt, versioning, and error handling rules ([#89](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/89)) ([302c4db](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/302c4dbc7642700289b91cdaffbc77de457b9975))
+
 ## [0.5.4](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.3...0.5.4) (2026-01-15)
 
 
