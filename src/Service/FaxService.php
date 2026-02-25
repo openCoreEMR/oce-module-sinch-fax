@@ -231,9 +231,9 @@ class FaxService
             $existingSql = "SELECT id, file_path, status FROM oce_sinch_faxes WHERE sinch_fax_id = ?";
             $existingFax = QueryUtils::querySingleRow($existingSql, [$faxId]);
 
-            if ($existingFax) {
+            if (is_array($existingFax)) {
                 // If fax exists but has no file, try to download it (only if Sinch has the file)
-                if (empty($existingFax['file_path']) && $fileAvailable) {
+                if (($existingFax['file_path'] ?? '') === '' && $fileAvailable) {
                     $this->logger->debug("Existing fax {$faxId} has no file, attempting download");
                     try {
                         $filePath = $this->downloadAndSaveFax($faxId);
@@ -244,7 +244,7 @@ class FaxService
                     } catch (\Throwable $e) {
                         $this->logger->error("Failed to download fax {$faxId}: " . $e->getMessage());
                     }
-                } elseif (empty($existingFax['file_path']) && !$fileAvailable) {
+                } elseif (($existingFax['file_path'] ?? '') === '' && !$fileAvailable) {
                     $this->logger->debug("Fax {$faxId} has no file available on Sinch (hasFile=false)");
                 }
                 continue;
@@ -333,7 +333,7 @@ class FaxService
         $sql = 'SELECT last_sync_time FROM oce_sinch_reconciliation WHERE id = 1';
         $row = QueryUtils::querySingleRow($sql, []);
 
-        if ($row && !empty($row['last_sync_time'])) {
+        if (is_array($row) && is_string($row['last_sync_time'] ?? null) && $row['last_sync_time'] !== '') {
             try {
                 return new \DateTimeImmutable($row['last_sync_time']);
             } catch (\Throwable $e) {
@@ -364,7 +364,7 @@ class FaxService
     {
         $sql = 'SELECT 1 FROM oce_sinch_faxes WHERE sinch_fax_id = ? LIMIT 1';
         $row = QueryUtils::querySingleRow($sql, [$sinchFaxId]);
-        return $row !== null;
+        return is_array($row);
     }
 
     /**
@@ -414,8 +414,8 @@ class FaxService
         $sql = "SELECT id FROM categories WHERE name = ? AND parent = 1";
         $category = QueryUtils::querySingleRow($sql, ['Received Faxes']);
 
-        if ($category) {
-            return (int)$category['id'];
+        if (is_array($category) && is_numeric($category['id'] ?? null)) {
+            return (int) $category['id'];
         }
 
         // Create the category if it doesn't exist
@@ -425,13 +425,13 @@ class FaxService
         // Get the newly created category ID
         $category = QueryUtils::querySingleRow($sql, ['Received Faxes']);
 
-        if (!$category) {
+        if (!is_array($category) || !is_numeric($category['id'] ?? null)) {
             throw new FaxConfigurationException("Failed to create 'Received Faxes' category");
         }
 
         $this->logger->info("Created 'Received Faxes' document category");
 
-        return (int)$category['id'];
+        return (int) $category['id'];
     }
 
     /**
@@ -460,9 +460,9 @@ class FaxService
             $filePath = $this->saveFileContent($faxId, $fileContent);
         }
 
-        if ($existingFax) {
+        if (is_array($existingFax)) {
             // Update existing record if we now have a file (handles reconciled faxes)
-            if ($filePath && empty($existingFax['file_path'])) {
+            if ($filePath && ($existingFax['file_path'] ?? '') === '') {
                 $updateSql = <<<'SQL'
                     UPDATE oce_sinch_faxes
                     SET file_path = ?, error_message = NULL, updated_at = NOW()
@@ -516,7 +516,7 @@ class FaxService
         $numPages = $faxData['numberOfPages'] ?? 0;
         $completedTime = $faxData['completedTime'] ?? null;
 
-        if ($existingFax) {
+        if (is_array($existingFax)) {
             // Update existing record with completion status
             $updateSql = <<<'SQL'
                 UPDATE oce_sinch_faxes SET
@@ -608,56 +608,69 @@ class FaxService
         $faxSql = "SELECT * FROM oce_sinch_faxes WHERE id = ?";
         $fax = QueryUtils::querySingleRow($faxSql, [$faxId]);
 
-        if (!$fax) {
+        if (!is_array($fax)) {
             throw new FaxNotFoundException("Fax not found");
         }
 
-        if ($fax['document_id']) {
+        /** @var array<string, mixed> $fax */
+
+        $documentIdVal = $fax['document_id'] ?? null;
+        if (!in_array($documentIdVal, [null, '', 0], true)) {
+            $docIdStr = is_scalar($documentIdVal) ? (string) $documentIdVal : '?';
             throw new FaxValidationException(
-                "Fax has already been moved to patient chart (Document ID: {$fax['document_id']})"
+                "Fax has already been moved to patient chart (Document ID: {$docIdStr})"
             );
         }
 
-        if (empty($fax['file_path']) || !file_exists($fax['file_path'])) {
+        $faxFilePath = is_string($fax['file_path'] ?? null) ? $fax['file_path'] : '';
+        if ($faxFilePath === '' || !file_exists($faxFilePath)) {
             throw new FaxNotFoundException("Fax file not found");
         }
 
-        $fileContents = file_get_contents($fax['file_path']);
+        $fileContents = file_get_contents($faxFilePath);
         if ($fileContents === false) {
             throw new FaxValidationException("Unable to read fax file");
         }
 
-        $filename = basename((string) $fax['file_path']);
-        if ($fax['direction'] === 'INBOUND') {
-            $filename = "Incoming_Fax_{$fax['from_number']}_{$fax['sinch_fax_id']}.pdf";
+        $direction = is_string($fax['direction'] ?? null) ? $fax['direction'] : '';
+        $fromNumber = is_string($fax['from_number'] ?? null) ? $fax['from_number'] : '';
+        $toNumber = is_string($fax['to_number'] ?? null) ? $fax['to_number'] : '';
+        $sinchFaxId = is_string($fax['sinch_fax_id'] ?? null) ? $fax['sinch_fax_id'] : '';
+
+        if ($direction === 'INBOUND') {
+            $filename = "Incoming_Fax_{$fromNumber}_{$sinchFaxId}.pdf";
         } else {
-            $filename = "Outgoing_Fax_{$fax['to_number']}_{$fax['sinch_fax_id']}.pdf";
+            $filename = "Outgoing_Fax_{$toNumber}_{$sinchFaxId}.pdf";
         }
 
         // Get or create the "Received Faxes" category
         $categoryId = $this->getReceivedFaxesCategoryId();
+
+        $mimeType = is_string($fax['mime_type'] ?? null) ? $fax['mime_type'] : 'application/pdf';
 
         $document = new \Document();
         $result = $document->createDocument(
             $patientId,
             $categoryId,
             $filename,
-            $fax['mime_type'] ?? 'application/pdf',
+            $mimeType,
             $fileContents
         );
 
-        if (!empty($result)) {
-            throw new FaxConfigurationException("Failed to create document: " . $result);
+        if ($result !== '' && $result !== null) {
+            $resultStr = is_scalar($result) ? (string) $result : 'unknown error';
+            throw new FaxConfigurationException("Failed to create document: " . $resultStr);
         }
 
         $documentId = $document->get_id();
+        $documentIdInt = is_numeric($documentId) ? (int) $documentId : 0;
 
         $updateSql = "UPDATE oce_sinch_faxes SET document_id = ?, patient_id = ?, updated_at = NOW() WHERE id = ?";
-        QueryUtils::sqlStatementThrowException($updateSql, [$documentId, $patientId, $faxId]);
+        QueryUtils::sqlStatementThrowException($updateSql, [$documentIdInt, $patientId, $faxId]);
 
-        $this->logger->info("Moved fax {$faxId} to patient {$patientId} as document {$documentId}");
+        $this->logger->info("Moved fax {$faxId} to patient {$patientId} as document {$documentIdInt}");
 
-        return $documentId;
+        return $documentIdInt;
     }
 
     /**

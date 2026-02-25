@@ -29,7 +29,10 @@ const DEFAULT_VERSION = '0.5.5'; // x-release-please-version
         $return_code = 0;
 
         // Build command with properly escaped arguments
-        $escapedArgs = array_map('escapeshellarg', $gitArgs);
+        $escapedArgs = array_map(
+            static fn(mixed $arg): string => escapeshellarg(is_string($arg) ? $arg : ''),
+            $gitArgs
+        );
         $command = sprintf(
             'git -C %s %s 2>/dev/null',
             escapeshellarg(__DIR__),

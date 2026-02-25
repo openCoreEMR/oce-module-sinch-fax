@@ -74,7 +74,7 @@ class ModuleAccessGuard
             }
 
             // Check if active (mod_active = 1)
-            return (int) $result === 1;
+            return is_numeric($result) && (int) $result === 1;
         } catch (\Throwable) {
             // Database error - fail closed (deny access)
             return false;

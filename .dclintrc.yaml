@@ -1,0 +1,19 @@
+# dclint configuration
+# See: https://github.com/zavoloklom/docker-compose-linter
+#
+# Severity levels: 0 = disabled, 1 = warning, 2 = error
+
+rules:
+  # Disable rules that don't apply to this dev environment
+
+  # Random port assignment (127.0.0.1::containerPort) triggers false positives
+  no-duplicate-exported-ports: 0
+
+  # Dev environment uses unbound ports for random assignment
+  no-unbound-port-interfaces: 0
+
+  # The expected order puts 'extends' last, but common practice is extends first
+  service-keys-order: 0
+
+  # Services are organized logically (main app first), not alphabetically
+  services-alphabetical-order: 0

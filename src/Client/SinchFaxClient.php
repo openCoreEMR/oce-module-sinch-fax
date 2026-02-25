@@ -200,7 +200,10 @@ class SinchFaxClient
         } catch (GuzzleException $e) {
             // Log detailed error information
             $this->logger->error('Sinch Fax API error: ' . $e->getMessage());
-            if (method_exists($e, 'getResponse') && $e->getResponse() !== null) {
+            if (
+                $e instanceof \GuzzleHttp\Exception\RequestException
+                && $e->getResponse() instanceof \Psr\Http\Message\ResponseInterface
+            ) {
                 $responseBody = $e->getResponse()->getBody()->getContents();
                 $this->logger->error('Sinch API Response Body: ' . $responseBody);
             }

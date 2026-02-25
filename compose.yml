@@ -70,9 +70,9 @@ services:
     - .:/app
     - /app/vendor
     - ./htmlcov:/app/htmlcov
-    command: vendor/bin/phpunit --coverage-html htmlcov --coverage-text
     environment:
       XDEBUG_MODE: coverage
+    command: vendor/bin/phpunit --coverage-html htmlcov --coverage-text
 
 volumes:
   databasevolume: {}

@@ -1,5 +1,5 @@
 parameters:
-    level: 9
+    level: 10
     paths:
         - src
         - public
@@ -21,15 +21,25 @@ parameters:
     # Report always true conditions
     reportAlwaysTrueInLastCondition: true
 
-    # Ignore errors
+    # Ignore missing OpenEMR classes during static analysis
+    # reportUnmatched: false allows CI to pass when OpenEMR IS installed
     ignoreErrors:
-        # OpenEMR global functions not available for static analysis
-        - '#Function (xlt|xla|xlj|text|attr|sqlStatement|sqlQuery|sqlFetchArray) not found#'
-
-        # OpenEMR classes not available without full OpenEMR installation
-        # reportUnmatched: false allows CI to pass when OpenEMR IS installed
-        - message: '#OpenEMR#'
-          reportUnmatched: false
-
+        -
+            message: '#Function (xlt|xla|xlj|text|attr|sqlStatement|sqlQuery|sqlFetchArray) not found#'
+            reportUnmatched: false
+        -
+            message: '#unknown class OpenEMR\\#'
+            reportUnmatched: false
+        -
+            message: '#Instantiated class OpenEMR\\#'
+            reportUnmatched: false
+        -
+            message: '#invalid type OpenEMR\\#'
+            reportUnmatched: false
+        -
+            message: '#Property .+ is never read, only written#'
+            reportUnmatched: false
         # Class Document from OpenEMR not typed properly
-        - '#class Document#'
+        -
+            message: '#class Document#'
+            reportUnmatched: false

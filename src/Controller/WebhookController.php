@@ -147,21 +147,14 @@ class WebhookController
 
         // Handle multipart/form-data
         if (str_contains((string) $contentType, 'multipart/form-data')) {
-            $event = $request->request->get('event');
-            $faxJson = $request->request->get('fax');
-            $faxData = is_string($faxJson) ? json_decode($faxJson, true) : [];
-
-            return [
-                'event' => $event,
-                'fax' => is_array($faxData) ? $faxData : [],
-                'hasFile' => $request->files->has('file'),
-            ];
+            return $this->parseFormPayload($request);
         }
 
         // Handle application/json
         if (str_contains((string) $contentType, 'application/json')) {
             /** @var string $content */
             $content = $request->getContent();
+            /** @var array<string, mixed>|scalar|null $data */
             $data = json_decode($content, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -175,17 +168,28 @@ class WebhookController
         // Try to parse as form data
         $event = $request->request->get('event');
         if ($event) {
-            $faxJson = $request->request->get('fax');
-            $faxData = is_string($faxJson) ? json_decode($faxJson, true) : [];
-
-            return [
-                'event' => $event,
-                'fax' => is_array($faxData) ? $faxData : [],
-                'hasFile' => $request->files->has('file'),
-            ];
+            return $this->parseFormPayload($request);
         }
 
         return [];
+    }
+
+    /**
+     * Parse a form-data webhook payload
+     *
+     * @return array<string, mixed>
+     */
+    private function parseFormPayload(Request $request): array
+    {
+        $event = $request->request->get('event');
+        $faxJson = $request->request->get('fax');
+        $faxData = is_string($faxJson) ? json_decode($faxJson, true) : [];
+
+        return [
+            'event' => $event,
+            'fax' => is_array($faxData) ? $faxData : [],
+            'hasFile' => $request->files->has('file'),
+        ];
     }
 
     /**

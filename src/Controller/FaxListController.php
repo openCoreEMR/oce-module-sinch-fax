@@ -215,20 +215,20 @@ class FaxListController
 
         // Get fax IDs - can be single or multiple (bulk action)
         $faxIds = $request->request->all('fax_ids');
-        if (empty($faxIds)) {
+        if ($faxIds === []) {
             $singleId = $request->request->get('fax_id');
             if ($singleId) {
                 $faxIds = [$singleId];
             }
         }
 
-        if (empty($faxIds)) {
+        if ($faxIds === []) {
             $_SESSION['fax_error'] = 'No faxes selected';
             return $this->redirect($request);
         }
 
         // Sanitize IDs to integers
-        $faxIds = array_map(intval(...), $faxIds);
+        $faxIds = array_map(static fn(mixed $id): int => is_numeric($id) ? (int) $id : 0, $faxIds);
         $faxIds = array_filter($faxIds, fn($id): bool => $id > 0);
 
         if ($faxIds === []) {

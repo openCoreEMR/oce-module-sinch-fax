@@ -35,7 +35,11 @@ class ModuleInstaller
     {
         $sql = "SELECT * FROM modules WHERE mod_directory = ?";
         $result = QueryUtils::querySingleRow($sql, [$moduleName]);
-        return $result ?: null;
+        if (!is_array($result)) {
+            return null;
+        }
+        /** @var array<string, mixed> $result */
+        return $result;
     }
 
     /**
@@ -80,8 +84,9 @@ class ModuleInstaller
             $name = $moduleName;
         }
 
-        $maxId = QueryUtils::querySingleRow("SELECT MAX(section_id) as max_id FROM module_acl_sections", []);
-        $sectionId = ($maxId['max_id'] ?? 0) + 1;
+        $maxIdRow = QueryUtils::querySingleRow("SELECT MAX(section_id) as max_id FROM module_acl_sections", []);
+        $maxIdVal = is_array($maxIdRow) ? ($maxIdRow['max_id'] ?? 0) : 0;
+        $sectionId = (is_numeric($maxIdVal) ? (int) $maxIdVal : 0) + 1;
 
         $sql = "INSERT INTO modules SET
                 mod_id = ?,
@@ -104,13 +109,18 @@ class ModuleInstaller
             $moduleName
         ]);
 
-        $moduleId = QueryUtils::querySingleRow("SELECT mod_id FROM modules WHERE mod_directory = ?", [$moduleName]);
+        $moduleIdRow = QueryUtils::querySingleRow("SELECT mod_id FROM modules WHERE mod_directory = ?", [$moduleName]);
+        if (!is_array($moduleIdRow)) {
+            throw new \RuntimeException("Failed to retrieve registered module");
+        }
+        $modId = $moduleIdRow['mod_id'];
         QueryUtils::sqlStatementThrowException(
             "INSERT INTO module_acl_sections VALUES (?, ?, 0, ?, ?)",
-            [$moduleId['mod_id'], $name, strtolower($moduleName), $moduleId['mod_id']]
+            [$modId, $name, strtolower($moduleName), $modId]
         );
 
-        $this->output->writeln("  Registered with ID: <info>{$moduleId['mod_id']}</info>");
+        $modIdStr = is_scalar($modId) ? (string) $modId : 'unknown';
+        $this->output->writeln("  Registered with ID: <info>{$modIdStr}</info>");
     }
 
     /**
@@ -249,6 +259,7 @@ class ModuleInstaller
     public function listModules(): array
     {
         $sql = "SELECT mod_id, mod_name, mod_directory, mod_active, sql_run, type FROM modules ORDER BY mod_directory";
+        /** @var array<int, array<string, mixed>> */
         return QueryUtils::fetchRecords($sql, []);
     }
 
