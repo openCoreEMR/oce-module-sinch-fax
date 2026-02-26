@@ -15,12 +15,19 @@ namespace OpenCoreEMR\Modules\SinchFax;
 /**
  * Factory for creating the appropriate configuration accessor.
  *
- * When OCE_SINCH_FAX_ENV_CONFIG=1 is set, configuration is read from
- * environment variables instead of the database-backed OpenEMR globals.
+ * Configuration sources in precedence order:
+ *   1. YAML files (with env var overrides) — FileConfigAccessor
+ *   2. Environment variables only — EnvironmentConfigAccessor
+ *   3. Database globals — GlobalsAccessor
  */
 class ConfigFactory
 {
     public const ENV_CONFIG_VAR = 'OCE_SINCH_FAX_ENV_CONFIG';
+
+    public const CONVENTIONAL_CONFIG_PATH = '/etc/oce/sinch-fax/config.yaml';
+    public const CONVENTIONAL_SECRETS_PATH = '/etc/oce/sinch-fax/secrets.yaml';
+    public const CONFIG_FILE_ENV_VAR = 'OCE_SINCH_FAX_CONFIG_FILE';
+    public const SECRETS_FILE_ENV_VAR = 'OCE_SINCH_FAX_SECRETS_FILE';
 
     /**
      * Check if environment-only config mode is enabled
@@ -32,13 +39,58 @@ class ConfigFactory
     }
 
     /**
+     * Check if YAML file config mode is active (any config files exist)
+     */
+    public static function isFileConfigMode(): bool
+    {
+        $loader = new YamlConfigLoader();
+        return $loader->hasConfigFiles(self::getConfigFileCandidates());
+    }
+
+    /**
+     * Check if any external config mode is active (file or env)
+     */
+    public static function isExternalConfigMode(): bool
+    {
+        return self::isFileConfigMode() || self::isEnvConfigMode();
+    }
+
+    /**
      * Create the appropriate config accessor based on environment
+     *
+     * Precedence: file config > env config > database
      */
     public static function createConfigAccessor(): ConfigAccessorInterface
     {
+        if (self::isFileConfigMode()) {
+            $loader = new YamlConfigLoader();
+            $paths = $loader->resolveFilePaths(self::getConfigFileCandidates());
+            $data = $loader->load($paths);
+            return new FileConfigAccessor($data);
+        }
+
         if (self::isEnvConfigMode()) {
             return new EnvironmentConfigAccessor();
         }
+
         return new GlobalsAccessor();
+    }
+
+    /**
+     * Get candidate config file paths (overridden or conventional)
+     *
+     * @return list<string>
+     */
+    private static function getConfigFileCandidates(): array
+    {
+        $paths = [];
+
+        $configFile = getenv(self::CONFIG_FILE_ENV_VAR);
+        $paths[] = $configFile !== false ? $configFile : self::CONVENTIONAL_CONFIG_PATH;
+
+        $secretsFile = getenv(self::SECRETS_FILE_ENV_VAR);
+        $paths[] = $secretsFile !== false ? $secretsFile : self::CONVENTIONAL_SECRETS_PATH;
+
+        return $paths;
     }
 }

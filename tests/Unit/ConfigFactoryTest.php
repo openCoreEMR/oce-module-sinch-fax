@@ -14,20 +14,55 @@ namespace OpenCoreEMR\Modules\SinchFax\Tests\Unit;
 
 use OpenCoreEMR\Modules\SinchFax\ConfigFactory;
 use OpenCoreEMR\Modules\SinchFax\EnvironmentConfigAccessor;
+use OpenCoreEMR\Modules\SinchFax\FileConfigAccessor;
 use OpenCoreEMR\Modules\SinchFax\GlobalsAccessor;
 use PHPUnit\Framework\TestCase;
 
 class ConfigFactoryTest extends TestCase
 {
+    private string $tmpDir;
+
     protected function setUp(): void
     {
         putenv(ConfigFactory::ENV_CONFIG_VAR);
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR);
+        putenv(ConfigFactory::SECRETS_FILE_ENV_VAR);
+        $this->tmpDir = sys_get_temp_dir() . '/config_factory_test_' . uniqid();
+        mkdir($this->tmpDir, 0755, true);
     }
 
     protected function tearDown(): void
     {
         putenv(ConfigFactory::ENV_CONFIG_VAR);
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR);
+        putenv(ConfigFactory::SECRETS_FILE_ENV_VAR);
+        $this->removeDir($this->tmpDir);
     }
+
+    private function removeDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        $items = scandir($dir);
+        if ($items === false) {
+            return;
+        }
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->removeDir($path);
+            } else {
+                unlink($path);
+            }
+        }
+        rmdir($dir);
+    }
+
+    // --- Env config mode tests (existing) ---
 
     public function testIsEnvConfigModeReturnsFalseByDefault(): void
     {
@@ -62,6 +97,63 @@ class ConfigFactoryTest extends TestCase
         $this->assertFalse(ConfigFactory::isEnvConfigMode());
     }
 
+    // --- File config mode tests ---
+
+    public function testIsFileConfigModeReturnsFalseByDefault(): void
+    {
+        $this->assertFalse(ConfigFactory::isFileConfigMode());
+    }
+
+    public function testIsFileConfigModeReturnsTrueWhenConfigFileEnvVarPointsToExistingFile(): void
+    {
+        $configFile = $this->tmpDir . '/config.yaml';
+        file_put_contents($configFile, "enabled: true\n");
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR . '=' . $configFile);
+
+        $this->assertTrue(ConfigFactory::isFileConfigMode());
+    }
+
+    public function testIsFileConfigModeReturnsTrueWhenSecretsFileEnvVarPointsToExistingFile(): void
+    {
+        $secretsFile = $this->tmpDir . '/secrets.yaml';
+        file_put_contents($secretsFile, "api_secret: x\n");
+        putenv(ConfigFactory::SECRETS_FILE_ENV_VAR . '=' . $secretsFile);
+
+        $this->assertTrue(ConfigFactory::isFileConfigMode());
+    }
+
+    public function testIsFileConfigModeReturnsFalseWhenEnvVarPointsToNonexistentFile(): void
+    {
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR . '=/nonexistent/config.yaml');
+
+        $this->assertFalse(ConfigFactory::isFileConfigMode());
+    }
+
+    // --- External config mode tests ---
+
+    public function testIsExternalConfigModeReturnsFalseByDefault(): void
+    {
+        $this->assertFalse(ConfigFactory::isExternalConfigMode());
+    }
+
+    public function testIsExternalConfigModeReturnsTrueForEnvConfig(): void
+    {
+        putenv(ConfigFactory::ENV_CONFIG_VAR . '=1');
+
+        $this->assertTrue(ConfigFactory::isExternalConfigMode());
+    }
+
+    public function testIsExternalConfigModeReturnsTrueForFileConfig(): void
+    {
+        $configFile = $this->tmpDir . '/config.yaml';
+        file_put_contents($configFile, "enabled: true\n");
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR . '=' . $configFile);
+
+        $this->assertTrue(ConfigFactory::isExternalConfigMode());
+    }
+
+    // --- createConfigAccessor tests ---
+
     public function testCreateConfigAccessorReturnsGlobalsAccessorByDefault(): void
     {
         $accessor = ConfigFactory::createConfigAccessor();
@@ -78,8 +170,56 @@ class ConfigFactoryTest extends TestCase
         $this->assertInstanceOf(EnvironmentConfigAccessor::class, $accessor);
     }
 
+    public function testCreateConfigAccessorReturnsFileAccessorWhenConfigFileExists(): void
+    {
+        $configFile = $this->tmpDir . '/config.yaml';
+        file_put_contents($configFile, "enabled: true\nproject_id: from-yaml\n");
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR . '=' . $configFile);
+
+        $accessor = ConfigFactory::createConfigAccessor();
+
+        $this->assertInstanceOf(FileConfigAccessor::class, $accessor);
+        $this->assertSame('from-yaml', $accessor->getString('oce_sinch_fax_project_id'));
+    }
+
+    public function testFileConfigTakesPrecedenceOverEnvConfig(): void
+    {
+        // Set up both file and env config
+        $configFile = $this->tmpDir . '/config.yaml';
+        file_put_contents($configFile, "enabled: true\n");
+        putenv(ConfigFactory::CONFIG_FILE_ENV_VAR . '=' . $configFile);
+        putenv(ConfigFactory::ENV_CONFIG_VAR . '=1');
+
+        $accessor = ConfigFactory::createConfigAccessor();
+
+        // File config wins
+        $this->assertInstanceOf(FileConfigAccessor::class, $accessor);
+    }
+
+    // --- Constants ---
+
     public function testEnvConfigVarConstant(): void
     {
-        $this->assertEquals('OCE_SINCH_FAX_ENV_CONFIG', ConfigFactory::ENV_CONFIG_VAR);
+        $this->assertSame('OCE_SINCH_FAX_ENV_CONFIG', ConfigFactory::ENV_CONFIG_VAR);
+    }
+
+    public function testConfigFileEnvVarConstant(): void
+    {
+        $this->assertSame('OCE_SINCH_FAX_CONFIG_FILE', ConfigFactory::CONFIG_FILE_ENV_VAR);
+    }
+
+    public function testSecretsFileEnvVarConstant(): void
+    {
+        $this->assertSame('OCE_SINCH_FAX_SECRETS_FILE', ConfigFactory::SECRETS_FILE_ENV_VAR);
+    }
+
+    public function testConventionalConfigPathConstant(): void
+    {
+        $this->assertSame('/etc/oce/sinch-fax/config.yaml', ConfigFactory::CONVENTIONAL_CONFIG_PATH);
+    }
+
+    public function testConventionalSecretsPathConstant(): void
+    {
+        $this->assertSame('/etc/oce/sinch-fax/secrets.yaml', ConfigFactory::CONVENTIONAL_SECRETS_PATH);
     }
 }

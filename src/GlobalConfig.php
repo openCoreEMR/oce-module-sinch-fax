@@ -20,22 +20,22 @@ use Symfony\Component\HttpFoundation\IpUtils;
 
 class GlobalConfig
 {
-    private readonly bool $isEnvConfigMode;
+    private readonly bool $isExternalConfigMode;
 
     public function __construct(
         private readonly ConfigAccessorInterface $configAccessor = new GlobalsAccessor()
     ) {
-        $this->isEnvConfigMode = ConfigFactory::isEnvConfigMode();
+        $this->isExternalConfigMode = ConfigFactory::isExternalConfigMode();
     }
 
     public const CONFIG_OPTION_ENABLED = 'oce_sinch_fax_enabled';
 
     /**
-     * Check if configuration is managed via environment variables
+     * Check if configuration is managed externally (YAML files or env vars)
      */
-    public function isEnvConfigMode(): bool
+    public function isExternalConfigMode(): bool
     {
-        return $this->isEnvConfigMode;
+        return $this->isExternalConfigMode;
     }
     public const CONFIG_OPTION_PROJECT_ID = 'oce_sinch_fax_project_id';
     public const CONFIG_OPTION_SERVICE_ID = 'oce_sinch_fax_service_id';
@@ -79,8 +79,8 @@ class GlobalConfig
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_API_SECRET, '');
         if ($value !== '' && $value !== '0') {
-            // In env config mode, secrets are stored as plaintext (no encryption)
-            if ($this->isEnvConfigMode) {
+            // In external config mode, secrets are stored as plaintext (no encryption)
+            if ($this->isExternalConfigMode) {
                 return $value;
             }
             $cryptoGen = new CryptoGen();
@@ -94,8 +94,8 @@ class GlobalConfig
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
         if ($value !== '' && $value !== '0') {
-            // In env config mode, secrets are stored as plaintext (no encryption)
-            if ($this->isEnvConfigMode) {
+            // In external config mode, secrets are stored as plaintext (no encryption)
+            if ($this->isExternalConfigMode) {
                 return $value;
             }
             $cryptoGen = new CryptoGen();
@@ -150,8 +150,8 @@ class GlobalConfig
             return false;
         }
 
-        // Env mode: check if stored value is a bcrypt hash or plaintext
-        if ($this->isEnvConfigMode) {
+        // External config mode: check if stored value is a bcrypt hash or plaintext
+        if ($this->isExternalConfigMode) {
             if (AuthHash::hashValid($stored)) {
                 // Stored value is a hash - verify against it
                 return AuthHash::passwordVerify($password, $stored);
