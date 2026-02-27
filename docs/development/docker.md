@@ -260,6 +260,67 @@ This pattern is useful for:
 - Using real Sinch API credentials without committing them
 - Simulating production deployment configurations locally
 
+## YAML File-Based Configuration
+
+For Kubernetes-style deployments, the module supports YAML config files mounted via ConfigMap and Secret volumes. This is the preferred approach for K8s because it maps directly to volume mounts.
+
+**Config files:**
+- `/etc/oce/sinch-fax/config.yaml` — non-sensitive settings (from ConfigMap)
+- `/etc/oce/sinch-fax/secrets.yaml` — sensitive settings (from Secret)
+
+**Override paths via env vars:**
+- `OCE_SINCH_FAX_CONFIG_FILE` — custom path to config file
+- `OCE_SINCH_FAX_SECRETS_FILE` — custom path to secrets file
+
+**Example config.yaml:**
+```yaml
+enabled: true
+project_id: "abc123"
+region: global
+default_retry_count: 3
+auth_method: basic
+api_key: "your-api-key"
+```
+
+**Example secrets.yaml:**
+```yaml
+api_secret: "your-api-secret"
+webhook_password: "$2y$10$..."
+```
+
+**Precedence:** env vars > YAML files > database globals
+
+The module auto-detects file presence — no activation flag needed. When config files are present, the admin UI shows "Configuration Managed Externally" instead of editable fields.
+
+**Imports:** Config files support Symfony-style imports for splitting across files:
+```yaml
+imports:
+  - { resource: secrets.yaml }
+enabled: true
+```
+
+**Testing locally with Docker:**
+```bash
+# Create config files
+mkdir -p tmp/oce-config
+cat > tmp/oce-config/config.yaml <<'EOF'
+enabled: true
+project_id: "test-project"
+auth_method: basic
+api_key: "test-key"
+EOF
+
+cat > tmp/oce-config/secrets.yaml <<'EOF'
+api_secret: "test-secret"
+EOF
+
+# Mount into container via compose.override.yml:
+# services:
+#   openemr:
+#     volumes:
+#       - ./tmp/oce-config:/etc/oce/sinch-fax:ro
+```
+
 ## Best Practices
 
 1. Use `docker compose` (not `docker-compose`) - newer syntax

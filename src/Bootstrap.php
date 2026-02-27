@@ -97,8 +97,8 @@ class Bootstrap
         /** @phpstan-ignore argument.type (OpenEMR accepts string to position section) */
         $service->createSection($section, 'Fax');
 
-        // In env config mode, show informational message instead of editable fields
-        if ($this->globalsConfig->isEnvConfigMode()) {
+        // In external config mode, show informational message instead of editable fields
+        if ($this->globalsConfig->isExternalConfigMode()) {
             $setting = new GlobalSetting(
                 xlt('Configuration Managed Externally'),
                 GlobalSetting::DATA_TYPE_HTML_DISPLAY_SECTION,
