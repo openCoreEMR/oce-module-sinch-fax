@@ -41,17 +41,83 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
 
 ## Configuration
 
-1. Navigate to **Administration > Globals > OpenCoreEMR Sinch Fax Module**
-2. Configure the following settings:
-   - **Sinch Project ID**: Your Sinch project ID
-   - **Sinch Service ID**: Your Sinch service ID (optional)
-   - **API Authentication**: Choose Basic Auth or OAuth2
-   - **API Key/Secret**: Your Sinch API credentials
-   - **API Region**: Select your preferred region (or leave as 'global')
+The module supports three configuration modes with the following precedence (highest to lowest):
 
-3. Save the settings
+1. **Environment variables** — each `OCE_SINCH_FAX_*` variable overrides the corresponding setting
+2. **YAML files** — for Kubernetes-style deployments with ConfigMap/Secret volumes
+3. **Database (UI)** — the default; edit settings in **Administration > Globals > OpenCoreEMR Sinch Fax Module**
+
+When file-based or environment configuration is active, the admin UI displays "Configuration Managed Externally" instead of editable fields.
+
+### Configuration Settings
+
+#### General Settings (not sensitive)
+
+| Setting | Env Var | Default | Description |
+|---------|---------|---------|-------------|
+| Enabled | `OCE_SINCH_FAX_ENABLED` | `false` | Enable the module |
+| Project ID | `OCE_SINCH_FAX_PROJECT_ID` | | Sinch project ID (required) |
+| Service ID | `OCE_SINCH_FAX_SERVICE_ID` | | Sinch service ID (optional, not required for fax) |
+| Auth Method | `OCE_SINCH_FAX_AUTH_METHOD` | `basic` | Authentication method (`basic`) |
+| Region | `OCE_SINCH_FAX_REGION` | `global` | API region (`global`, `use1`, `eu1`, `sae1`, `apse1`, `apse2`) |
+| File Storage Path | `OCE_SINCH_FAX_FILE_STORAGE_PATH` | | Fax file storage directory (defaults to site documents) |
+| Default Retry Count | `OCE_SINCH_FAX_DEFAULT_RETRY_COUNT` | `3` | Number of send retries |
+| Webhook Username | `OCE_SINCH_FAX_WEBHOOK_USERNAME` | | HTTP Basic Auth username for incoming webhooks |
+| Webhook IP Allowlist | `OCE_SINCH_FAX_WEBHOOK_IP_ALLOWLIST` | | Allowed IPs/CIDRs for webhooks (comma or newline-separated; empty allows all) |
+
+#### Secrets (treat as sensitive)
+
+| Setting | Env Var | Description |
+|---------|---------|-------------|
+| API Key | `OCE_SINCH_FAX_API_KEY` | Sinch API key |
+| API Secret | `OCE_SINCH_FAX_API_SECRET` | Sinch API secret |
+| Webhook Password | `OCE_SINCH_FAX_WEBHOOK_PASSWORD` | HTTP Basic Auth password for incoming webhooks — should be a **bcrypt hash** (see below) |
+
+In database mode, API Secret is encrypted at rest, and Webhook Password is automatically hashed on save. In file/environment modes, the deployment platform (e.g., Kubernetes Secrets) is responsible for protecting these values. **Webhook Password should be provided as a bcrypt hash** — the module will accept plaintext for development convenience, but plaintext passwords should never be used in production. Generate a hash with `htpasswd -nbBC 10 '' 'your-password' | cut -d: -f2` or any bcrypt tool.
+
+### Mode 1: Database (Default)
+
+Navigate to **Administration > Globals > OpenCoreEMR Sinch Fax Module**, configure the settings, and save.
 
 ![Configuration Settings](.docs/screenshots/configuration.png)
+
+### Mode 2: YAML Files
+
+Mount YAML files at the conventional paths. The module auto-detects their presence — no activation flag needed.
+
+| Path | Purpose | K8s Source |
+|------|---------|------------|
+| `/etc/oce/sinch-fax/config.yaml` | General settings | ConfigMap |
+| `/etc/oce/sinch-fax/secrets.yaml` | Secrets | Secret |
+
+Override paths with `OCE_SINCH_FAX_CONFIG_FILE` and `OCE_SINCH_FAX_SECRETS_FILE`.
+
+**Example config.yaml:**
+```yaml
+imports:
+  - { resource: secrets.yaml }
+enabled: true
+project_id: "abc123"
+region: global
+default_retry_count: 3
+auth_method: basic
+webhook_username: "sinch"
+```
+
+**Example secrets.yaml:**
+```yaml
+api_key: "your-api-key"
+api_secret: "your-api-secret"
+webhook_password: "$2y$10$..."  # bcrypt hash, not plaintext
+```
+
+Config files support Symfony-style `imports` for splitting across files (paths resolve relative to the importing file). Keys in the parent file override imported keys.
+
+Even when using YAML files, any `OCE_SINCH_FAX_*` environment variable still takes precedence over the file value.
+
+### Mode 3: Environment Variables Only
+
+Set `OCE_SINCH_FAX_ENV_CONFIG=1` to use pure environment variable configuration without YAML files. Then set each `OCE_SINCH_FAX_*` variable listed in the tables above.
 
 ## Usage
 
@@ -144,10 +210,11 @@ Once moved to a patient, the fax will:
 
 ## Security
 
-- API credentials are encrypted in the database
-- Fax files are stored with restricted permissions
-- All file uploads are validated
-- Audit logging for all fax operations
+- **Credential protection**: In database mode, API Secret is encrypted at rest using OpenEMR's `CryptoGen`, and Webhook Password is stored as a bcrypt hash. In file/environment modes, protect secrets through your deployment platform (e.g., Kubernetes Secrets, sealed secrets, or vault injection).
+- **Fax file storage**: Files are stored with restricted filesystem permissions.
+- **Upload validation**: All uploaded files are validated before processing.
+- **Webhook authentication**: Incoming webhooks are verified with HTTP Basic Auth and an optional IP allowlist (supports CIDR notation).
+- **Audit trail**: All fax operations are logged for compliance.
 
 ## Support
 
