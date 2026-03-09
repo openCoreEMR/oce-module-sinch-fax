@@ -58,7 +58,7 @@ When file-based or environment configuration is active, the admin UI displays "C
 | Enabled | `OCE_SINCH_FAX_ENABLED` | `false` | Enable the module |
 | Project ID | `OCE_SINCH_FAX_PROJECT_ID` | | Sinch project ID (required) |
 | Service ID | `OCE_SINCH_FAX_SERVICE_ID` | | Sinch service ID (optional, not required for fax) |
-| Auth Method | `OCE_SINCH_FAX_AUTH_METHOD` | `basic` | `basic` or `oauth` |
+| Auth Method | `OCE_SINCH_FAX_AUTH_METHOD` | `basic` | Authentication method (`basic`) |
 | Region | `OCE_SINCH_FAX_REGION` | `global` | API region (`global`, `use1`, `eu1`, `sae1`, `apse1`, `apse2`) |
 | File Storage Path | `OCE_SINCH_FAX_FILE_STORAGE_PATH` | | Fax file storage directory (defaults to site documents) |
 | Default Retry Count | `OCE_SINCH_FAX_DEFAULT_RETRY_COUNT` | `3` | Number of send retries |
@@ -69,12 +69,11 @@ When file-based or environment configuration is active, the admin UI displays "C
 
 | Setting | Env Var | Description |
 |---------|---------|-------------|
-| API Key | `OCE_SINCH_FAX_API_KEY` | Sinch API key (for Basic Auth) |
-| API Secret | `OCE_SINCH_FAX_API_SECRET` | Sinch API secret (for Basic Auth) |
-| OAuth Token | `OCE_SINCH_FAX_OAUTH_TOKEN` | OAuth2 access token (if using OAuth) |
+| API Key | `OCE_SINCH_FAX_API_KEY` | Sinch API key |
+| API Secret | `OCE_SINCH_FAX_API_SECRET` | Sinch API secret |
 | Webhook Password | `OCE_SINCH_FAX_WEBHOOK_PASSWORD` | HTTP Basic Auth password for incoming webhooks — should be a **bcrypt hash** (see below) |
 
-In database mode, API Secret and OAuth Token are encrypted at rest, and Webhook Password is automatically hashed on save. In file/environment modes, the deployment platform (e.g., Kubernetes Secrets) is responsible for protecting these values. **Webhook Password should be provided as a bcrypt hash** — the module will accept plaintext for development convenience, but plaintext passwords should never be used in production. Generate a hash with `htpasswd -nbBC 10 '' 'your-password' | cut -d: -f2` or any bcrypt tool.
+In database mode, API Secret is encrypted at rest, and Webhook Password is automatically hashed on save. In file/environment modes, the deployment platform (e.g., Kubernetes Secrets) is responsible for protecting these values. **Webhook Password should be provided as a bcrypt hash** — the module will accept plaintext for development convenience, but plaintext passwords should never be used in production. Generate a hash with `htpasswd -nbBC 10 '' 'your-password' | cut -d: -f2` or any bcrypt tool.
 
 ### Mode 1: Database (Default)
 
@@ -211,7 +210,7 @@ Once moved to a patient, the fax will:
 
 ## Security
 
-- **Credential protection**: In database mode, API Secret and OAuth Token are encrypted at rest using OpenEMR's `CryptoGen`, and Webhook Password is stored as a bcrypt hash. In file/environment modes, protect secrets through your deployment platform (e.g., Kubernetes Secrets, sealed secrets, or vault injection).
+- **Credential protection**: In database mode, API Secret is encrypted at rest using OpenEMR's `CryptoGen`, and Webhook Password is stored as a bcrypt hash. In file/environment modes, protect secrets through your deployment platform (e.g., Kubernetes Secrets, sealed secrets, or vault injection).
 - **Fax file storage**: Files are stored with restricted filesystem permissions.
 - **Upload validation**: All uploaded files are validated before processing.
 - **Webhook authentication**: Incoming webhooks are verified with HTTP Basic Auth and an optional IP allowlist (supports CIDR notation).
