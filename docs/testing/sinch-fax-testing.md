@@ -26,9 +26,8 @@ This document describes end-to-end testing workflows for the Sinch Fax module.
 |---------|-------------|
 | Enable Sinch Fax | Must be checked |
 | Sinch Project ID | From your Sinch dashboard |
-| Authentication Method | `basic` or `oauth` |
-| API Key | Your Sinch API key (for basic auth) |
-| API Secret | Your Sinch API secret (for basic auth) |
+| API Key | Your Sinch API key |
+| API Secret | Your Sinch API secret |
 | API Region | `global`, `us`, or `eu` |
 
 ### Optional Settings

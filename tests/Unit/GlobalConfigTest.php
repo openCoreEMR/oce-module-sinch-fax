@@ -27,10 +27,8 @@ class GlobalConfigTest extends TestCase
             GlobalConfig::CONFIG_OPTION_ENABLED => true,
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
             GlobalConfig::CONFIG_OPTION_SERVICE_ID => 'test-service-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-api-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-api-secret'),
-            GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('test-oauth-token'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',
             GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH => '/tmp/faxes',
             GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT => 5,
@@ -58,11 +56,6 @@ class GlobalConfigTest extends TestCase
         $this->assertEquals('test-service-id', $this->config->getServiceId());
     }
 
-    public function testGetAuthMethod(): void
-    {
-        $this->assertEquals('basic', $this->config->getAuthMethod());
-    }
-
     public function testGetApiKey(): void
     {
         $this->assertEquals('test-api-key', $this->config->getApiKey());
@@ -81,21 +74,6 @@ class GlobalConfigTest extends TestCase
         $config = new GlobalConfig($mockGlobals);
 
         $this->assertEquals('', $config->getApiSecret());
-    }
-
-    public function testGetOAuthToken(): void
-    {
-        $this->assertEquals('test-oauth-token', $this->config->getOAuthToken());
-    }
-
-    public function testGetOAuthTokenEmpty(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => '',
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertEquals('', $config->getOAuthToken());
     }
 
     public function testGetRegion(): void
@@ -159,22 +137,9 @@ class GlobalConfigTest extends TestCase
         $this->assertTrue($this->config->isConfigured());
     }
 
-    public function testIsConfiguredWithOAuth(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'oauth',
-            GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('test-token'),
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertTrue($config->isConfigured());
-    }
-
     public function testIsConfiguredMissingProjectId(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
             GlobalConfig::CONFIG_OPTION_API_KEY => 'key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('secret'),
         ]);
@@ -183,22 +148,10 @@ class GlobalConfigTest extends TestCase
         $this->assertFalse($config->isConfigured());
     }
 
-    public function testIsConfiguredMissingBasicAuthCredentials(): void
+    public function testIsConfiguredMissingAuthCredentials(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
-        ]);
-        $config = new GlobalConfig($mockGlobals);
-
-        $this->assertFalse($config->isConfigured());
-    }
-
-    public function testIsConfiguredMissingOAuthToken(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'oauth',
         ]);
         $config = new GlobalConfig($mockGlobals);
 

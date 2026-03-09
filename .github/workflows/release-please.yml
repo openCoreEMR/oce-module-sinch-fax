@@ -23,8 +23,8 @@ jobs:
       id: release
       uses: googleapis/release-please-action@v4
       with:
-          # This assumes you're using a personal access token stored as a secret
-          # If you want to use the default GITHUB_TOKEN, you can remove this line
+        # This assumes you're using a personal access token stored as a secret
+        # If you want to use the default GITHUB_TOKEN, you can remove this line
         token: ${{ secrets.GITHUB_TOKEN }}
 
     # Convert lightweight tag to annotated tag

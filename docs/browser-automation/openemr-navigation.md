@@ -88,10 +88,8 @@ When viewing the module configuration (Admin > Config > OpenCoreEMR Sinch Fax Mo
 | Enable Sinch Fax | Master enable/disable toggle | Yes |
 | Sinch Project ID | Your Sinch project identifier | Yes |
 | Sinch Service ID | Service identifier | **No** (not crucial for fax) |
-| Authentication Method | `basic` or `oauth` | Yes |
-| API Key | Sinch API key | Yes (for basic auth) |
-| API Secret | Sinch API secret | Yes (for basic auth) |
-| OAuth Token | OAuth bearer token | Yes (for oauth auth) |
+| API Key | Sinch API key | Yes |
+| API Secret | Sinch API secret | Yes |
 | API Region | `global`, `us`, `eu` | Yes |
 | File Storage Path | Where to store fax files | Optional |
 | Default Retry Count | Retry attempts for failed faxes | Yes |

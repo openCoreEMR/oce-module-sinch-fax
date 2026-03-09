@@ -25,10 +25,8 @@ class EnvironmentConfigAccessorTest extends TestCase
         'OCE_SINCH_FAX_ENABLED',
         'OCE_SINCH_FAX_PROJECT_ID',
         'OCE_SINCH_FAX_SERVICE_ID',
-        'OCE_SINCH_FAX_AUTH_METHOD',
         'OCE_SINCH_FAX_API_KEY',
         'OCE_SINCH_FAX_API_SECRET',
-        'OCE_SINCH_FAX_OAUTH_TOKEN',
         'OCE_SINCH_FAX_REGION',
         'OCE_SINCH_FAX_FILE_STORAGE_PATH',
         'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT',
@@ -166,10 +164,8 @@ class EnvironmentConfigAccessorTest extends TestCase
             'OCE_SINCH_FAX_ENABLED' => '1',
             'OCE_SINCH_FAX_PROJECT_ID' => 'proj-123',
             'OCE_SINCH_FAX_SERVICE_ID' => 'svc-456',
-            'OCE_SINCH_FAX_AUTH_METHOD' => 'basic',
             'OCE_SINCH_FAX_API_KEY' => 'key-789',
             'OCE_SINCH_FAX_API_SECRET' => 'secret',
-            'OCE_SINCH_FAX_OAUTH_TOKEN' => 'token',
             'OCE_SINCH_FAX_REGION' => 'use1',
             'OCE_SINCH_FAX_FILE_STORAGE_PATH' => '/tmp/faxes',
             'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT' => '5',
@@ -187,10 +183,8 @@ class EnvironmentConfigAccessorTest extends TestCase
         $this->assertTrue($accessor->getBoolean(GlobalConfig::CONFIG_OPTION_ENABLED));
         $this->assertEquals('proj-123', $accessor->getString(GlobalConfig::CONFIG_OPTION_PROJECT_ID));
         $this->assertEquals('svc-456', $accessor->getString(GlobalConfig::CONFIG_OPTION_SERVICE_ID));
-        $this->assertEquals('basic', $accessor->getString(GlobalConfig::CONFIG_OPTION_AUTH_METHOD));
         $this->assertEquals('key-789', $accessor->getString(GlobalConfig::CONFIG_OPTION_API_KEY));
         $this->assertEquals('secret', $accessor->getString(GlobalConfig::CONFIG_OPTION_API_SECRET));
-        $this->assertEquals('token', $accessor->getString(GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN));
         $this->assertEquals('use1', $accessor->getString(GlobalConfig::CONFIG_OPTION_REGION));
         $this->assertEquals('/tmp/faxes', $accessor->getString(GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH));
         $this->assertEquals(5, $accessor->getInt(GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT));

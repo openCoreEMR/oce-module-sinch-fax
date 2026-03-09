@@ -35,7 +35,7 @@ class FaxServiceTest extends TestCase
 
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',

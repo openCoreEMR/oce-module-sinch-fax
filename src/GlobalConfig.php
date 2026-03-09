@@ -39,10 +39,8 @@ class GlobalConfig
     }
     public const CONFIG_OPTION_PROJECT_ID = 'oce_sinch_fax_project_id';
     public const CONFIG_OPTION_SERVICE_ID = 'oce_sinch_fax_service_id';
-    public const CONFIG_OPTION_AUTH_METHOD = 'oce_sinch_fax_auth_method';
     public const CONFIG_OPTION_API_KEY = 'oce_sinch_fax_api_key';
     public const CONFIG_OPTION_API_SECRET = 'oce_sinch_fax_api_secret';
-    public const CONFIG_OPTION_OAUTH_TOKEN = 'oce_sinch_fax_oauth_token';
     public const CONFIG_OPTION_REGION = 'oce_sinch_fax_region';
     public const CONFIG_OPTION_FILE_STORAGE_PATH = 'oce_sinch_fax_file_storage_path';
     public const CONFIG_OPTION_DEFAULT_RETRY_COUNT = 'oce_sinch_fax_default_retry_count';
@@ -65,11 +63,6 @@ class GlobalConfig
         return $this->configAccessor->getString(self::CONFIG_OPTION_SERVICE_ID, '');
     }
 
-    public function getAuthMethod(): string
-    {
-        return $this->configAccessor->getString(self::CONFIG_OPTION_AUTH_METHOD, 'basic');
-    }
-
     public function getApiKey(): string
     {
         return $this->configAccessor->getString(self::CONFIG_OPTION_API_KEY, '');
@@ -78,21 +71,6 @@ class GlobalConfig
     public function getApiSecret(): string
     {
         $value = $this->configAccessor->getString(self::CONFIG_OPTION_API_SECRET, '');
-        if ($value !== '' && $value !== '0') {
-            // In external config mode, secrets are stored as plaintext (no encryption)
-            if ($this->isExternalConfigMode) {
-                return $value;
-            }
-            $cryptoGen = new CryptoGen();
-            $decrypted = $cryptoGen->decryptStandard($value);
-            return $decrypted !== false ? $decrypted : '';
-        }
-        return '';
-    }
-
-    public function getOAuthToken(): string
-    {
-        $value = $this->configAccessor->getString(self::CONFIG_OPTION_OAUTH_TOKEN, '');
         if ($value !== '' && $value !== '0') {
             // In external config mode, secrets are stored as plaintext (no encryption)
             if ($this->isExternalConfigMode) {
@@ -251,13 +229,10 @@ class GlobalConfig
     public function isConfigured(): bool
     {
         $hasProjectId = !in_array($this->getProjectId(), ['', '0'], true);
-        $hasBasicAuth = $this->getAuthMethod() === 'basic'
-            && !in_array($this->getApiKey(), ['', '0'], true)
+        $hasAuth = !in_array($this->getApiKey(), ['', '0'], true)
             && !in_array($this->getApiSecret(), ['', '0'], true);
-        $hasOAuth = $this->getAuthMethod() === 'oauth'
-            && !in_array($this->getOAuthToken(), ['', '0'], true);
 
-        return $hasProjectId && ($hasBasicAuth || $hasOAuth);
+        return $hasProjectId && $hasAuth;
     }
 
     /**
@@ -284,31 +259,15 @@ class GlobalConfig
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
-            self::CONFIG_OPTION_AUTH_METHOD => [
-                'title' => 'Authentication Method',
-                'description' => 'Choose between Basic Auth or OAuth2',
-                'type' => GlobalSetting::DATA_TYPE_TEXT,
-                'default' => 'basic',
-                'options' => [
-                    'basic' => 'Basic Authentication',
-                    'oauth' => 'OAuth2'
-                ]
-            ],
             self::CONFIG_OPTION_API_KEY => [
                 'title' => 'API Key',
-                'description' => 'Your Sinch API key (for Basic Auth)',
+                'description' => 'Your Sinch API key',
                 'type' => GlobalSetting::DATA_TYPE_TEXT,
                 'default' => ''
             ],
             self::CONFIG_OPTION_API_SECRET => [
                 'title' => 'API Secret',
-                'description' => 'Your Sinch API secret (for Basic Auth)',
-                'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
-                'default' => ''
-            ],
-            self::CONFIG_OPTION_OAUTH_TOKEN => [
-                'title' => 'OAuth Token',
-                'description' => 'Your OAuth2 access token (for OAuth authentication)',
+                'description' => 'Your Sinch API secret',
                 'type' => GlobalSetting::DATA_TYPE_ENCRYPTED,
                 'default' => ''
             ],

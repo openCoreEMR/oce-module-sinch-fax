@@ -278,7 +278,6 @@ enabled: true
 project_id: "abc123"
 region: global
 default_retry_count: 3
-auth_method: basic
 api_key: "your-api-key"
 ```
 

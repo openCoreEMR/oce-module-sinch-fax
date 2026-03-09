@@ -51,7 +51,6 @@ class WebhookControllerTest extends TestCase
         $this->mockConfig = $this->createMock(GlobalConfig::class);
         $this->mockConfig->method('getFileStoragePath')->willReturn($this->storagePath);
         $this->mockConfig->method('getProjectId')->willReturn('test-project-id');
-        $this->mockConfig->method('getAuthMethod')->willReturn('basic');
         $this->mockConfig->method('getApiKey')->willReturn('test-key');
         $this->mockConfig->method('getApiSecret')->willReturn('test-secret');
         $this->mockConfig->method('isIpInAllowlist')->willReturn(true);
