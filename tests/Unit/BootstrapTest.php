@@ -37,7 +37,7 @@ class BootstrapTest extends TestCase
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_ENABLED => '1',
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',
@@ -123,7 +123,7 @@ class BootstrapTest extends TestCase
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_ENABLED => '0',
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',

@@ -35,8 +35,6 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_services` (
     `service_id` VARCHAR(255) NOT NULL COMMENT 'Sinch service ID',
     `api_key` VARCHAR(255) DEFAULT NULL COMMENT 'Sinch API key (encrypted)',
     `api_secret` TEXT DEFAULT NULL COMMENT 'Sinch API secret (encrypted)',
-    `oauth_token` TEXT DEFAULT NULL COMMENT 'OAuth token if using OAuth2 authentication',
-    `oauth_token_expires` DATETIME DEFAULT NULL COMMENT 'When the OAuth token expires',
     `region` VARCHAR(50) DEFAULT 'global' COMMENT 'Sinch API region (global, use1, eu1, sae1, apse1, apse2)',
     `webhook_url` VARCHAR(500) DEFAULT NULL COMMENT 'URL for receiving webhooks',
     `is_active` BOOLEAN DEFAULT TRUE COMMENT 'Whether this service is active',

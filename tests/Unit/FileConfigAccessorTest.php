@@ -25,10 +25,8 @@ class FileConfigAccessorTest extends TestCase
         'OCE_SINCH_FAX_ENABLED',
         'OCE_SINCH_FAX_PROJECT_ID',
         'OCE_SINCH_FAX_SERVICE_ID',
-        'OCE_SINCH_FAX_AUTH_METHOD',
         'OCE_SINCH_FAX_API_KEY',
         'OCE_SINCH_FAX_API_SECRET',
-        'OCE_SINCH_FAX_OAUTH_TOKEN',
         'OCE_SINCH_FAX_REGION',
         'OCE_SINCH_FAX_FILE_STORAGE_PATH',
         'OCE_SINCH_FAX_DEFAULT_RETRY_COUNT',
@@ -161,10 +159,8 @@ class FileConfigAccessorTest extends TestCase
             'enabled' => true,
             'project_id' => 'proj-123',
             'service_id' => 'svc-456',
-            'auth_method' => 'basic',
             'api_key' => 'key-789',
             'api_secret' => 'secret',
-            'oauth_token' => 'token',
             'region' => 'use1',
             'file_storage_path' => '/tmp/faxes',
             'default_retry_count' => 5,
@@ -178,10 +174,8 @@ class FileConfigAccessorTest extends TestCase
         $this->assertTrue($accessor->getBoolean(GlobalConfig::CONFIG_OPTION_ENABLED));
         $this->assertSame('proj-123', $accessor->getString(GlobalConfig::CONFIG_OPTION_PROJECT_ID));
         $this->assertSame('svc-456', $accessor->getString(GlobalConfig::CONFIG_OPTION_SERVICE_ID));
-        $this->assertSame('basic', $accessor->getString(GlobalConfig::CONFIG_OPTION_AUTH_METHOD));
         $this->assertSame('key-789', $accessor->getString(GlobalConfig::CONFIG_OPTION_API_KEY));
         $this->assertSame('secret', $accessor->getString(GlobalConfig::CONFIG_OPTION_API_SECRET));
-        $this->assertSame('token', $accessor->getString(GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN));
         $this->assertSame('use1', $accessor->getString(GlobalConfig::CONFIG_OPTION_REGION));
         $this->assertSame('/tmp/faxes', $accessor->getString(GlobalConfig::CONFIG_OPTION_FILE_STORAGE_PATH));
         $this->assertSame(5, $accessor->getInt(GlobalConfig::CONFIG_OPTION_DEFAULT_RETRY_COUNT));

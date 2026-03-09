@@ -33,7 +33,7 @@ class SinchFaxClientTest extends TestCase
     {
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_REGION => 'use1',
@@ -59,25 +59,11 @@ class SinchFaxClientTest extends TestCase
         $this->assertInstanceOf(SinchFaxClient::class, $client);
     }
 
-    public function testConstructorWithOAuth(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'oauth',
-            GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('test-token'),
-            GlobalConfig::CONFIG_OPTION_REGION => 'global',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $client = new SinchFaxClient($config);
-        $this->assertInstanceOf(SinchFaxClient::class, $client);
-    }
-
     public function testConstructorSetsGlobalBaseUrl(): void
     {
         $mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_REGION => 'global',
@@ -124,30 +110,6 @@ class SinchFaxClientTest extends TestCase
         $this->assertEquals("Basic {$expectedCredentials}", $headers['Authorization']);
     }
 
-    public function testGetAuthHeadersWithOAuth(): void
-    {
-        $mockGlobals = new MockGlobalsAccessor([
-            GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'oauth',
-            GlobalConfig::CONFIG_OPTION_OAUTH_TOKEN => base64_encode('my-oauth-token'),
-            GlobalConfig::CONFIG_OPTION_REGION => 'global',
-        ]);
-
-        $config = new GlobalConfig($mockGlobals);
-        $client = new SinchFaxClient($config);
-
-        // Use reflection to call private method
-        $reflection = new \ReflectionClass($client);
-        $method = $reflection->getMethod('getAuthHeaders');
-
-        $headers = $method->invoke($client);
-
-        $this->assertArrayHasKey('Accept', $headers);
-        $this->assertEquals('application/json', $headers['Accept']);
-        $this->assertArrayHasKey('Authorization', $headers);
-        $this->assertEquals('Bearer my-oauth-token', $headers['Authorization']);
-    }
-
     public function testConstructorSetsProjectId(): void
     {
         $client = new SinchFaxClient($this->config);
@@ -157,17 +119,6 @@ class SinchFaxClientTest extends TestCase
         $projectIdProperty = $reflection->getProperty('projectId');
 
         $this->assertEquals('test-project-id', $projectIdProperty->getValue($client));
-    }
-
-    public function testConstructorSetsAuthMethod(): void
-    {
-        $client = new SinchFaxClient($this->config);
-
-        // Use reflection to verify authMethod
-        $reflection = new \ReflectionClass($client);
-        $authMethodProperty = $reflection->getProperty('authMethod');
-
-        $this->assertEquals('basic', $authMethodProperty->getValue($client));
     }
 
     public function testConstructorWithDifferentRegions(): void
@@ -183,7 +134,7 @@ class SinchFaxClientTest extends TestCase
         foreach ($regions as $region) {
             $mockGlobals = new MockGlobalsAccessor([
                 GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-                GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
                 GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
                 GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
                 GlobalConfig::CONFIG_OPTION_REGION => $region,

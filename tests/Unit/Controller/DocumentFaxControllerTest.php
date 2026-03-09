@@ -49,7 +49,7 @@ class DocumentFaxControllerTest extends TestCase
 
         $this->mockGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_ENABLED => true,
@@ -118,7 +118,7 @@ class DocumentFaxControllerTest extends TestCase
         // Create disabled config
         $disabledGlobals = new MockGlobalsAccessor([
             GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'test-project-id',
-            GlobalConfig::CONFIG_OPTION_AUTH_METHOD => 'basic',
+
             GlobalConfig::CONFIG_OPTION_API_KEY => 'test-key',
             GlobalConfig::CONFIG_OPTION_API_SECRET => base64_encode('test-secret'),
             GlobalConfig::CONFIG_OPTION_ENABLED => false,

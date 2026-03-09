@@ -25,7 +25,6 @@ class SinchFaxClient
     private readonly SystemLogger $logger;
     private readonly string $baseUrl;
     private readonly string $projectId;
-    private readonly string $authMethod;
 
     /**
      * @param GlobalConfig $config Module configuration
@@ -37,7 +36,6 @@ class SinchFaxClient
     ) {
         $this->logger = new SystemLogger();
         $this->projectId = $config->getProjectId();
-        $this->authMethod = $config->getAuthMethod();
 
         $region = $config->getRegion();
         $this->baseUrl = $region === 'global' ? 'https://fax.api.sinch.com' : "https://{$region}.fax.api.sinch.com";
@@ -54,21 +52,14 @@ class SinchFaxClient
      */
     private function getAuthHeaders(): array
     {
-        $headers = [
+        $apiKey = trim($this->config->getApiKey());
+        $apiSecret = trim($this->config->getApiSecret());
+        $credentials = base64_encode("{$apiKey}:{$apiSecret}");
+
+        return [
             'Accept' => 'application/json',
+            'Authorization' => "Basic {$credentials}",
         ];
-
-        if ($this->authMethod === 'basic') {
-            $apiKey = trim($this->config->getApiKey());
-            $apiSecret = trim($this->config->getApiSecret());
-            $credentials = base64_encode("{$apiKey}:{$apiSecret}");
-            $headers['Authorization'] = "Basic {$credentials}";
-        } elseif ($this->authMethod === 'oauth') {
-            $token = trim($this->config->getOAuthToken());
-            $headers['Authorization'] = "Bearer {$token}";
-        }
-
-        return $headers;
     }
 
     /**
@@ -169,7 +160,6 @@ class SinchFaxClient
             $maskedKey = substr($apiKey, 0, 4) . '...' . substr($apiKey, -4);
             $maskedSecret = substr($apiSecret, 0, 4) . '...' . substr($apiSecret, -4);
             $this->logger->debug("Sinch Fax API Request: POST {$url}");
-            $this->logger->debug("Auth method: {$this->authMethod}");
             $this->logger->debug("API Key: {$maskedKey} (length: " . strlen($apiKey) . ")");
             $this->logger->debug("API Secret: {$maskedSecret} (length: " . strlen($apiSecret) . ")");
 
