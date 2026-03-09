@@ -72,9 +72,9 @@ When file-based or environment configuration is active, the admin UI displays "C
 | API Key | `OCE_SINCH_FAX_API_KEY` | Sinch API key (for Basic Auth) |
 | API Secret | `OCE_SINCH_FAX_API_SECRET` | Sinch API secret (for Basic Auth) |
 | OAuth Token | `OCE_SINCH_FAX_OAUTH_TOKEN` | OAuth2 access token (if using OAuth) |
-| Webhook Password | `OCE_SINCH_FAX_WEBHOOK_PASSWORD` | HTTP Basic Auth password for incoming webhooks (accepts bcrypt hash or plaintext) |
+| Webhook Password | `OCE_SINCH_FAX_WEBHOOK_PASSWORD` | HTTP Basic Auth password for incoming webhooks — should be a **bcrypt hash** (see below) |
 
-In database mode, API Secret and OAuth Token are encrypted at rest. Webhook Password is stored as a bcrypt hash. In file/environment modes, the deployment platform (e.g., Kubernetes Secrets) is responsible for protecting these values.
+In database mode, API Secret and OAuth Token are encrypted at rest, and Webhook Password is automatically hashed on save. In file/environment modes, the deployment platform (e.g., Kubernetes Secrets) is responsible for protecting these values. **Webhook Password should be provided as a bcrypt hash** — the module will accept plaintext for development convenience, but plaintext passwords should never be used in production. Generate a hash with `htpasswd -nbBC 10 '' 'your-password' | cut -d: -f2` or any bcrypt tool.
 
 ### Mode 1: Database (Default)
 
@@ -109,7 +109,7 @@ webhook_username: "sinch"
 ```yaml
 api_key: "your-api-key"
 api_secret: "your-api-secret"
-webhook_password: "$2y$10$..."
+webhook_password: "$2y$10$..."  # bcrypt hash, not plaintext
 ```
 
 Config files support Symfony-style `imports` for splitting across files (paths resolve relative to the importing file). Keys in the parent file override imported keys.
