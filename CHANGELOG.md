@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.6.0...0.6.1) (2026-03-13)
+
+
+### Bug Fixes
+
+* widen psr/http-message constraint to ^1.1 || ^2.0 ([#101](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/101)) ([507a0fa](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/507a0fac98d9ec11e6ed9c8202967cd206940f27))
+
 ## [0.6.0](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.5...0.6.0) (2026-03-13)
 
 
