@@ -12,9 +12,6 @@
 
 $sessionAllowWrite = true;
 
-// Load module autoloader before globals.php so our classes are available
-// even when OpenEMR hasn't bootstrapped the module (e.g., module not registered)
-require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../../../../globals.php';
 require_once __DIR__ . '/../../../../../library/classes/Document.class.php';
 

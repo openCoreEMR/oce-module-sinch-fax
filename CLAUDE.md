@@ -48,6 +48,9 @@ This document describes the architectural patterns and conventions for OpenEMR m
 
 ### Key Patterns
 
+**Autoloading:**
+- NEVER require or load a module-level `vendor/autoload.php` in entry points (`public/*.php`, `openemr.bootstrap.php`). Modules use the root OpenEMR autoloader loaded by `globals.php`. The `oe-module-installer-plugin` does not create a module `vendor/` directory. Dev-only files (`tests/bootstrap.php`) may use the module's own vendor autoloader.
+
 **Controllers:**
 - Use `Request::createFromGlobals()` - never `$_GET`, `$_POST`, `$_SERVER`
 - Return `Response` objects - never `void`, `die()`, or `exit`
