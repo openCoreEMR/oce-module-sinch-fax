@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.6.0](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.5...0.6.0) (2026-03-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* The auth_method and oauth_token configuration options have been removed. The oauth_token and oauth_token_expires columns have been removed from the oce_sinch_services table schema.
+
+### Features
+
+* add YAML file-based configuration support ([#87](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/87)) ([dc20f2c](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/dc20f2c35a6b640cffbd27baca3c9ad8ff10f139))
+
+
+### Bug Fixes
+
+* remove module-level vendor/autoload.php from entry points ([#100](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/100)) ([e6ccf21](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/e6ccf21b428c7a621b3a7575fb4b327781b2eb0b))
+
+
+### Documentation
+
+* document all configuration modes and identify secrets ([#98](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/98)) ([44c7fb1](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/44c7fb121d342ef1c978c4948d80c22e0a2b6bcd))
+
+
+### Code Refactoring
+
+* remove unused OAuth authentication support ([#97](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/97)) ([3f0da02](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/3f0da026940c2061a8037d712bd7fd8512a5da12))
+
+
+### Dependencies
+
+* **deps:** bump actions/upload-artifact from 6 to 7 ([#96](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/96)) ([0bcc273](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/0bcc27343df34b7b4513250e4d3e7962b9f23991))
+* **deps:** bump rhysd/actionlint from 1.7.10 to 1.7.11 ([#93](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/93)) ([de4607a](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/de4607a1efdea8013c682dae12f13f9990cd16f8))
+
 ## [0.5.5](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.5.4...0.5.5) (2026-02-25)
 
 
