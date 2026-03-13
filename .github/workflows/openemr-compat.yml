@@ -1,0 +1,55 @@
+name: OpenEMR Compatibility
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  compat:
+    name: OpenEMR ${{ matrix.openemr-ref }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep in sync with the package repository definitions in composer.json
+        include:
+        - openemr-ref: v8_0_0
+          openemr-label: '8.0.0'
+        - openemr-ref: rel-800
+          openemr-label: 8.0.x-dev
+        - openemr-ref: master
+          openemr-label: dev-master
+
+    steps:
+    - name: Checkout module
+      uses: actions/checkout@v6
+      with:
+        path: module
+
+    - name: Checkout OpenEMR
+      uses: actions/checkout@v6
+      with:
+        repository: openemr/openemr
+        ref: ${{ matrix.openemr-ref }}
+        path: openemr
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: curl, json, mbstring, sodium, xml, gd
+        coverage: none
+        tools: composer:v2
+
+    - name: Add module as path repository
+      working-directory: openemr
+      run: composer config repositories.sinch-fax path ../module
+
+    - name: Require module (dry-run)
+      working-directory: openemr
+      run: composer require --dry-run --no-interaction opencoreemr/oce-module-sinch-fax:@dev
