@@ -1,0 +1,21 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+
+About to call Sinch Subproject API (production org).
+  target subproject : REDACTED-SUBPROJECT-ID
+  parent project    : REDACTED-PROJECT-ID
+  auth              : Basic key_id=REDACTED-ACCESS-KEY-ID secret=REDACTED
+
+Attempts (stop on first success):
+  1) PATCH  https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID?update_mask=deleted  {'deleted': true}
+  2) DELETE https://subproject.api.sinch.com/v1alpha1/projects/REDACTED-PROJECT-ID/subprojects/REDACTED-SUBPROJECT-ID
+
+Proceed? [y/N] {"ts": "20260417T183820Z", "phase": "probe", "status": "start", "subproject_id": "REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T183820Z", "phase": "verify", "status": "request", "method": "GET", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T183821Z", "phase": "verify", "status": "response", "http_status": 200, "body": {"subprojectId": "REDACTED-SUBPROJECT-ID", "displayName": "oce-probe-adr023-20260417T182402Z", "createTime": "2026-04-17T18:24:23.629601Z", "updateTime": "2026-04-17T18:24:24.209960Z", "deleted": false, "labels": {}, "parentProjectId": "REDACTED-PROJECT-ID"}}
+{"ts": "20260417T183821Z", "phase": "attempt_1", "status": "request", "method": "PATCH", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID", "params": {"update_mask": "deleted"}, "body": {"deleted": true}}
+{"ts": "20260417T183821Z", "phase": "attempt_1", "status": "response", "http_status": 400, "body": {"error": "failed to marshal error message"}}
+{"ts": "20260417T183821Z", "phase": "attempt_2", "status": "request", "method": "DELETE", "url": "https://subproject.api.sinch.com/v1alpha1/projects/REDACTED-PROJECT-ID/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T183821Z", "phase": "attempt_2", "status": "response", "http_status": 404, "body": {"error": {"code": 404, "message": "Not Found", "status": "NOT_FOUND", "details": []}}}
+{"ts": "20260417T183821Z", "phase": "probe", "status": "exhausted", "note": "neither candidate teardown succeeded; manual cleanup required"}

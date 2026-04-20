@@ -1,0 +1,24 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+
+About to call Sinch APIs (production org).
+  target subproject : REDACTED-SUBPROJECT-ID
+  parent project    : REDACTED-PROJECT-ID
+  auth              : Basic key_id=REDACTED-ACCESS-KEY-ID secret=REDACTED
+
+Steps:
+  1) POST   https://auth.sinch.com/oauth2/token  (client_credentials grant)
+  2) DELETE https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID  (Bearer)
+  3) GET    https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID  (Bearer)
+
+Proceed? [y/N] {"ts": "20260417T191230Z", "phase": "probe", "status": "start", "subproject_id": "REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T191230Z", "phase": "token", "status": "request", "url": "https://auth.sinch.com/oauth2/token", "grant_type": "client_credentials"}
+{"ts": "20260417T191230Z", "phase": "token", "status": "response", "http_status": 200, "body": {"expires_in": 3599, "scope": "", "token_type": "bearer", "access_token": "REDACTED"}}
+{"ts": "20260417T191230Z", "phase": "verify", "status": "request", "method": "GET", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T191231Z", "phase": "verify", "status": "response", "http_status": 200, "body": {"subprojectId": "REDACTED-SUBPROJECT-ID", "displayName": "oce-probe-adr023-20260417T182402Z", "createTime": "2026-04-17T18:24:23.629601Z", "updateTime": "2026-04-17T18:24:24.209960Z", "deleted": false, "labels": {}, "parentProjectId": "REDACTED-PROJECT-ID"}}
+{"ts": "20260417T191231Z", "phase": "delete", "status": "request", "method": "DELETE", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T191232Z", "phase": "delete", "status": "response", "http_status": 200, "body": {}}
+{"ts": "20260417T191232Z", "phase": "verify", "status": "request", "method": "GET", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T191232Z", "phase": "verify", "status": "response", "http_status": 200, "body": {"subprojectId": "REDACTED-SUBPROJECT-ID", "displayName": "oce-probe-adr023-20260417T182402Z", "createTime": "2026-04-17T18:24:23.629601Z", "updateTime": "2026-04-17T19:12:31.891163Z", "deleted": true, "labels": {}, "parentProjectId": "REDACTED-PROJECT-ID"}}
+{"ts": "20260417T191232Z", "phase": "probe", "status": "success", "method": "bearer_delete"}

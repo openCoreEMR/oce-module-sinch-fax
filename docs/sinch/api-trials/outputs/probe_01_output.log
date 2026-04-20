@@ -1,0 +1,17 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+
+About to call Sinch Subproject API (production org):
+  POST   https://subproject.api.sinch.com/v1alpha1/projects/REDACTED-PROJECT-ID/subprojects
+  body   {"displayName": 'oce-probe-adr023-20260417T182402Z'}  (minimal body — required fields unknown)
+  auth   Basic  key_id=REDACTED-ACCESS-KEY-ID  secret=REDACTED
+
+On success the probe will immediately DELETE the subproject.
+Proceed? [y/N] {"ts": "20260417T182422Z", "phase": "probe", "status": "start", "display_name": "oce-probe-adr023-20260417T182402Z", "parent_project_id": "REDACTED-PROJECT-ID"}
+{"ts": "20260417T182422Z", "phase": "create", "status": "request", "url": "https://subproject.api.sinch.com/v1alpha1/projects/REDACTED-PROJECT-ID/subprojects", "body": {"displayName": "oce-probe-adr023-20260417T182402Z"}}
+{"ts": "20260417T182424Z", "phase": "create", "status": "response", "http_status": 200, "headers": {"content-type": "application/json"}, "body": {"subprojectId": "REDACTED-SUBPROJECT-ID", "displayName": "oce-probe-adr023-20260417T182402Z", "createTime": "2026-04-17T18:24:23.629601Z", "updateTime": "2026-04-17T18:24:23.629601Z", "deleted": false, "labels": {}, "parentProjectId": "REDACTED-PROJECT-ID"}}
+{"ts": "20260417T182424Z", "phase": "probe", "status": "created", "subproject_id": "REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T182424Z", "phase": "delete", "status": "request", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T182424Z", "phase": "delete", "status": "response", "http_status": 403, "body": {"error": {"code": 403, "message": "", "status": "PERMISSION_DENIED", "details": []}}}
+{"ts": "20260417T182424Z", "phase": "probe", "status": "ORPHANED", "subproject_id": "REDACTED-SUBPROJECT-ID", "note": "manual cleanup required: DELETE https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}

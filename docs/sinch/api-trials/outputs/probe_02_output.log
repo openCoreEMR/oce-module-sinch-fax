@@ -1,0 +1,31 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+
+ADR-023 Probe 2: Access Key create/read/delete (production org)
+  parent project : REDACTED-PROJECT-ID
+  bootstrap key  : REDACTED-ACCESS-KEY-ID secret=REDACTED
+
+Flow:
+  1. Create fresh subproject
+  2. Sleep 35s for propagation
+  3. Create access key scoped to subproject
+  4. GET key — confirm secret omitted
+  5. LIST keys — confirm presence
+  6. Exchange new key for bearer token
+  7. DELETE key
+  8. DELETE subproject
+
+Proceed? [y/N] {"ts": "20260417T194234Z", "phase": "probe", "status": "start", "parent": "REDACTED-PROJECT-ID"}
+{"ts": "20260417T194234Z", "phase": "token", "status": "request", "label": "parent_key", "url": "https://auth.sinch.com/oauth2/token", "key_id": "REDACTED-ACCESS-KEY-ID"}
+{"ts": "20260417T194235Z", "phase": "token", "status": "response", "label": "parent_key", "http_status": 200, "body": {"access_token": "REDACTED", "expires_in": 3599, "scope": "", "token_type": "bearer"}}
+{"ts": "20260417T194235Z", "phase": "subproject_create", "status": "request", "url": "https://subproject.api.sinch.com/v1alpha1/projects/REDACTED-PROJECT-ID/subprojects", "body": {"displayName": "oce-probe02-20260417T194235Z"}}
+{"ts": "20260417T194236Z", "phase": "subproject_create", "status": "response", "http_status": 200, "body": {"subprojectId": "REDACTED-SUBPROJECT-ID", "displayName": "oce-probe02-20260417T194235Z", "createTime": "2026-04-17T19:42:35.473058Z", "updateTime": "2026-04-17T19:42:35.473058Z", "deleted": false, "labels": {}, "parentProjectId": "REDACTED-PROJECT-ID"}}
+{"ts": "20260417T194236Z", "phase": "probe", "status": "sleep_for_propagation", "seconds": 35}
+{"ts": "20260417T194311Z", "phase": "key_create", "status": "request", "url": "https://account.api.sinch.com/v1/projects/REDACTED-SUBPROJECT-ID/accessKeys", "body": {"displayName": "oce-probe02-key-20260417T194311Z"}}
+{"ts": "20260417T194311Z", "phase": "key_create", "status": "response", "http_status": 403, "body": {"error": {"code": 403, "message": "Permission denied.", "status": "PERMISSION_DENIED", "details": []}}}
+{"ts": "20260417T194311Z", "phase": "probe", "status": "abort", "stage": "key_create"}
+{"ts": "20260417T194311Z", "phase": "teardown", "status": "begin", "subproject_id": "REDACTED-SUBPROJECT-ID", "access_key_id": null}
+{"ts": "20260417T194311Z", "phase": "subproject_delete", "status": "request", "url": "https://subproject.api.sinch.com/v1alpha1/subprojects/REDACTED-SUBPROJECT-ID"}
+{"ts": "20260417T194312Z", "phase": "subproject_delete", "status": "response", "http_status": 200, "body": {}}
+{"ts": "20260417T194312Z", "phase": "teardown", "status": "end", "orphans": []}

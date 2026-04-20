@@ -1,0 +1,22 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+
+ADR-023 Probe 4: available-numbers search (read-only)
+  project      : REDACTED-PROJECT-ID
+  key          : REDACTED-ACCESS-KEY-ID secret=REDACTED
+  region       : US
+  number type  : LOCAL
+  capability   : VOICE (== fax)
+  area code    : 212
+  size limit   : 10
+
+No state is created; read-only search.
+
+Proceed? [y/N] {"ts": "20260417T202043Z", "phase": "probe", "status": "start", "project": "REDACTED-PROJECT-ID"}
+{"ts": "20260417T202043Z", "phase": "token", "status": "request", "url": "https://auth.sinch.com/oauth2/token"}
+{"ts": "20260417T202044Z", "phase": "token", "status": "response", "http_status": 200, "body": {"access_token": "REDACTED", "expires_in": 3599, "scope": "", "token_type": "bearer"}}
+{"ts": "20260417T202044Z", "phase": "search", "status": "request", "url": "https://numbers.api.sinch.com/v1/projects/REDACTED-PROJECT-ID/availableNumbers", "params": {"regionCode": "US", "type": "LOCAL", "capabilities": "VOICE", "size": "10", "numberPattern.pattern": "212", "numberPattern.searchPattern": "START"}}
+{"ts": "20260417T202044Z", "phase": "search", "status": "response", "http_status": 200, "body": {"availableNumbers": []}}
+{"ts": "20260417T202044Z", "phase": "search", "status": "summary", "count": 0, "docs_required_count": 0, "direct_rent_eligible_count": 0, "sample_first_three": []}
+{"ts": "20260417T202044Z", "phase": "probe", "status": "clean_exit"}

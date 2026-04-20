@@ -1,0 +1,11 @@
+The currently activated Python version 3.14.4 is not supported by the project (>=3.13,<3.14).
+Trying to find and use a compatible version.
+Using python3.13 (3.13.13)
+{"ts": "20260419T212404Z", "phase": "probe", "status": "start", "project": "REDACTED-PROJECT-ID"}
+{"ts": "20260419T212404Z", "phase": "token", "status": "request", "url": "https://auth.sinch.com/oauth2/token"}
+{"ts": "20260419T212404Z", "phase": "token", "status": "response", "http_status": 200, "body": {"access_token": "REDACTED", "expires_in": 3599, "scope": "", "token_type": "bearer"}}
+{"ts": "20260419T212404Z", "phase": "lookup", "status": "request", "url": "https://numbers.api.sinch.com/v1/projects/REDACTED-PROJECT-ID/numberOrders:lookupNumberRequirements", "body": {"regionCode": "US", "numberType": "LOCAL"}, "number_type": "LOCAL"}
+{"ts": "20260419T212405Z", "phase": "lookup", "status": "response", "number_type": "LOCAL", "http_status": 404, "body": {"error": {"code": 404, "message": "Number requirements not found", "status": "NOT_FOUND", "details": [{"type": "ResourceInfo", "resourceType": "NumberProduct", "resourceName": "numberRequirements", "owner": "", "description": "Number requirements not found"}]}}}
+{"ts": "20260419T212405Z", "phase": "lookup", "status": "request", "url": "https://numbers.api.sinch.com/v1/projects/REDACTED-PROJECT-ID/numberOrders:lookupNumberRequirements", "body": {"regionCode": "US", "numberType": "TOLL_FREE"}, "number_type": "TOLL_FREE"}
+{"ts": "20260419T212405Z", "phase": "lookup", "status": "response", "number_type": "TOLL_FREE", "http_status": 404, "body": {"error": {"code": 404, "message": "Number requirements not found", "status": "NOT_FOUND", "details": [{"type": "ResourceInfo", "resourceType": "NumberProduct", "resourceName": "numberRequirements", "owner": "", "description": "Number requirements not found"}]}}}
+{"ts": "20260419T212405Z", "phase": "probe", "status": "clean_exit"}
