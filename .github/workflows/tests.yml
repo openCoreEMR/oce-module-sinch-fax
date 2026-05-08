@@ -17,9 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-        - '8.2'
-        - '8.3'
-        - '8.4'
         - '8.5'
 
     steps:
@@ -52,19 +49,13 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
 
-    - name: Run tests
-      if: matrix.php-version != '8.2'
-      run: composer test
-
     - name: Run tests with coverage
-      if: matrix.php-version == '8.2'
       run: |
         echo "::group::Running PHPUnit with Coverage"
         vendor/bin/phpunit --coverage-text --coverage-html coverage-report --colors=never
         echo "::endgroup::"
 
     - name: Upload coverage report
-      if: matrix.php-version == '8.2'
       uses: actions/upload-artifact@v7
       with:
         name: coverage-report

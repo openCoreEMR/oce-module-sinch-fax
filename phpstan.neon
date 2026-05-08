@@ -7,7 +7,7 @@ parameters:
         - version.php
 
     # PHP version
-    phpVersion: 80200
+    phpVersion: 80500
 
     # Ignore errors in vendor
     excludePaths:

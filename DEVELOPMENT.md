@@ -255,7 +255,7 @@ This project uses pre-commit hooks to enforce code quality standards. The hooks 
 - **PHP Syntax Check** - Validates PHP syntax
 - **PHP CodeSniffer** - Enforces PSR-12 coding standards
 - **PHPStan** - Static analysis (level 8)
-- **Rector** - PHP 8.2+ compatibility checks
+- **Rector** - PHP 8.5+ compatibility checks
 
 To run checks manually:
 ```bash

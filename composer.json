@@ -26,7 +26,7 @@
     "source": "https://github.com/opencoreemr/oce-module-sinch-fax"
   },
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.5",
     "ext-curl": "*",
     "ext-date": "*",
     "ext-filter": "*",
