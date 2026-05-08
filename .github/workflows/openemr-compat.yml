@@ -50,6 +50,10 @@ jobs:
       working-directory: openemr
       run: composer config repositories.sinch-fax path ../module
 
+    - name: Use runner PHP version for resolution
+      working-directory: openemr
+      run: composer config --unset platform.php
+
     - name: Require module (dry-run)
       working-directory: openemr
       run: composer require --dry-run --no-interaction opencoreemr/oce-module-sinch-fax:@dev
