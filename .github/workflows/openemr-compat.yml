@@ -50,10 +50,10 @@ jobs:
       working-directory: openemr
       run: composer config repositories.sinch-fax path ../module
 
-    - name: Use runner PHP version for resolution
-      working-directory: openemr
-      run: composer config --unset platform.php
-
+    # Ignore the PHP platform requirement during resolution. OpenEMR's
+    # composer.json pins config.platform.php to an older version, which
+    # would conflict with this module's >=8.5 floor. This check is about
+    # non-PHP package compatibility; PHP version is enforced separately.
     - name: Require module (dry-run)
       working-directory: openemr
-      run: composer require --dry-run --no-interaction opencoreemr/oce-module-sinch-fax:@dev
+      run: composer require --dry-run --no-interaction --ignore-platform-req=php opencoreemr/oce-module-sinch-fax:@dev
