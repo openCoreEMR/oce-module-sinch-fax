@@ -41,7 +41,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: '8.5'
         extensions: curl, json, mbstring, sodium, xml, gd
         coverage: none
         tools: composer:v2
@@ -50,6 +50,10 @@ jobs:
       working-directory: openemr
       run: composer config repositories.sinch-fax path ../module
 
+    # Ignore the PHP platform requirement during resolution. OpenEMR's
+    # composer.json pins config.platform.php to an older version, which
+    # would conflict with this module's >=8.5 floor. This check is about
+    # non-PHP package compatibility; PHP version is enforced separately.
     - name: Require module (dry-run)
       working-directory: openemr
-      run: composer require --dry-run --no-interaction opencoreemr/oce-module-sinch-fax:@dev
+      run: composer require --dry-run --no-interaction --ignore-platform-req=php opencoreemr/oce-module-sinch-fax:@dev

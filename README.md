@@ -13,7 +13,7 @@ A secure fax integration module for OpenEMR using the Sinch Fax API.
 ## Requirements
 
 - OpenEMR 7.0.0 or later
-- PHP 8.2 or later
+- PHP 8.5 or later
 - MySQL 5.7 or later / MariaDB 10.2 or later
 - Sinch Fax account with API credentials
 

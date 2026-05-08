@@ -85,8 +85,8 @@ These mocks ensure tests run quickly and don't require a full OpenEMR installati
 
 Tests are automatically run on every push and pull request via GitHub Actions. The workflow:
 
-- Runs tests on PHP 8.2, 8.3, and 8.4
-- Generates code coverage report (PHP 8.3 only)
+- Runs tests on PHP 8.5
+- Generates code coverage report
 - Runs code quality checks (PHPStan, PHP_CodeSniffer, Rector)
 
 See `.github/workflows/tests.yml` for the complete configuration.
@@ -178,6 +178,6 @@ Exception classes are excluded from coverage requirements as they are simple dat
 The test suite runs automatically on GitHub Actions for:
 - Every push to `main`, `develop`, or feature branches
 - Every pull request
-- Multiple PHP versions (8.2, 8.3, 8.4)
+- PHP 8.5
 
 Pull requests must pass all tests before being merged.
