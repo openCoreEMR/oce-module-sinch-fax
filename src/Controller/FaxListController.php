@@ -10,6 +10,8 @@
  * @license   GNU General Public License 3
  */
 
+declare(strict_types=1);
+
 namespace OpenCoreEMR\Modules\SinchFax\Controller;
 
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
