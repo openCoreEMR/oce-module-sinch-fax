@@ -4,9 +4,15 @@ on:
   push:
     branches:
     - main
+    paths:
+    - '**/Dockerfile*'
+    - .github/workflows/hadolint.yml
   pull_request:
     branches:
     - main
+    paths:
+    - '**/Dockerfile*'
+    - .github/workflows/hadolint.yml
 
 jobs:
   hadolint:
