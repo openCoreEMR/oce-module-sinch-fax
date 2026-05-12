@@ -39,7 +39,7 @@
     "symfony/console": "^6.4 || ^7.0",
     "symfony/event-dispatcher": "^6.4 || ^7.0",
     "symfony/http-foundation": "^6.4 || ^7.0",
-    "symfony/yaml": "^8.0.10",
+    "symfony/yaml": "^7.0 || ^8.0",
     "twig/twig": "^3.0"
   },
   "require-dev": {
