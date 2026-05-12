@@ -8,6 +8,8 @@ on:
     - '**.php'
     - '.phpcs.xml*'
     - 'phpcs.xml*'
+    - composer.json
+    - composer.lock
     - .github/workflows/phpcs.yml
   pull_request:
     branches:
@@ -16,11 +18,13 @@ on:
     - '**.php'
     - '.phpcs.xml*'
     - 'phpcs.xml*'
+    - composer.json
+    - composer.lock
     - .github/workflows/phpcs.yml
 
 jobs:
   phpcs:
-    uses: openCoreEMR/github-workflows-public/.github/workflows/php-composer-script.yml@0.0.2
+    uses: openCoreEMR/github-workflows-public/.github/workflows/php-composer-script.yml@0.0.4
     with:
       name: Run PHP CodeSniffer
       run: composer phpcs
