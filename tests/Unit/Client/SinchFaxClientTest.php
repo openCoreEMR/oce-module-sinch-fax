@@ -22,6 +22,7 @@ use GuzzleHttp\Psr7\Response;
 use OpenCoreEMR\Modules\SinchFax\Client\SinchFaxClient;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Tests\Mocks\MockGlobalsAccessor;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class SinchFaxClientTest extends TestCase
@@ -354,9 +355,8 @@ class SinchFaxClientTest extends TestCase
      *
      * Sinch API expects: ?createTime>=2021-10-01 (operator in param name)
      * Not: ?createTime=>=2021-10-01 (operator in value)
-     *
-     * @dataProvider createTimeOperatorProvider
      */
+    #[DataProvider('createTimeOperatorProvider')]
     public function testListFaxesCreateTimeOperatorInParamName(string $filterValue, string $expectedParam): void
     {
         $container = [];
