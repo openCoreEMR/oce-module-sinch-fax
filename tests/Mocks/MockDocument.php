@@ -1,9 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Mock Document class for testing
  *
- * This mocks OpenEMR's Document class used for document management.
+ * Mirrors the subset of OpenEMR's \Document class that this module uses.
+ * It lives in the module's test namespace so that static analyzers running
+ * over an installed OpenEMR tree never see a second global `Document`
+ * declaration competing with the real one. tests/bootstrap.php aliases this
+ * class to the global `\Document` at runtime via class_alias() so code under
+ * test that does `new \Document(...)` resolves to this mock.
+ *
+ * Return types are nullable to match OpenEMR's untyped getters, whose backing
+ * properties default to null (effectively string|null).
  *
  * @package   OpenCoreEMR
  * @link      https://opencoreemr.com
@@ -12,10 +22,9 @@
  * @license   GNU General Public License 3
  */
 
-/**
- * Mock Document class in global namespace to match OpenEMR
- */
-class Document
+namespace OpenCoreEMR\Modules\SinchFax\Tests\Mocks;
+
+class MockDocument
 {
     /**
      * @var array<int, array<string, mixed>>
@@ -64,12 +73,12 @@ class Document
         self::$mockDocuments = [];
     }
 
-    public function get_name(): string
+    public function get_name(): ?string
     {
         return $this->data['name'] ?? '';
     }
 
-    public function get_mimetype(): string
+    public function get_mimetype(): ?string
     {
         return $this->data['mimetype'] ?? 'application/pdf';
     }
@@ -82,10 +91,10 @@ class Document
     /**
      * Get document data (content)
      *
-     * @return string Document content
+     * @return ?string Document content
      * @throws \Exception If configured to throw
      */
-    public function get_data(): string
+    public function get_data(): ?string
     {
         if (isset($this->data['throw_exception']) && $this->data['throw_exception']) {
             throw new \Exception($this->data['exception_message'] ?? 'Document error');

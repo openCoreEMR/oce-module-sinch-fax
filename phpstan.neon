@@ -39,7 +39,8 @@ parameters:
         -
             message: '#Property .+ is never read, only written#'
             reportUnmatched: false
-        # Class Document from OpenEMR not typed properly
+        # OpenEMR's global \Document class is unknown during standalone analysis
+        # (it only exists once the module is installed into an OpenEMR tree).
         -
             message: '#class Document#'
             reportUnmatched: false
