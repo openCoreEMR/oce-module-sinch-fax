@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.0](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.6.1...0.7.0) (2026-05-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Minimum required PHP version is now 8.5.
+
+### Features
+
+* drop PHP &lt; 8.5, fix failing Rector on main ([#112](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/112)) ([9168842](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/9168842e10684c4bc7989364d1476c102f8d250e))
+
+
+### Dependencies
+
+* **deps-dev:** update phpunit/phpunit requirement from ^11.0 to ^13.1 ([#118](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/118)) ([83a7d78](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/83a7d78f886628b2a2b8251e721083e290876f2e))
+* **deps:** bump googleapis/release-please-action from 4 to 5 ([#109](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/109)) ([3f26e80](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/3f26e80da2e249f58b5fe31a9d6c56845dead9c9))
+* **deps:** bump openCoreEMR/github-workflows-public/.github/workflows/actionlint.yml ([#123](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/123)) ([07b17df](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/07b17df80bb98a8ca46a146e0eae5088aac08038))
+* **deps:** bump openCoreEMR/github-workflows-public/.github/workflows/conventional-pr-title.yml ([#127](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/127)) ([20e7323](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/20e732386e1ad6681f474f7a12395d7e90235ddf))
+* **deps:** bump openCoreEMR/github-workflows-public/.github/workflows/dclint.yml ([#124](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/124)) ([1ff4ebb](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/1ff4ebbc51a76fc637b549dce59a46174fadc73f))
+* **deps:** bump openCoreEMR/github-workflows-public/.github/workflows/hadolint.yml ([#126](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/126)) ([c263b0c](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c263b0c012533f51ed925e7547fed91fd14f19a7))
+* **deps:** bump openCoreEMR/github-workflows-public/.github/workflows/php-composer-script.yml ([#125](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/125)) ([86a7441](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/86a7441ba9bf72f9dd773568cd0c1698acb1eb64))
+* **deps:** bump opencoreemr/github-workflows-public/.github/workflows/release-please-reusable.yml ([#116](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/116)) ([e697fdb](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/e697fdbee13f1986185b1f682b1dd40fb042698d))
+* **deps:** bump rhysd/actionlint from 1.7.11 to 1.7.12 ([#106](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/106)) ([d1e3c9d](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/d1e3c9d81ecfb66fe665bb7c2a0d3f5c325f62d6))
+
 ## [0.6.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.6.0...0.6.1) (2026-03-13)
 
 
