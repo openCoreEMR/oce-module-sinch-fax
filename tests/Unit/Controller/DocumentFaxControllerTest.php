@@ -12,11 +12,11 @@
 
 namespace OpenCoreEMR\Modules\SinchFax\Tests\Unit\Controller;
 
-use Document;
 use OpenCoreEMR\Modules\SinchFax\Controller\DocumentFaxController;
 use OpenCoreEMR\Modules\SinchFax\Exception\FaxAccessDeniedException;
 use OpenCoreEMR\Modules\SinchFax\GlobalConfig;
 use OpenCoreEMR\Modules\SinchFax\Service\FaxService;
+use OpenCoreEMR\Modules\SinchFax\Tests\Mocks\MockDocument;
 use OpenCoreEMR\Modules\SinchFax\Tests\Mocks\MockGlobalsAccessor;
 use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Common\Logging\SystemLogger;
@@ -37,7 +37,7 @@ class DocumentFaxControllerTest extends TestCase
     protected function setUp(): void
     {
         // Clear mock data
-        Document::clearMockDocuments();
+        MockDocument::clearMockDocuments();
         CsrfUtils::reset();
         SystemLogger::clearLogs();
 
@@ -79,7 +79,7 @@ class DocumentFaxControllerTest extends TestCase
         $_GET = [];
         $_SERVER = [];
         $_SESSION = [];
-        Document::clearMockDocuments();
+        MockDocument::clearMockDocuments();
     }
 
     public function testControllerCanBeConstructed(): void
@@ -139,7 +139,7 @@ class DocumentFaxControllerTest extends TestCase
 
     public function testShowSendFormWithDocumentLoadsDocumentName(): void
     {
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'foreign_id' => 456,
         ]);
@@ -157,7 +157,7 @@ class DocumentFaxControllerTest extends TestCase
 
     public function testShowSendFormWithDocumentUsesDocumentForeignIdWhenPidEmpty(): void
     {
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'foreign_id' => 789,
         ]);
@@ -240,7 +240,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'empty-doc.pdf',
             'data' => '', // Empty content
         ]);
@@ -262,7 +262,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'error-doc.pdf',
             'throw_exception' => true,
             'exception_message' => 'Cannot read document',
@@ -287,7 +287,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['patient_id'] = '456';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'mimetype' => 'application/pdf',
             'data' => '%PDF-1.4 test content',
@@ -314,7 +314,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.tiff',
             'mimetype' => 'image/tiff',
             'data' => 'TIFF image data',
@@ -341,7 +341,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.png',
             'mimetype' => 'image/png',
             'data' => 'PNG image data',
@@ -368,7 +368,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.jpg',
             'mimetype' => 'image/jpeg',
             'data' => 'JPEG image data',
@@ -396,7 +396,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['patient_id'] = ''; // Empty patient ID
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'mimetype' => 'application/pdf',
             'data' => '%PDF-1.4 test content',
@@ -428,7 +428,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'mimetype' => 'application/pdf',
             'data' => '%PDF-1.4 test content',
@@ -457,7 +457,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.tif',
             'mimetype' => 'image/tif',
             'data' => 'TIFF image data',
@@ -481,7 +481,7 @@ class DocumentFaxControllerTest extends TestCase
         $_POST['doc_id'] = '123';
         CsrfUtils::setVerifyResult(true);
 
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.jpg',
             'mimetype' => 'image/jpg',
             'data' => 'JPEG image data',
@@ -498,7 +498,7 @@ class DocumentFaxControllerTest extends TestCase
 
     public function testShowSendFormWithProvidedPid(): void
     {
-        Document::setMockDocument(123, [
+        MockDocument::setMockDocument(123, [
             'name' => 'test-document.pdf',
             'foreign_id' => 789,
         ]);
