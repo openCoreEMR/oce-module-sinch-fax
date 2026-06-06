@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.0...0.7.1) (2026-06-06)
+
+
+### Bug Fixes
+
+* namespace MockDocument so it no longer collides with OpenEMR's \Document ([#146](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/146)) ([251ec1b](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/251ec1bac110cb5d9976dba3515f78538dc7213d)), closes [#145](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/145)
+
 ## [0.7.0](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.6.1...0.7.0) (2026-05-21)
 
 
