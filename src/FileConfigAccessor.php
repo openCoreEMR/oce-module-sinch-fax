@@ -29,7 +29,7 @@ class FileConfigAccessor implements ConfigAccessorInterface
      *
      * @var array<string, string>
      */
-    private const KEY_MAP = [
+    private const array KEY_MAP = [
         'enabled' => GlobalConfig::CONFIG_OPTION_ENABLED,
         'project_id' => GlobalConfig::CONFIG_OPTION_PROJECT_ID,
         'service_id' => GlobalConfig::CONFIG_OPTION_SERVICE_ID,
@@ -49,7 +49,7 @@ class FileConfigAccessor implements ConfigAccessorInterface
      *
      * @var array<string, string>
      */
-    private const ENV_OVERRIDE_MAP = [
+    private const array ENV_OVERRIDE_MAP = [
         GlobalConfig::CONFIG_OPTION_ENABLED => 'OCE_SINCH_FAX_ENABLED',
         GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'OCE_SINCH_FAX_PROJECT_ID',
         GlobalConfig::CONFIG_OPTION_SERVICE_ID => 'OCE_SINCH_FAX_SERVICE_ID',
@@ -68,7 +68,7 @@ class FileConfigAccessor implements ConfigAccessorInterface
      *
      * @var array<string, string>
      */
-    private const REVERSE_KEY_MAP = [
+    private const array REVERSE_KEY_MAP = [
         GlobalConfig::CONFIG_OPTION_ENABLED => 'enabled',
         GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'project_id',
         GlobalConfig::CONFIG_OPTION_SERVICE_ID => 'service_id',

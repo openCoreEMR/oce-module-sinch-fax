@@ -26,6 +26,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 )]
 class ModuleDisableCommand extends AbstractModuleCommand
 {
+    #[\Override]
     protected function configure(): void
     {
         parent::configure();

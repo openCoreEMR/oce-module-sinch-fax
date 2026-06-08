@@ -1,4 +1,4 @@
-FROM php:8.3-cli
+FROM php:8.5-cli@sha256:ed47882f75aed5a761ffcf222739b09a930effd8b815309faa1f7e80f094067b
 
 # Install system dependencies
 # hadolint ignore=DL3008

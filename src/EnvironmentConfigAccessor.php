@@ -29,7 +29,7 @@ class EnvironmentConfigAccessor implements ConfigAccessorInterface
     /**
      * Maps internal config keys (oce_sinch_fax_*) to env var names (OCE_SINCH_FAX_*)
      */
-    private const KEY_MAP = [
+    private const array KEY_MAP = [
         GlobalConfig::CONFIG_OPTION_ENABLED => 'OCE_SINCH_FAX_ENABLED',
         GlobalConfig::CONFIG_OPTION_PROJECT_ID => 'OCE_SINCH_FAX_PROJECT_ID',
         GlobalConfig::CONFIG_OPTION_SERVICE_ID => 'OCE_SINCH_FAX_SERVICE_ID',
