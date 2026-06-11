@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.2...0.7.3) (2026-06-11)
+
+
+### Bug Fixes
+
+* lower php floor to &gt;=8.4 so consumers on platform.php 8.4 can resolve ([#155](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/155)) ([241fd76](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/241fd76e86e190948e21cae12b4e6889a9baeace))
+
 ## [0.7.2](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.1...0.7.2) (2026-06-11)
 
 
