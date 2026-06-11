@@ -36,14 +36,14 @@ class Bootstrap
 
     public function __construct(
         private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly Kernel $kernel = new Kernel(),
+        ?Kernel $kernel = null,
         ?ConfigAccessorInterface $configAccessor = null
     ) {
         $configAccessor ??= ConfigFactory::createConfigAccessor();
         $this->globalsConfig = new GlobalConfig($configAccessor);
 
         $templatePath = \dirname(__DIR__) . DIRECTORY_SEPARATOR . "templates" . DIRECTORY_SEPARATOR;
-        $twig = new TwigContainer($templatePath, $this->kernel);
+        $twig = new TwigContainer($templatePath, $kernel);
         $this->twig = $twig->getTwig();
 
         $this->logger = new SystemLogger();
