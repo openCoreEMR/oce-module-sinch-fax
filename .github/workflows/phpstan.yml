@@ -26,3 +26,7 @@ jobs:
       name: Run PHPStan
       run: composer phpstan
       php-version: ${{ matrix.php-version }}
+      private-repos: openemr-internal
+    secrets:
+      app-id: ${{ secrets.OPENEMR_INTERNAL_CLIENT_ID }}
+      app-private-key: ${{ secrets.OPENEMR_INTERNAL_APP_PRIVATE_KEY }}

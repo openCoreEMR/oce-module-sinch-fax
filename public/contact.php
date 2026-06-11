@@ -36,8 +36,11 @@ if (!$kernel instanceof \OpenEMR\Core\Kernel) {
 $configAccessor = ConfigFactory::createConfigAccessor();
 $bootstrap = new Bootstrap($kernel->getEventDispatcher(), $kernel, $configAccessor);
 
+// globals.php establishes the active session via the SessionWrapperFactory
+$session = \OpenEMR\Common\Session\SessionWrapperFactory::getInstance()->getActiveSession();
+
 // Get controller
-$controller = $bootstrap->getDocumentFaxController();
+$controller = $bootstrap->getDocumentFaxController($session);
 
 // Determine action
 $action = $_SERVER['REQUEST_METHOD'] === 'POST' ? 'send' : 'show';

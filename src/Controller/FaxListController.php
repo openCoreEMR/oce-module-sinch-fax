@@ -22,6 +22,7 @@ use OpenEMR\Common\Logging\SystemLogger;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Twig\Environment;
 
 class FaxListController
@@ -31,7 +32,8 @@ class FaxListController
     public function __construct(
         private readonly GlobalConfig $config,
         private readonly FaxService $faxService,
-        private readonly Environment $twig
+        private readonly Environment $twig,
+        private readonly SessionInterface $session
     ) {
         $this->logger = new SystemLogger();
     }
@@ -63,7 +65,7 @@ class FaxListController
         }
 
         // Verify CSRF token
-        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''))) {
+        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''), $this->session)) {
             CsrfUtils::csrfNotVerified();
         }
 
@@ -184,7 +186,7 @@ class FaxListController
             'faxes' => $faxes,
             'success_message' => $successMessage,
             'error_message' => $errorMessage,
-            'csrf_token' => CsrfUtils::collectCsrfToken(),
+            'csrf_token' => CsrfUtils::collectCsrfToken($this->session),
             'assets_path' => $this->config->getAssetsStaticRelative(),
             'current_direction' => $direction,
             'show_archived' => $showArchived,
@@ -205,7 +207,7 @@ class FaxListController
             return $this->redirect($request);
         }
 
-        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''))) {
+        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''), $this->session)) {
             CsrfUtils::csrfNotVerified();
         }
 
@@ -267,7 +269,7 @@ class FaxListController
             return $this->redirect($request);
         }
 
-        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''))) {
+        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token', ''), $this->session)) {
             CsrfUtils::csrfNotVerified();
         }
 

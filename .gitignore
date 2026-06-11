@@ -1,6 +1,10 @@
 # Composer
 /vendor/
 
+# OpenEMR source for tooling and dev runtime — see tools/openemr/README.md
+/tools/openemr/vendor/
+/tools/openemr/composer.lock
+
 # IDE
 .idea/
 .vscode/

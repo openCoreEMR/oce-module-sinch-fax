@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6562b72b7943779f9b1aa52d98e1f83e",
+    "content-hash": "81f9012dc715551d04d1fea8f726a2bc",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -2703,21 +2703,6 @@
             "time": "2025-12-06T11:56:16+00:00"
         },
         {
-            "name": "openemr/openemr",
-            "version": "8.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/openemr/openemr.git",
-                "reference": "v8_0_0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "OpenEMR\\": "src/"
-                }
-            }
-        },
-        {
             "name": "phar-io/manifest",
             "version": "2.0.4",
             "source": {
@@ -4725,9 +4710,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "openemr/openemr": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

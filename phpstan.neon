@@ -9,9 +9,18 @@ parameters:
     # PHP version
     phpVersion: 80500
 
+    # OpenEMR source lives under tools/openemr/vendor (NOT root vendor —
+    # see tools/openemr/README.md for the #118 redeclare trap). Load its
+    # autoloader so PHPStan can resolve OpenEMR\… types directly from the
+    # real source rather than from hand-maintained stubs.
+    bootstrapFiles:
+        - tools/openemr/vendor/autoload.php
+
     # Ignore errors in vendor
     excludePaths:
-        - vendor
+        analyseAndScan:
+            - vendor
+            - tools/openemr/vendor
 
     # Additional checks
     checkMissingCallableSignature: true
@@ -21,26 +30,19 @@ parameters:
     # Report always true conditions
     reportAlwaysTrueInLastCondition: true
 
-    # Ignore missing OpenEMR classes during static analysis
-    # reportUnmatched: false allows CI to pass when OpenEMR IS installed
+    # PHPStan analyses against the real OpenEMR autoload (loaded via
+    # bootstrapFiles above). OpenEMR's procedural helpers (xlt/xla/xlj/text/
+    # attr/sql*) live in library/ and are not autoloaded — they're loaded
+    # via globals.php at runtime. Use reportUnmatched: false so the rule
+    # applies when the autoload tree is absent (CI without tools/openemr
+    # installed) and doesn't trip when it's present.
     ignoreErrors:
         -
             message: '#Function (xlt|xla|xlj|text|attr|sqlStatement|sqlQuery|sqlFetchArray) not found#'
             reportUnmatched: false
-        -
-            message: '#unknown class OpenEMR\\#'
-            reportUnmatched: false
-        -
-            message: '#Instantiated class OpenEMR\\#'
-            reportUnmatched: false
-        -
-            message: '#invalid type OpenEMR\\#'
-            reportUnmatched: false
-        -
-            message: '#Property .+ is never read, only written#'
-            reportUnmatched: false
-        # OpenEMR's global \Document class is unknown during standalone analysis
-        # (it only exists once the module is installed into an OpenEMR tree).
+        # OpenEMR's global \Document class lives in library/classes and is not
+        # PSR-4 autoloaded; it's required directly by the entry points at
+        # runtime, so it is unknown during standalone analysis.
         -
             message: '#class Document#'
             reportUnmatched: false

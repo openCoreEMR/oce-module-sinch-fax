@@ -23,6 +23,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 
@@ -31,6 +32,7 @@ class FaxListControllerTest extends TestCase
     private GlobalConfig $config;
     private FaxService&MockObject $faxService;
     private Environment $twig;
+    private SessionInterface&MockObject $session;
     private FaxListController $controller;
 
     protected function setUp(): void
@@ -65,6 +67,7 @@ class FaxListControllerTest extends TestCase
 
         $this->config = new GlobalConfig($mockGlobals);
         $this->faxService = $this->createMock(FaxService::class);
+        $this->session = $this->createMock(SessionInterface::class);
 
         // Create a simple Twig environment for testing
         $loader = new ArrayLoader([
@@ -76,7 +79,8 @@ class FaxListControllerTest extends TestCase
         $this->controller = new FaxListController(
             $this->config,
             $this->faxService,
-            $this->twig
+            $this->twig,
+            $this->session
         );
     }
 
