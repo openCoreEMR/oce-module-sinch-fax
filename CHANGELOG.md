@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.2](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.1...0.7.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **bootstrap:** resolve Kernel projectDir throw on oce-810 ([#152](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/152)) ([0e680b0](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/0e680b0d4327b5d56095d728dd7004afb706fce5))
+* **csrf:** pass SessionInterface to CsrfUtils for oce-810 ([#154](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/154)) ([d4b882a](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/d4b882ace169ab54f95f374840c70f8f43bc600f))
+* **deps:** bump guzzlehttp/guzzle from 7.11.0 to 7.11.1 ([#150](https://github.com/openCoreEMR/oce-module-sinch-fax/issues/150)) ([13565f2](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/13565f24a555b4886fe38af81adca0f5b87ebbf3))
+
 ## [0.7.1](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.0...0.7.1) (2026-06-06)
 
 
