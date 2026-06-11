@@ -2,6 +2,8 @@
 
 This directory exists so the OpenEMR source tree is available **outside** the module's runtime composer tree.
 
+This is pinned to **public upstream `openemr/openemr` `rel-810`**, not the internal `oce-810` core. This module consumes only upstream-core symbols (the `CsrfUtils` / `SessionWrapperFactory` signatures are byte-identical between the two), so analyzing against the public contract is the correct thing to do — and it needs no credential, so CI clones it anonymously.
+
 It serves two purposes:
 
 1. **PHPStan type resolution.** `phpstan.neon` loads `tools/openemr/vendor/autoload.php` via `bootstrapFiles`, so PHPStan can resolve `OpenEMR\…` symbols.

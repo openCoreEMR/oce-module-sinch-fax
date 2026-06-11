@@ -1,17 +1,17 @@
 {
   "name": "opencoreemr/oce-module-sinch-fax-tools-openemr",
-  "description": "OpenEMR source tree for static analysis (PHPStan) and the local Docker bind mount. Pinned to the openCoreEMR internal core (oce-810) so analysis resolves the Symfony-Session API the module targets. Not a runtime dependency of the module \u2014 see tools/openemr/README.md. CI authenticates to the private repo via the OPENEMR_INTERNAL GitHub App (setup-private-repos action).",
+  "description": "OpenEMR source tree for static analysis (PHPStan) and the local Docker bind mount. Pinned to PUBLIC upstream openemr/openemr rel-810 so analysis resolves the Symfony-Session API the module targets. This module uses only upstream-core symbols, so the public contract is the correct thing to analyze against and no credential is required. Not a runtime dependency of the module \u2014 see tools/openemr/README.md.",
   "type": "project",
   "license": "GPL-3.0-or-later",
   "require": {
-    "openemr/openemr": "dev-oce-810"
+    "openemr/openemr": "dev-rel-810"
   },
   "repositories": [
     {
       "type": "package",
       "package": {
         "name": "openemr/openemr",
-        "version": "dev-oce-810",
+        "version": "dev-rel-810",
         "autoload": {
           "psr-4": {
             "OpenEMR\\": "src/"
@@ -19,8 +19,8 @@
         },
         "source": {
           "type": "git",
-          "url": "https://github.com/openCoreEMR/openemr-internal.git",
-          "reference": "oce-810"
+          "url": "https://github.com/openemr/openemr.git",
+          "reference": "rel-810"
         }
       }
     }
