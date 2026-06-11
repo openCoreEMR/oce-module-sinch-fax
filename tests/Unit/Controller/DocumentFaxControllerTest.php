@@ -23,6 +23,7 @@ use OpenEMR\Common\Logging\SystemLogger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 
@@ -31,6 +32,7 @@ class DocumentFaxControllerTest extends TestCase
     private GlobalConfig $config;
     private FaxService&MockObject $faxService;
     private Environment $twig;
+    private SessionInterface&MockObject $session;
     private DocumentFaxController $controller;
     private MockGlobalsAccessor $mockGlobals;
 
@@ -57,6 +59,7 @@ class DocumentFaxControllerTest extends TestCase
 
         $this->config = new GlobalConfig($this->mockGlobals);
         $this->faxService = $this->createMock(FaxService::class);
+        $this->session = $this->createMock(SessionInterface::class);
 
         // Create a simple Twig environment for testing
         $loader = new ArrayLoader([
@@ -68,7 +71,8 @@ class DocumentFaxControllerTest extends TestCase
         $this->controller = new DocumentFaxController(
             $this->config,
             $this->faxService,
-            $this->twig
+            $this->twig,
+            $this->session
         );
     }
 
@@ -128,7 +132,8 @@ class DocumentFaxControllerTest extends TestCase
         $controller = new DocumentFaxController(
             $disabledConfig,
             $this->faxService,
-            $this->twig
+            $this->twig,
+            $this->session
         );
 
         $this->expectException(FaxAccessDeniedException::class);

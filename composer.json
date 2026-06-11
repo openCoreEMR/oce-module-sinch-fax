@@ -44,65 +44,11 @@
   },
   "require-dev": {
     "ergebnis/composer-normalize": "^2.44",
-    "openemr/openemr": ">=8.0.0 || 8.0.x-dev || dev-master",
     "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^13.1",
     "rector/rector": "^2.0",
     "squizlabs/php_codesniffer": "^4.0"
   },
-  "repositories": [
-    {
-      "type": "package",
-      "package": {
-        "name": "openemr/openemr",
-        "version": "8.0.0",
-        "autoload": {
-          "psr-4": {
-            "OpenEMR\\": "src/"
-          }
-        },
-        "source": {
-          "type": "git",
-          "url": "https://github.com/openemr/openemr.git",
-          "reference": "v8_0_0"
-        }
-      }
-    },
-    {
-      "type": "package",
-      "package": {
-        "name": "openemr/openemr",
-        "version": "8.0.x-dev",
-        "autoload": {
-          "psr-4": {
-            "OpenEMR\\": "src/"
-          }
-        },
-        "source": {
-          "type": "git",
-          "url": "https://github.com/openemr/openemr.git",
-          "reference": "rel-800"
-        }
-      }
-    },
-    {
-      "type": "package",
-      "package": {
-        "name": "openemr/openemr",
-        "version": "dev-master",
-        "autoload": {
-          "psr-4": {
-            "OpenEMR\\": "src/"
-          }
-        },
-        "source": {
-          "type": "git",
-          "url": "https://github.com/openemr/openemr.git",
-          "reference": "master"
-        }
-      }
-    }
-  ],
   "minimum-stability": "dev",
   "prefer-stable": true,
   "autoload": {
@@ -141,6 +87,7 @@
       "@phpstan",
       "@rector"
     ],
+    "ensure-openemr-tools": "test -f tools/openemr/vendor/autoload.php || composer install --working-dir=tools/openemr --no-progress --no-interaction",
     "fix": [
       "@phpcbf",
       "@rector-fix"
@@ -148,11 +95,26 @@
     "php-lint": "git ls-files -z '*.php' | xargs -0 -n1 php -l",
     "phpcbf": "phpcbf",
     "phpcs": "phpcs",
-    "phpstan": "phpstan --memory-limit=512M analyse",
-    "phpunit": "phpunit --testdox",
-    "phpunit-coverage": "phpunit --coverage-html htmlcov --coverage-text",
-    "rector": "rector process --dry-run",
-    "rector-fix": "rector process",
+    "phpstan": [
+      "@ensure-openemr-tools",
+      "phpstan --memory-limit=512M analyse"
+    ],
+    "phpunit": [
+      "@ensure-openemr-tools",
+      "phpunit --testdox"
+    ],
+    "phpunit-coverage": [
+      "@ensure-openemr-tools",
+      "phpunit --coverage-html htmlcov --coverage-text"
+    ],
+    "rector": [
+      "@ensure-openemr-tools",
+      "rector process --dry-run"
+    ],
+    "rector-fix": [
+      "@ensure-openemr-tools",
+      "rector process"
+    ],
     "require-checker": "@php -r \"if(!shell_exec('which composer-require-checker')){echo \\\"composer-require-checker not found. Install globally: composer global require maglnet/composer-require-checker\\n\\\";exit(1);}\" && composer-require-checker check --config-file=.composer-require-checker.json",
     "test": "@phpunit"
   }

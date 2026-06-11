@@ -19,6 +19,7 @@ use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Common\Logging\SystemLogger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Twig\Environment;
 
 class DocumentFaxController
@@ -26,7 +27,8 @@ class DocumentFaxController
     public function __construct(
         private readonly GlobalConfig $config,
         private readonly FaxService $faxService,
-        private readonly Environment $twig
+        private readonly Environment $twig,
+        private readonly SessionInterface $session
     ) {
     }
 
@@ -80,7 +82,7 @@ class DocumentFaxController
             'patient_id' => $pid,
             'is_documents' => $isDocuments,
             'doc_id' => $docId,
-            'csrf_token' => CsrfUtils::collectCsrfToken(),
+            'csrf_token' => CsrfUtils::collectCsrfToken($this->session),
             'error_message' => null,
             'success_message' => null,
         ]);
@@ -99,7 +101,7 @@ class DocumentFaxController
             return $this->showSendForm($params);
         }
 
-        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token_form', ''))) {
+        if (!CsrfUtils::verifyCsrfToken($request->request->get('csrf_token_form', ''), $this->session)) {
             throw new FaxAccessDeniedException("CSRF token verification failed");
         }
 
@@ -189,7 +191,7 @@ class DocumentFaxController
             'patient_id' => $pid,
             'is_documents' => $isDocuments,
             'doc_id' => $docId,
-            'csrf_token' => CsrfUtils::collectCsrfToken(),
+            'csrf_token' => CsrfUtils::collectCsrfToken($this->session),
             'error_message' => $error,
             'success_message' => $success,
         ]);

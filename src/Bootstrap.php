@@ -25,6 +25,7 @@ use OpenEMR\Events\PatientDocuments\PatientDocumentEvent;
 use OpenEMR\Menu\MenuEvent;
 use OpenEMR\Services\Globals\GlobalSetting;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class Bootstrap
 {
@@ -216,24 +217,26 @@ class Bootstrap
     /**
      * Get FaxListController instance
      */
-    public function getFaxListController(): FaxListController
+    public function getFaxListController(SessionInterface $session): FaxListController
     {
         return new FaxListController(
             $this->globalsConfig,
             new FaxService($this->globalsConfig),
-            $this->twig
+            $this->twig,
+            $session
         );
     }
 
     /**
      * Get DocumentFaxController instance
      */
-    public function getDocumentFaxController(): DocumentFaxController
+    public function getDocumentFaxController(SessionInterface $session): DocumentFaxController
     {
         return new DocumentFaxController(
             $this->globalsConfig,
             new FaxService($this->globalsConfig),
-            $this->twig
+            $this->twig,
+            $session
         );
     }
 

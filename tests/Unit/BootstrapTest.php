@@ -21,6 +21,7 @@ use OpenCoreEMR\Modules\SinchFax\Tests\Mocks\MockGlobalsAccessor;
 use OpenEMR\Common\Logging\SystemLogger;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class BootstrapTest extends TestCase
 {
@@ -70,14 +71,14 @@ class BootstrapTest extends TestCase
 
     public function testGetFaxListControllerReturnsController(): void
     {
-        $controller = $this->bootstrap->getFaxListController();
+        $controller = $this->bootstrap->getFaxListController($this->createMock(SessionInterface::class));
 
         $this->assertInstanceOf(FaxListController::class, $controller);
     }
 
     public function testGetDocumentFaxControllerReturnsController(): void
     {
-        $controller = $this->bootstrap->getDocumentFaxController();
+        $controller = $this->bootstrap->getDocumentFaxController($this->createMock(SessionInterface::class));
 
         $this->assertInstanceOf(DocumentFaxController::class, $controller);
     }
