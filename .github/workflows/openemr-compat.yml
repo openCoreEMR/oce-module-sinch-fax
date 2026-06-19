@@ -27,12 +27,12 @@ jobs:
 
     steps:
     - name: Checkout module
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: module
 
     - name: Checkout OpenEMR
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: openemr/openemr
         ref: ${{ matrix.openemr-ref }}
