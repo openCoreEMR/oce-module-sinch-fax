@@ -63,8 +63,9 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_reconciliation` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated'
 ) ENGINE=InnoDB;
 
--- Create "Received Faxes" document category
--- For fresh installs only - no duplicate checking needed
+-- Create "Received Faxes" document category. Guarded because this script runs
+-- again on every deploy that changes module SQL, not only on a fresh install.
+#IfNotRow categories name Received Faxes
 INSERT INTO categories (id, name, parent, lft, rght, aco_spec)
 SELECT
     1 + COALESCE(MAX(id), 0),
@@ -74,3 +75,4 @@ SELECT
     2 + COALESCE(MAX(lft), 0),
     'patients|docs'
 FROM categories;
+#EndIf
