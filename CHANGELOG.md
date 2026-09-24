@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.4](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.3...0.7.4) (2026-09-24)
+
+
+### Bug Fixes
+
+* **sql:** guard the Received Faxes category insert ([0a78353](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/0a783531a990cb8cffab87d7d0fb6c17a4e9c138))
+* **version:** pass the default version as a literal, not a global const ([c899184](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c89918498ef1409228bc66b84e857f983afb2754))
+
+
+### Documentation
+
+* **sql:** table.sql must run through SQLUpgradeService, not a db client ([54138ab](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/54138ab5bf8f30225f9b8cfb666a76e549789381))
+
 ## [0.7.3](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.2...0.7.3) (2026-06-11)
 
 
