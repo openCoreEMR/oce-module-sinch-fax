@@ -88,4 +88,4 @@
 
     // Fallback if the default version is malformed
     return ['1', '0', '0', '', 1];
-})('0.7.3'); // x-release-please-version
+})('0.7.4'); // x-release-please-version
