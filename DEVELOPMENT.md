@@ -226,7 +226,7 @@ This emulates all aspects of a real fax without billing.
 1. **Webhooks not received**: Check firewall, ensure URL is publicly accessible
 2. **Authentication failures**: Verify API key/secret, check region setting
 3. **File upload errors**: Check file permissions, PHP upload limits
-4. **Database errors**: Run table.sql manually if auto-install fails
+4. **Database errors**: Re-run table.sql through OpenEMR (`task module:reinstall` in the dev stack, which drops the module's tables first), not a database client, which ignores its `#IfNotRow` guards
 
 ### Logs
 Check OpenEMR logs for detailed error messages:

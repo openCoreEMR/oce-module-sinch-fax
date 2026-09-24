@@ -1,4 +1,7 @@
--- This table definition is loaded and then executed when the OpenEMR interface's install button is clicked.
+-- OpenEMR runs this file through SQLUpgradeService on install, and again on every install_sql
+-- and openemr:module-migrate. Every statement must be safe to re-run: CREATE TABLE IF NOT EXISTS,
+-- or guarded by a directive such as #IfNotRow. A plain database client reads the directives as
+-- comments, so do not pipe this file to one.
 
 -- Table to store fax documents
 CREATE TABLE IF NOT EXISTS `oce_sinch_faxes` (
@@ -63,8 +66,7 @@ CREATE TABLE IF NOT EXISTS `oce_sinch_reconciliation` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'When this record was last updated'
 ) ENGINE=InnoDB;
 
--- Create "Received Faxes" document category. Guarded because this script runs
--- again on every deploy that changes module SQL, not only on a fresh install.
+-- Create "Received Faxes" document category
 #IfNotRow categories name Received Faxes
 INSERT INTO categories (id, name, parent, lft, rght, aco_spec)
 SELECT
