@@ -180,8 +180,10 @@ docker compose exec mysql mariadb -uroot -proot -e "SELECT * FROM oce_sinch_faxe
 **Run SQL from file:**
 ```bash
 # From local file (use -T to disable pseudo-TTY)
-docker compose exec -T mysql mariadb -uroot -proot openemr < table.sql
+docker compose exec -T mysql mariadb -uroot -proot openemr < query.sql
 ```
+
+Don't do this with `table.sql`. The client reads its `#IfNotRow` guards as comments, so each run adds another "Received Faxes" category. To re-run it in the dev stack, use `task module:reinstall`, which drops the module's tables first.
 
 **Export/Import:**
 ```bash
