@@ -1,0 +1,15 @@
+{
+  "name": "oce-module-sinch-fax-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E2E tests for OpenCoreEMR Sinch Fax module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0"
+  }
+}

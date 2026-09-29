@@ -264,6 +264,53 @@ tasks:
     cmds:
     - docker compose run --rm phpunit
 
+  # === E2E Tests (Playwright) ===
+
+  e2e:install:
+    desc: Install Playwright and browser dependencies
+    cmds:
+    - npm install
+    - npx playwright install chromium
+    - echo "Playwright installed. Run 'task e2e:test' to run tests."
+
+  e2e:test:
+    desc: Run Playwright E2E tests against running Docker environment
+    cmds:
+    - |
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      BASE_URL="http://localhost:$HTTP_PORT" npm run test:e2e
+
+  e2e:test:ui:
+    desc: Run Playwright with interactive UI mode
+    cmds:
+    - |
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      BASE_URL="http://localhost:$HTTP_PORT" npm run test:e2e:ui
+
+  e2e:test:headed:
+    desc: Run Playwright tests with visible browser
+    cmds:
+    - |
+      HTTP_PORT=$(docker compose port openemr 80 2>/dev/null | cut -d: -f2)
+      if [ -z "$HTTP_PORT" ]; then
+        echo "Error: OpenEMR container not running. Start with 'task dev:start'"
+        exit 1
+      fi
+      BASE_URL="http://localhost:$HTTP_PORT" npm run test:e2e:headed
+
+  e2e:report:
+    desc: Open the Playwright HTML report
+    cmds:
+    - npx playwright show-report
+
   # === Development Helpers ===
   # Composer dependency management tasks (infrastructure, not code quality)
 
