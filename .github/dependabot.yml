@@ -5,6 +5,10 @@ version: 2
 updates:
 # Monitor Composer dependencies
 - package-ecosystem: composer
+  cooldown:
+    exclude:
+    - openCoreEMR/*
+    - opencoreemr/*
   directory: /
   schedule:
     interval: daily
@@ -21,6 +25,10 @@ updates:
     - '>=8.0'
 # Monitor GitHub Actions
 - package-ecosystem: github-actions
+  cooldown:
+    exclude:
+    - openCoreEMR/*
+    - opencoreemr/*
   directory: /
   schedule:
     interval: daily
