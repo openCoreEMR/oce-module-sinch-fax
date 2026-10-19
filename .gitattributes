@@ -1,0 +1,34 @@
+# Paths excluded from `git archive` / `composer archive` / GitHub source
+# tarballs. Dev-only files do not need to ship to consumers; this prevents
+# whole-tree static analyzers (PHPStan, Rector) in consumer projects from
+# parsing test mocks as competing definitions of real OpenEMR classes.
+# See openCoreEMR/oce-module-junction-labs#129 and
+# openCoreEMR/oce-module-sinch-fax#146.
+/tests/ export-ignore
+/docs/ export-ignore
+/.docs/ export-ignore
+/.github/ export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.dockerignore export-ignore
+/Dockerfile.test export-ignore
+/compose.yml export-ignore
+/compose.override.yml.example export-ignore
+/.env.testing.example export-ignore
+/Taskfile.yml export-ignore
+/phpunit.xml export-ignore
+/phpcs.xml export-ignore
+/phpstan.neon export-ignore
+/rector.php export-ignore
+/.pre-commit-config.yaml export-ignore
+/.editorconfig export-ignore
+/cleanup.sql export-ignore
+/DEVELOPMENT.md export-ignore
+/.release-please-manifest.json export-ignore
+/release-please-config.json export-ignore
+/.composer-require-checker.json export-ignore
+/.dclintrc.yaml export-ignore
+/.yamlfmt export-ignore
+/AGENTS.md export-ignore
+/CLAUDE.md export-ignore
+/tools/ export-ignore
