@@ -57,7 +57,7 @@ This document describes the architectural patterns and conventions for OpenEMR m
 - Throw custom exceptions with `getStatusCode()` method
 
 **Database:**
-- Always use `QueryUtils::fetchRecords()` and `QueryUtils::sqlStatementThrowException()`
+- Always use `QueryUtils::fetchRecords()`, `QueryUtils::querySingleRow()`, or `QueryUtils::sqlStatementThrowException()`
 - Never use `sqlStatement()`, `sqlQuery()`, or other direct SQL functions
 
 **Templates:**
