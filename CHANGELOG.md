@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.5](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.4...0.7.5) (2026-10-21)
+
+
+### Bug Fixes
+
+* add .gitattributes to export-ignore dev files ([afb9586](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/afb95862a25c38ddc1b14adb8046e6604eb3ca12))
+
+
+### Documentation
+
+* list querySingleRow() with supported database APIs ([b942cc8](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b942cc810d86cf5be71b042c2f4ac14bb27ae42e))
+* move agent instructions to AGENTS.md ([b043cbb](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b043cbbd613716ffebe2bed92ecbfed50f59bbcf))
+* replace Copilot guide with pointer to AGENTS.md ([ef23831](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/ef23831b274a1204cecc7d6dcb9d183042158396))
+
 ## [0.7.4](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.3...0.7.4) (2026-09-24)
 
 
