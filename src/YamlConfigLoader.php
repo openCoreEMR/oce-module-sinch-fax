@@ -56,7 +56,7 @@ class YamlConfigLoader
      */
     public function hasConfigFiles(array $paths): bool
     {
-        return array_any($paths, fn($path): bool => file_exists($path));
+        return array_any($paths, fn(string $path): bool => file_exists($path));
     }
 
     /**
