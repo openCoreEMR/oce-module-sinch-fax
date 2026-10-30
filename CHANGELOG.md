@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.6](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.5...0.7.6) (2026-10-30)
+
+
+### Bug Fixes
+
+* **deps:** bump symfony/event-dispatcher from 7.4.9 to 7.4.17 ([fff1123](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/fff1123466c729649dd5feaf2cc09080f2b92f54))
+* **deps:** bump symfony/event-dispatcher from 7.4.9 to 7.4.17 ([a0db5ce](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/a0db5cea599b553eab1e79ce9160293576ca6118))
+* **deps:** bump symfony/yaml from 7.4.13 to 7.4.22 ([b44f4a4](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b44f4a4d3e49e32c4ef5c36f349b77534828e67b))
+* **deps:** bump symfony/yaml from 7.4.13 to 7.4.22 ([f2837e7](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/f2837e7ee05d5bfc0615b3b2f64e63ef255064ac))
+
+
+### Code Refactoring
+
+* **config:** type array_any closure parameter as string ([90f9884](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/90f9884a8579c1acf0a7fd317f7aa7132a3afff0))
+
 ## [0.7.5](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.4...0.7.5) (2026-10-21)
 
 
