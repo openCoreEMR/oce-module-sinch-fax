@@ -23,6 +23,10 @@ updates:
   - dependency-name: symfony/*
     versions:
     - '>=8.0'
+  # OpenEMR requires guzzlehttp/guzzle ^7.10; ignore Guzzle 8 until upstream moves.
+  - dependency-name: guzzlehttp/guzzle
+    versions:
+    - '>=8.0'
 # Monitor GitHub Actions
 - package-ecosystem: github-actions
   cooldown:
