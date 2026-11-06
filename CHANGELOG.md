@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.7.6](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.5...0.7.6) (2026-11-05)
+
+
+### Bug Fixes
+
+* **deps:** bump guzzlehttp/guzzle from 7.11.1 to 7.16.1 ([f2e1736](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/f2e1736315731d21c4103e45b009cd3ea9c6d386))
+* **deps:** bump guzzlehttp/guzzle from 7.11.1 to 7.16.1 ([cb84e16](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/cb84e161a71317583ea66f39736db60300f1838b))
+* **deps:** bump symfony/console from 7.4.13 to 7.4.22 ([b64e172](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b64e1725eefd8b1987875b06fd558082c82a1bfc))
+* **deps:** bump symfony/console from 7.4.13 to 7.4.22 ([410a28c](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/410a28cdc937010e48a21b44346e28269e32e795))
+* **deps:** bump symfony/console from 7.4.22 to 7.4.23 ([4b406ee](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/4b406eecf4df1e8160c8550b8daf57a060c404ed))
+* **deps:** bump symfony/console from 7.4.22 to 7.4.23 ([bdf94bf](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/bdf94bf3d488ae0975c606db7e5e160f124d76bb))
+* **deps:** bump symfony/event-dispatcher from 7.4.9 to 7.4.17 ([fff1123](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/fff1123466c729649dd5feaf2cc09080f2b92f54))
+* **deps:** bump symfony/event-dispatcher from 7.4.9 to 7.4.17 ([a0db5ce](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/a0db5cea599b553eab1e79ce9160293576ca6118))
+* **deps:** bump symfony/http-foundation from 7.4.13 to 7.4.22 ([c560699](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c56069955eb77f31253e60c54e997eabf877a61a))
+* **deps:** bump symfony/http-foundation from 7.4.13 to 7.4.22 ([c7e354e](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c7e354ea4036d38b271ff89c54d337b01cb00f57))
+* **deps:** bump symfony/http-foundation from 7.4.22 to 7.4.23 ([66c756b](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/66c756bce9a4be757c1afc2018d926ac25c5d9d2))
+* **deps:** bump symfony/http-foundation from 7.4.22 to 7.4.23 ([ba988cd](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/ba988cd1c724f664c26fa345d60c9c3311ddc40d))
+* **deps:** bump symfony/yaml from 7.4.13 to 7.4.22 ([b44f4a4](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/b44f4a4d3e49e32c4ef5c36f349b77534828e67b))
+* **deps:** bump symfony/yaml from 7.4.13 to 7.4.22 ([f2837e7](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/f2837e7ee05d5bfc0615b3b2f64e63ef255064ac))
+* **deps:** bump symfony/yaml from 7.4.22 to 7.4.23 ([a38c368](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/a38c368428ccec378bd487b378f37ace31f1573c))
+* **deps:** bump symfony/yaml from 7.4.22 to 7.4.23 ([c1b94b6](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/c1b94b6c31b6bc3046f72bca46ad866f9e2d10ad))
+* **deps:** bump twig/twig from 3.27.1 to 3.30.0 ([d5a6253](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/d5a6253b9465140795b7adccab3aaa0d22b768fa))
+* **deps:** bump twig/twig from 3.27.1 to 3.30.0 ([1c01571](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/1c01571230fa3ea1479c1d1ebae425afe1474a48))
+
+
+### Code Refactoring
+
+* **config:** type array_any closure parameter as string ([90f9884](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/90f9884a8579c1acf0a7fd317f7aa7132a3afff0))
+
 ## [0.7.5](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.4...0.7.5) (2026-10-21)
 
 
