@@ -14,3 +14,5 @@ on:
 jobs:
   hadolint:
     uses: openCoreEMR/github-workflows-public/.github/workflows/hadolint.yml@1.2.2
+    permissions:
+      contents: read
