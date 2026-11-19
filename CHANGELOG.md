@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.8](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.7...0.7.8) (2026-11-19)
+
+
+### Bug Fixes
+
+* **deps:** bump guzzlehttp/guzzle ([3397b4a](https://github.com/openCoreEMR/oce-module-sinch-fax/commit/3397b4a7f9ba5e6e2bd79545af7f0a70f39666fc))
+
 ## [0.7.7](https://github.com/openCoreEMR/oce-module-sinch-fax/compare/0.7.6...0.7.7) (2026-11-17)
 
 
